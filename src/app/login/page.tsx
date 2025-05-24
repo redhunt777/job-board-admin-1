@@ -1,0 +1,88 @@
+"use client";
+import { useState, FormEvent } from "react";
+import { IoMdEye, IoMdEyeOff } from "react-icons/io";
+import Link from "next/link";
+
+const AdminLogin = () => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    // login logic here
+  };
+
+  return (
+    <div className="container mx-auto px-4">
+      <div className="flex flex-col justify-center items-center bg-white rounded-xl shadow-lg max-w-xl mx-auto p-6 sm:p-10 mt-10">
+        <form onSubmit={handleSubmit} className="w-full flex flex-col gap-2">
+          <h1 className="text-center text-neutral-800 font-semibold text-2xl sm:text-4xl mb-4">
+            Admin Login
+          </h1>
+          <label className="text-lg mt-4" htmlFor="email">
+            Email
+          </label>
+          <input
+            id="email"
+            type="email"
+            placeholder="Enter your email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full p-4 text-lg border border-gray-300 rounded-lg mb-2 outline-none focus:border-blue-500"
+            required
+          />
+          <label className="text-lg mt-4" htmlFor="password">
+            Password
+          </label>
+          <div className="relative flex items-center mb-2">
+            <input
+              id="password"
+              type={showPassword ? "text" : "password"}
+              placeholder="Enter your password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full p-4 text-lg border border-gray-300 rounded-lg pr-12 outline-none focus:border-blue-500"
+              required
+            />
+            <span
+              className="absolute right-4 top-1/2 -translate-y-1/2 cursor-pointer"
+              onClick={() => setShowPassword((prev) => !prev)}
+              role="button"
+              tabIndex={0}
+              aria-label={showPassword ? "Hide password" : "Show password"}
+            >
+              {showPassword ? (
+                <IoMdEye size={24} className="text-neutral-500" />
+              ) : (
+                <IoMdEyeOff size={24} className="text-neutral-500" />
+              )}
+            </span>
+          </div>
+          <Link
+            href="/reset-password"
+            className="text-blue-600 font-medium text-base text-center mb-8 hover:underline"
+          >
+            Forgot Password?
+          </Link>
+          <button
+            type="submit"
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white sm:font-medium text- sm:text-2xl rounded-lg py-3 mb-2 transition-colors cursor-pointer"
+          >
+            <Link href="/dashboard">Login</Link>
+          </button>
+        </form>
+        <div className="text-center mt-10">
+          <Link
+            href="/register"
+            className="text-black font-medium text-xl underline hover:text-blue-700"
+          >
+            Register here
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default AdminLogin;
