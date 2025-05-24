@@ -7,7 +7,6 @@ import { TiDocumentDelete } from "react-icons/ti";
 import { BsBriefcase } from "react-icons/bs";
 import { FaCaretDown } from "react-icons/fa";
 import { GoPeople } from "react-icons/go";
-import { SearchComponent } from "@/components/search-component";
 
 const stats = [
   {
@@ -60,13 +59,12 @@ export default function DashboardPage() {
   const { collapsed } = context;
 
   return (
-    <main
-      className={`transition-all duration-300 min-h-screen pb-40 md:pb-0 px-3 ${
+    <div
+      className={`transition-all duration-300 min-h-full px-3 ${
         collapsed ? "md:ml-0" : "md:ml-64"
       } md:pt-0 pt-4`}
     >
-      <SearchComponent/>
-      <div className="max-w-7xl mx-auto px-2 md:px-8 pt-8">
+      <div className="max-w-7xl mx-auto px-2 py-8">
         <h1 className="text-3xl font-bold text-neutral-800 mb-4">Dashboard</h1>
         {/* Stat Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
@@ -122,6 +120,6 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
-    </main>
+    </div>
   );
 }
