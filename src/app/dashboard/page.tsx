@@ -7,6 +7,7 @@ import { TiDocumentDelete } from "react-icons/ti";
 import { BsBriefcase } from "react-icons/bs";
 import { FaCaretDown } from "react-icons/fa";
 import { GoPeople } from "react-icons/go";
+import { SearchComponent } from "@/components/search-component";
 
 const stats = [
   {
@@ -64,6 +65,7 @@ export default function DashboardPage() {
         collapsed ? "md:ml-0" : "md:ml-64"
       } md:pt-0 pt-4`}
     >
+      <SearchComponent/>
       <div className="max-w-7xl mx-auto px-2 md:px-8 pt-8">
         <h1 className="text-3xl font-bold text-neutral-800 mb-4">Dashboard</h1>
         {/* Stat Cards */}
