@@ -86,7 +86,7 @@ const ResetPasswordForm = () => {
 
   return (
     <div className="container mx-auto px-4">
-      <div className="flex flex-col justify-center items-center bg-white rounded-xl shadow max-w-xl mx-auto p-6 sm:p-10 mt-10">
+      <div className="flex flex-col justify-center items-center bg-white rounded-xl shadow-sm max-w-xl mx-auto p-6 sm:p-10 my-10">
         <div className="slide-container">
           {/* Email Step */}
           <div
@@ -122,7 +122,7 @@ const ResetPasswordForm = () => {
                   placeholder="Enter your email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg py-3 px-4 text-lg outline-none focus:border-blue-500 transition-colors"
+                  className="w-full border border-neutral-300 rounded-lg py-3 px-4 text-lg outline-hidden focus:border-blue-500 transition-colors"
                   required
                 />
               </div>
@@ -133,11 +133,6 @@ const ResetPasswordForm = () => {
                 Send OTP
               </button>
             </form>
-            {emailSent && (
-              <p className="text-center text-green-500 mt-4">
-                OTP sent to {email}. Please check your inbox.
-              </p>
-            )}
           </div>
           {/* OTP Step */}
           <div
@@ -172,8 +167,10 @@ const ResetPasswordForm = () => {
                     onChange={(e) => handleChange(e, idx)}
                     onKeyDown={(e) => handleKeyDown(e, idx)}
                     onPaste={handlePaste}
-                    ref={(el) => (inputs.current[idx] = el)}
-                    className="w-11 h-11 sm:w-16 sm:h-16 text-3xl text-center border border-gray-300 rounded-lg outline-none focus:border-blue-500 transition-colors"
+                    ref={(el) => {
+                      inputs.current[idx] = el;
+                    }}
+                    className="w-11 h-11 sm:w-16 sm:h-16 text-3xl text-center border border-neutral-300 rounded-lg outline-hidden focus:border-blue-500 transition-colors"
                     required
                   />
                 ))}
@@ -231,13 +228,13 @@ const ResetPasswordForm = () => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Enter your new password"
-                    className="w-full border border-gray-300 rounded-lg py-3 px-4 text-lg outline-none focus:border-blue-500 transition-colors"
+                    className="w-full border border-neutral-300 rounded-lg py-3 px-4 text-lg outline-hidden focus:border-blue-500 transition-colors"
                     required
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword((v) => !v)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600"
                     tabIndex={-1}
                   >
                     {showPassword ? (

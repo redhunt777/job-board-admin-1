@@ -2,8 +2,10 @@
 import { useState, FormEvent } from "react";
 import { IoMdEye, IoMdEyeOff } from "react-icons/io";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 const AdminLogin = () => {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -11,11 +13,12 @@ const AdminLogin = () => {
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     // login logic here
+    router.push('/dashboard');
   };
 
   return (
     <div className="container mx-auto px-4">
-      <div className="flex flex-col justify-center items-center bg-white rounded-xl shadow-lg max-w-xl mx-auto p-6 sm:p-10 mt-10">
+      <div className="flex flex-col justify-center items-center bg-white rounded-xl shadow max-w-xl mx-auto p-6 sm:p-10 my-12">
         <form onSubmit={handleSubmit} className="w-full flex flex-col gap-2">
           <h1 className="text-center text-neutral-800 font-semibold text-2xl sm:text-4xl mb-4">
             Admin Login
@@ -29,7 +32,7 @@ const AdminLogin = () => {
             placeholder="Enter your email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full p-4 text-lg border border-gray-300 rounded-lg mb-2 outline-none focus:border-blue-500"
+            className="w-full p-4 text-lg border border-neutral-300 rounded-lg mb-2 outline-hidden focus:border-blue-500"
             required
           />
           <label className="text-lg mt-4" htmlFor="password">
@@ -42,7 +45,7 @@ const AdminLogin = () => {
               placeholder="Enter your password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full p-4 text-lg border border-gray-300 rounded-lg pr-12 outline-none focus:border-blue-500"
+              className="w-full p-4 text-lg border border-neutral-300 rounded-lg pr-12 outline-hidden focus:border-blue-500"
               required
             />
             <span
@@ -69,7 +72,7 @@ const AdminLogin = () => {
             type="submit"
             className="w-full bg-blue-600 hover:bg-blue-700 text-white sm:font-medium text- sm:text-2xl rounded-lg py-3 mb-2 transition-colors cursor-pointer"
           >
-            <Link href="/dashboard">Login</Link>
+            Login
           </button>
         </form>
         <div className="text-center mt-10">

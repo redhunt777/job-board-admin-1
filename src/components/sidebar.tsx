@@ -39,7 +39,7 @@ export default function Sidebar() {
     <aside
       className={`hidden md:flex fixed top-0 left-0 h-full z-50 transition-all duration-300 flex-col justify-between \
         ${collapsed ? "w-20" : "w-64"} \
-        bg-gradient-to-b from-[#1E3170] to-[#07123A] shadow-lg`}
+        bg-linear-to-b from-[#1E3170] to-[#07123A] shadow-lg`}
     >
       <div>
         <div className="px-4 pt-6 pb-2 flex flex-col">

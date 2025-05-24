@@ -20,7 +20,7 @@ const AdminRegister = () => {
 
   return (
     <div className="container mx-auto px-4">
-      <div className="flex flex-col justify-center items-center bg-white rounded-xl shadow max-w-4xl mx-auto p-6 sm:p-10 mt-10">
+      <div className="flex flex-col justify-center items-center bg-white rounded-xl shadow-sm max-w-4xl mx-auto p-6 sm:p-10 my-10">
         <form onSubmit={handleSubmit} className="w-full flex flex-col gap-2">
           <h1 className="text-center text-neutral-800 font-semibold text-2xl sm:text-4xl mb-4">
             Register
@@ -36,7 +36,7 @@ const AdminRegister = () => {
                 placeholder="Enter your full name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full p-4 text-lg border border-gray-300 rounded-lg mb-2 outline-none focus:border-blue-500"
+                className="w-full p-4 text-lg border border-neutral-300 rounded-lg mb-2 outline-hidden focus:border-blue-500"
                 required
               />
             </div>
@@ -50,7 +50,7 @@ const AdminRegister = () => {
                 placeholder="Enter your email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full p-4 text-lg border border-gray-300 rounded-lg mb-2 outline-none focus:border-blue-500"
+                className="w-full p-4 text-lg border border-neutral-300 rounded-lg mb-2 outline-hidden focus:border-blue-500"
                 required
               />
             </div>
@@ -58,7 +58,7 @@ const AdminRegister = () => {
               <label className="text-lg mt-4" htmlFor="phone">
                 Mobile Number
               </label>
-              <div className="focus-within:border-blue-500 focus-within:outline-none border border-gray-300 rounded-lg mb-2">
+              <div className="focus-within:border-blue-500 focus-within:outline-hidden border border-neutral-300 rounded-lg mb-2">
                 <PhoneInput
                   id="phone"
                   international
@@ -83,7 +83,7 @@ const AdminRegister = () => {
                   placeholder="Enter your password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full p-4 text-lg border border-gray-300 rounded-lg pr-12 outline-none focus:border-blue-500"
+                  className="w-full p-4 text-lg border border-neutral-300 rounded-lg pr-12 outline-hidden focus:border-blue-500"
                   required
                 />
                 <span
