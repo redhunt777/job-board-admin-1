@@ -198,15 +198,15 @@ const jobOptions = [
 ];
 
 const ctcOptions = [
-  "All",
-  "1-4 Lakhs",
-  "4-7 Lakhs",
-  "7-10 Lakhs",
-  "10-13 Lakhs",
-  "13-16 Lakhs",
-  "16-19 Lakhs",
-  "19-22 Lakhs",
-] as const;
+   "All",
+   "1-4 Lakhs",
+   "4-7 Lakhs",
+   "7-10 Lakhs",
+   "10-13 Lakhs",
+   "13-16 Lakhs",
+   "16-19 Lakhs",
+   "19-22 Lakhs",
+ ] as const;
 
 export default function Candidates() {
   const context = useContext(SidebarContext);
@@ -441,7 +441,6 @@ export default function Candidates() {
         if (range === "13-16 Lakhs" && c.currentctc >= 13 && c.currentctc < 16) match = true;
         if (range === "16-19 Lakhs" && c.currentctc >= 16 && c.currentctc < 19) match = true;
         if (range === "19-22 Lakhs" && c.currentctc >= 19 && c.currentctc < 22) match = true;
-        if (range === "22+ Lakhs" && c.currentctc >= 22) match = true;
       }
       if (!match) return false;
     }
@@ -456,7 +455,6 @@ export default function Candidates() {
         if (range === "13-16 Lakhs" && c.expectedctc >= 13 && c.expectedctc < 16) match = true;
         if (range === "16-19 Lakhs" && c.expectedctc >= 16 && c.expectedctc < 19) match = true;
         if (range === "19-22 Lakhs" && c.expectedctc >= 19 && c.expectedctc < 22) match = true;
-        if (range === "22+ Lakhs" && c.expectedctc >= 22) match = true;
       }
       if (!match) return false;
     }
