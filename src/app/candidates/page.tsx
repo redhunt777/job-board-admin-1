@@ -147,43 +147,43 @@ const tableHeaders = [
   },
   {
     label: "ID",
-    className: "p-3 text-left font-bold text-neutral-700",
+    className: "p-3 text-left font-semibold text-neutral-700",
   },
   {
     label: "Applied Date",
-    className: "p-3 text-left font-bold text-neutral-700",
+    className: "p-3 text-left font-semibold text-neutral-700",
   },
   {
     label: "Candidate Name",
-    className: "p-3 text-left font-bold text-neutral-700",
+    className: "p-3 text-left font-semibold text-neutral-700",
   },
   {
     label: "Job",
-    className: "p-3 text-left font-bold text-neutral-700",
+    className: "p-3 text-left font-semibold text-neutral-700",
   },
   {
     label: "Company",
-    className: "p-3 text-left font-bold text-neutral-700",
+    className: "p-3 text-left font-semibold text-neutral-700",
   },
   {
     label: "Location",
-    className: "p-3 text-left font-bold text-neutral-700",
+    className: "p-3 text-left font-semibold text-neutral-700",
   },
   {
     label: "Years of Exp.",
-    className: "p-3 text-left font-bold text-neutral-700",
+    className: "p-3 text-left font-semibold text-neutral-700",
   },
   {
     label: "Current CTC",
-    className: "p-3 text-left font-bold text-neutral-700",
+    className: "p-3 text-left font-semibold text-neutral-700",
   },
   {
     label: "Expected CTC",
-    className: "p-3 text-left font-bold text-neutral-700",
+    className: "p-3 text-left font-semibold text-neutral-700",
   },
   {
     label: "App. Status",
-    className: "p-3 text-left font-bold text-neutral-700",
+    className: "p-3 text-left font-semibold text-neutral-700",
   },
   { label: "", className: "p-3" },
 ];
@@ -249,82 +249,33 @@ export default function Candidates() {
   const locationOptions = ["All", ...Array.from(new Set(candidates.map(c => c.location)))];
 
   // Handlers for temporary filters
-  const handleTempStatusChange = (option: string) => {
-    if (option === "All") setTempStatusFilter(["All"]);
-    else {
-      let newFilter = tempStatusFilter.filter((s) => s !== "All");
-      if (tempStatusFilter.includes(option)) newFilter = newFilter.filter((s) => s !== option);
-      else newFilter = [...newFilter, option];
-      if (newFilter.length === 0) newFilter = ["All"];
-      setTempStatusFilter(newFilter);
-    }
+  const createFilterHandler = (
+    currentFilter: string[],
+    setFilter: React.Dispatch<React.SetStateAction<string[]>>
+  ) => {
+    return (option: string) => {
+      if (option === "All") {
+        setFilter(["All"]);
+      } else {
+        let newFilter = currentFilter.filter((item) => item !== "All");
+        if (currentFilter.includes(option)) {
+          newFilter = newFilter.filter((item) => item !== option);
+        } else {
+          newFilter = [...newFilter, option];
+        }
+        if (newFilter.length === 0) newFilter = ["All"];
+        setFilter(newFilter);
+      }
+    };
   };
 
-  const handleTempExpChange = (option: string) => {
-    if (option === "All") setTempExpFilter(["All"]);
-    else {
-      let newFilter = tempExpFilter.filter((e) => e !== "All");
-      if (tempExpFilter.includes(option)) newFilter = newFilter.filter((e) => e !== option);
-      else newFilter = [...newFilter, option];
-      if (newFilter.length === 0) newFilter = ["All"];
-      setTempExpFilter(newFilter);
-    }
-  };
-
-  const handleTempJobChange = (option: string) => {
-    if (option === "All") setTempJobFilter(["All"]);
-    else {
-      let newFilter = tempJobFilter.filter((j) => j !== "All");
-      if (tempJobFilter.includes(option)) newFilter = newFilter.filter((j) => j !== option);
-      else newFilter = [...newFilter, option];
-      if (newFilter.length === 0) newFilter = ["All"];
-      setTempJobFilter(newFilter);
-    }
-  };
-
-  const handleTempCompanyChange = (option: string) => {
-    if (option === "All") setTempCompanyFilter(["All"]);
-    else {
-      let newFilter = tempCompanyFilter.filter((j) => j !== "All");
-      if (tempCompanyFilter.includes(option)) newFilter = newFilter.filter((j) => j !== option);
-      else newFilter = [...newFilter, option];
-      if (newFilter.length === 0) newFilter = ["All"];
-      setTempCompanyFilter(newFilter);
-    }
-  };
-
-  const handleTempLocationChange = (option: string) => {
-    if (option === "All") setTempLocationFilter(["All"]);
-    else {
-      let newFilter = tempLocationFilter.filter((j) => j !== "All");
-      if (tempLocationFilter.includes(option)) newFilter = newFilter.filter((j) => j !== option);
-      else newFilter = [...newFilter, option];
-      if (newFilter.length === 0) newFilter = ["All"];
-      setTempLocationFilter(newFilter);
-    }
-  };
-
-  const handleTempCurrentCtcChange = (option: string) => {
-    if (option === "All") setTempCurrentCtcRange(["All"]);
-    else {
-      let newFilter = tempCurrentCtcRange.filter((c) => c !== "All");
-      if (tempCurrentCtcRange.includes(option)) newFilter = newFilter.filter((c) => c !== option);
-      else newFilter = [...newFilter, option];
-      if (newFilter.length === 0) newFilter = ["All"];
-      setTempCurrentCtcRange(newFilter);
-    }
-  };
-
-  const handleTempExpectedCtcChange = (option: string) => {
-    if (option === "All") setTempExpectedCtcRange(["All"]);
-    else {
-      let newFilter = tempExpectedCtcRange.filter((e) => e !== "All");
-      if (tempExpectedCtcRange.includes(option)) newFilter = newFilter.filter((e) => e !== option);
-      else newFilter = [...newFilter, option];
-      if (newFilter.length === 0) newFilter = ["All"];
-      setTempExpectedCtcRange(newFilter);
-    }
-  };
+  const handleTempStatusChange = createFilterHandler(tempStatusFilter, setTempStatusFilter);
+  const handleTempExpChange = createFilterHandler(tempExpFilter, setTempExpFilter);
+  const handleTempJobChange = createFilterHandler(tempJobFilter, setTempJobFilter);
+  const handleTempCompanyChange = createFilterHandler(tempCompanyFilter, setTempCompanyFilter);
+  const handleTempLocationChange = createFilterHandler(tempLocationFilter, setTempLocationFilter);
+  const handleTempCurrentCtcChange = createFilterHandler(tempCurrentCtcRange, setTempCurrentCtcRange);
+  const handleTempExpectedCtcChange = createFilterHandler(tempExpectedCtcRange, setTempExpectedCtcRange);
 
   const applyFilters = () => {
     setSortBy(tempSortBy);
