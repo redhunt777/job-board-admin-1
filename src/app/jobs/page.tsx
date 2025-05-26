@@ -1,7 +1,6 @@
 "use client";
 import { SidebarContext } from "@/components/sidebar";
 import { useContext, useState } from "react";
-import { FiArrowLeftCircle } from "react-icons/fi";
 import { GoPlus } from "react-icons/go";
 import { IoList } from "react-icons/io5";
 import { FaCaretDown } from "react-icons/fa";
@@ -21,7 +20,7 @@ export default function Jobs() {
 
   const [viewMode, setViewMode] = useState("board"); // 'board' or 'list'
 
-   const jobData = [
+  const jobData = [
     {
       id: 1,
       title: "Software Engineer",
@@ -92,7 +91,7 @@ export default function Jobs() {
       location: "Los Angeles, CA",
       salary: "50,000-80,000",
     },
-  ]
+  ];
 
   return (
     <div
@@ -100,8 +99,7 @@ export default function Jobs() {
         collapsed ? "md:ml-20" : "md:ml-64"
       } md:pt-0 pt-4`}
     >
-      <div>
-      </div>
+      <div></div>
       <div className="mt-4 px-2 md:px-4 py-4 ">
         <div className="flex items-center gap-2 mb-4">
           <Link
@@ -207,16 +205,21 @@ export default function Jobs() {
             </div>
           </div>
         </div>
-            <div className={`grid ${viewMode === "board" ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3" : "grid-cols-1"} gap-4`}>
+        <div
+          className={`grid ${
+            viewMode === "board"
+              ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
+              : "grid-cols-1"
+          } gap-4`}
+        >
           {jobData.map((job) => (
             <JobCard key={job.id} job={job} />
           ))}
-          </div>
+        </div>
       </div>
     </div>
   );
 }
-
 
 type Job = {
   id: number;
@@ -231,13 +234,17 @@ const JobCard = ({ job }: { job: Job }) => {
     <div className="bg-white rounded-2xl shadow-sm p-6 mb-4">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <img src="/demo.png" alt="company logo" className="w-14 h-14 rounded-xl" />
+          <img
+            src="/demo.png"
+            alt="company logo"
+            className="w-14 h-14 rounded-xl"
+          />
         </div>
         <div className="flex-1 ml-4">
           <h2 className="text-xl font-semibold text-[#151515]">{job.title}</h2>
           <p className="text-sm text-[#83858C]">{job.company}</p>
         </div>
-      </div> 
+      </div>
       <div>
         <div className="inline-flex items-center justify-center gap-2 mb-2 bg-[#F0F1F1] px-4 py-2 rounded-lg">
           <span>
@@ -254,16 +261,16 @@ const JobCard = ({ job }: { job: Job }) => {
           <p className="text-sm text-[#606167]">{job.location}</p>
         </div>
       </div>
-      
+
       <div className="flex items-center justify-between">
         <button
           type="button"
           className="text-[#151515] mr-0 ml-auto font-medium text-sm py-2 flex items-center gap-2"
           onClick={() => alert(`Viewing details for ${job.title}`)}
         >
-         View Details <FaChevronRight className="w-4 h-4"/> 
+          View Details <FaChevronRight className="w-4 h-4" />
         </button>
       </div>
     </div>
   );
-}
+};
