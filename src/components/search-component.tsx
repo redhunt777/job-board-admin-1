@@ -1,7 +1,41 @@
 import { IoSearch } from "react-icons/io5";
 import { FaCaretDown } from "react-icons/fa";
-import { useContext } from "react";
+import { useContext, Suspense } from "react";
 import { SidebarContext } from "@/components/sidebar";
+import Image from "next/image";
+
+function SearchBar() {
+  return (
+    <div className="hidden md:block relative w-1/3 bg-neutral-200 rounded-xl">
+      <IoSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-400 w-5 h-5" />
+      <input
+        type="text"
+        placeholder="Search"
+        className="outline-none py-2 pl-10 pr-4 w-full"
+      />
+    </div>
+  );
+}
+
+function UserButton() {
+  return (
+    <button
+      role="button"
+      className="md:absolute md:right-10 flex items-center bg-neutral-200 rounded-3xl px-2 py-2"
+    >
+      <div className="flex items-center justify-center bg-gradient-to-b from-blue-600 to-blue-700 shadow-lg rounded-full p-2">
+        <Image
+          src="/logomark-white.svg"
+          alt="logo"
+          width={12}
+          height={12}
+          className="h-3 w-3"
+        />
+      </div>
+      <FaCaretDown className="w-5 h-5 text-neutral-500" />
+    </button>
+  );
+}
 
 export default function SearchComponent() {
   const context = useContext(SidebarContext);
@@ -18,34 +52,31 @@ export default function SearchComponent() {
     >
       <div className="container mx-auto flex items-center justify-between md:justify-center px-4 md:px-0 relative">
         {/* Mobile Logo */}
-        <div className="md:hidden">
-          <img src="wordmark-blue.svg" alt="logo" className="h-12" />
-        </div>
+        <Suspense fallback={<div className="h-12 w-40 bg-neutral-200 animate-pulse rounded" />}>
+          <div className="md:hidden">
+            <Image
+              src="/wordmark-blue.svg"
+              alt="logo"
+              height={48}
+              width={160}
+              className="h-12 w-auto"
+            />
+          </div>
+        </Suspense>
 
         {/* Search Bar - Hidden on Mobile */}
-        <div className="hidden md:block relative w-1/3 bg-neutral-200 rounded-xl">
-          <IoSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-400 w-5 h-5" />
-          <input
-            type="text"
-            placeholder="Search"
-            className="outline-none py-2 pl-10 pr-4 w-full"
-          />
-        </div>
+        <Suspense fallback={<div className="hidden md:block w-1/3 h-10 bg-neutral-200 animate-pulse rounded-xl" />}>
+          <SearchBar />
+        </Suspense>
 
         {/* Mobile Search Icon */}
         <button className="md:hidden rounded-full p-2 ml-10">
           <IoSearch className="w-6 h-6 text-neutral-700" />
         </button>
 
-        <button
-          role="button"
-          className="md:absolute md:right-10 flex items-center bg-neutral-200 rounded-3xl px-2 py-2"
-        >
-          <div className="flex items-center justify-center bg-gradient-to-b from-blue-600 to-blue-700 shadow-lg rounded-full p-2">
-            <img src="logomark-white.svg" alt="logo" className="h-3 w-3" />
-          </div>
-          <FaCaretDown className="w-5 h-5 text-neutral-500" />
-        </button>
+        <Suspense fallback={<div className="h-10 w-32 bg-neutral-200 animate-pulse rounded-3xl" />}>
+          <UserButton />
+        </Suspense>
       </div>
     </div>
   );

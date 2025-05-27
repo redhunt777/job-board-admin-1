@@ -5,6 +5,7 @@ import LogoHeader from "@/components/logo-header";
 import Sidebar from "@/components/sidebar";
 import SearchComponent from "@/components/search-component";
 import BottomNav from "@/components/bottom-nav";
+import { Suspense } from "react";
 
 interface LayoutWrapperProps {
   children: React.ReactNode;
@@ -17,12 +18,28 @@ export default function LayoutWrapper({ children, hideBottomNav = false }: Layou
 
   return (
     <>
-      {isAuthPage ? <LogoHeader /> : <Sidebar />}
-      {!isAuthPage && <SearchComponent />}
+      {isAuthPage ? (
+        <LogoHeader />
+      ) : (
+        <Suspense fallback={<div className="w-64 h-screen bg-neutral-100 animate-pulse" />}>
+          <Sidebar />
+        </Suspense>
+      )}
+      {!isAuthPage && (
+        <Suspense fallback={<div className="h-16 bg-neutral-100 animate-pulse" />}>
+          <SearchComponent />
+        </Suspense>
+      )}
       <main className="pb-32 md:pb-0">
-        {children}
+        <Suspense fallback={<div className="min-h-screen bg-neutral-100 animate-pulse" />}>
+          {children}
+        </Suspense>
       </main>
-      {!isAuthPage && !hideBottomNav && <BottomNav />}
+      {!isAuthPage && !hideBottomNav && (
+        <Suspense fallback={<div className="h-16 bg-neutral-100 animate-pulse fixed bottom-0 w-full" />}>
+          <BottomNav />
+        </Suspense>
+      )}
     </>
   );
 } 

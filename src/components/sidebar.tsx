@@ -1,19 +1,22 @@
 "use client";
 import { useState, createContext, useContext } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { BiHomeAlt } from "react-icons/bi";
 import { BsBriefcase } from "react-icons/bs";
 import { GoPeople, GoGear } from "react-icons/go";
 import { HiOutlineChatAlt2 } from "react-icons/hi";
 import { FiSidebar } from "react-icons/fi";
+import Image from "next/image";
 
 interface SidebarContextType {
   collapsed: boolean;
   setCollapsed: (value: boolean | ((prev: boolean) => boolean)) => void;
 }
 
-export const SidebarContext = createContext<SidebarContextType | undefined>(undefined);
+export const SidebarContext = createContext<SidebarContextType | undefined>(
+  undefined
+);
 
 interface SidebarProviderProps {
   children: React.ReactNode;
@@ -43,10 +46,13 @@ export default function Sidebar() {
     >
       <div>
         <div className="px-4 pt-6 pb-2 flex flex-col">
-          <img
+          <Image
             src={collapsed ? "/logomark-white.svg" : "/wordmark-white.svg"}
             alt="Recrivio Logo"
+            height={44}
+            width={collapsed ? 44 : 176}
             className="h-11 w-full object-contain"
+            priority
           />
           <div className="flex justify-end mt-10 mr-1 -mb-2">
             <button
@@ -107,10 +113,20 @@ interface SidebarLinkProps {
 function SidebarLink({ icon, label, to, collapsed }: SidebarLinkProps) {
   const pathname = usePathname();
   const isActive = pathname === to;
+  const router = useRouter();
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    // Prevent default to avoid any delay
+    e.preventDefault();
+    // Start navigation immediately
+    router.push(to);
+  };
 
   return (
     <Link
       href={to}
+      prefetch={true}
+      onMouseDown={handleMouseDown}
       className={`flex items-center gap-4 px-4 py-3 rounded-lg text-white transition-colors duration-200 \
         ${collapsed ? "justify-center" : ""} \
         ${isActive ? "bg-blue-900" : "hover:bg-blue-900"}`}

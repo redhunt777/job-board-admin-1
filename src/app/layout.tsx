@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { SidebarProvider } from "@/components/sidebar";
 import LayoutWrapper from "@/components/layout-wrapper";
+import { Suspense } from "react";
 
 export const metadata: Metadata = {
   title: "Recrivio Admin",
@@ -31,7 +32,9 @@ export default function RootLayout({
     <html lang="en">
       <body className={`antialiased bg-neutral-50`}>
         <SidebarProvider>
-          <LayoutWrapper>{children}</LayoutWrapper>
+          <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
+            <LayoutWrapper>{children}</LayoutWrapper>
+          </Suspense>
         </SidebarProvider>
       </body>
     </html>

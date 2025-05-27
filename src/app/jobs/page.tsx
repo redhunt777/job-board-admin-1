@@ -11,6 +11,7 @@ import { MdCurrencyRupee } from "react-icons/md";
 import { IoLocationOutline } from "react-icons/io5";
 import { FaChevronRight } from "react-icons/fa";
 import { createClient } from "@/utils/supabase/client";
+import Image from "next/image";
 
 export default function Jobs() {
   const context = useContext(SidebarContext);
@@ -196,9 +197,11 @@ const JobCard = ({ job }: { job: Job }) => {
     <div className="bg-white rounded-2xl shadow-sm p-6 mb-4">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <img
+          <Image
             src="/demo.png"
             alt="company logo"
+            width={56}
+            height={56}
             className="w-14 h-14 rounded-xl"
           />
         </div>
