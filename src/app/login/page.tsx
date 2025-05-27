@@ -1,25 +1,34 @@
 "use client";
-import { useState, FormEvent } from "react";
+import { useEffect, useState } from "react";
 import { IoMdEye, IoMdEyeOff } from "react-icons/io";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import { admin_email_login, checkUserLoggedIn } from "@/app/login/actions";
 
 const AdminLogin = () => {
-  const router = useRouter();
+  const searchParams = useSearchParams();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    // login logic here
-    router.push('/dashboard');
-  };
+  // Check if the user is already logged in
+  useEffect(() => {
+    const checkLoginStatus = async () => {
+      const isLoggedIn = await checkUserLoggedIn();
+      if (isLoggedIn) {
+        // Redirect to the dashboard if already logged in
+        window.location.href = "/dashboard";
+      }
+    };
+    checkLoginStatus();
+  }, []);
+
 
   return (
     <div className="container mx-auto px-4">
       <div className="flex flex-col justify-center items-center bg-white rounded-xl shadow max-w-xl mx-auto p-6 sm:p-10 my-12">
-        <form onSubmit={handleSubmit} className="w-full flex flex-col gap-2">
+        <form className="w-full flex flex-col gap-2">
           <h1 className="text-center text-neutral-800 font-semibold text-2xl sm:text-4xl mb-4">
             Admin Login
           </h1>
@@ -29,6 +38,7 @@ const AdminLogin = () => {
           <input
             id="email"
             type="email"
+            name="email"
             placeholder="Enter your email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -41,6 +51,7 @@ const AdminLogin = () => {
           <div className="relative flex items-center mb-2">
             <input
               id="password"
+              name="password"
               type={showPassword ? "text" : "password"}
               placeholder="Enter your password"
               value={password}
@@ -68,8 +79,22 @@ const AdminLogin = () => {
           >
             Forgot Password?
           </Link>
+          {
+          searchParams.get('error') && (
+            <div className="text-red-500 font-medium text-lg">
+              {searchParams.get('error')}
+            </div>
+          )
+          }
+          {
+          searchParams.get('message') && (
+            <div className="text-green-500 font-medium text-lg">
+              {searchParams.get('message')}
+            </div>
+          )
+          }
           <button
-            type="submit"
+            formAction={admin_email_login}
             className="w-full bg-blue-600 hover:bg-blue-700 text-white sm:font-medium text- sm:text-2xl rounded-lg py-3 mb-2 transition-colors cursor-pointer"
           >
             Login
