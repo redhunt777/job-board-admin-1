@@ -1,59 +1,60 @@
 "use client";
 
-import { useContext } from "react";
+import { useContext, useState } from "react";
 import { SidebarContext } from "@/components/sidebar";
-import { FaCaretDown } from "react-icons/fa";
 import { CiFilter } from "react-icons/ci";
 import { HiOutlineArrowCircleLeft, HiDotsVertical } from "react-icons/hi";
+import { IoPersonCircleSharp } from "react-icons/io5";
 import Link from "next/link";
+import FiltersModal from "@/components/filters-modal";
 
 const candidates = [
   {
     id: "25622626",
     appliedDate: "Apr.28, 2025",
-    name: "Rupal Gupta",
-    email: "rupalgupta@gmail.com",
+    name: "Abhinav Kumar",
+    email: "abhinav@gmail.com",
     job: "UI/UX Designer",
     company: "mix3D.ai",
-    location: "Pune",
+    location: "Ranchi",
     experience: 4,
     currentctc: 10,
     expectedctc: 12,
     status: "Accepted",
   },
   {
-    id: "25622626",
+    id: "25622627",
     appliedDate: "Apr.28, 2025",
-    name: "Rupal Gupta",
-    email: "rupalgupta@gmail.com",
+    name: "Bhavesh Kumar",
+    email: "bhavesh@gmail.com",
     job: "UI/UX Designer",
     company: "mix3D.ai",
-    location: "Pune",
+    location: "Siliguri",
     experience: 4,
     currentctc: 10,
     expectedctc: 12,
     status: "Rejected",
   },
   {
-    id: "25622626",
+    id: "25622628",
     appliedDate: "Apr.28, 2025",
-    name: "Rupal Gupta",
-    email: "rupalgupta@gmail.com",
+    name: "Rajesh Kumar",
+    email: "rajesh@gmail.com",
     job: "UI/UX Designer",
-    company: "mix3D.ai",
-    location: "Pune",
+    company: "Recrivio",
+    location: "Ranchi",
     experience: 4,
     currentctc: 10,
     expectedctc: 12,
     status: "On Hold",
   },
   {
-    id: "25622626",
+    id: "25622629",
     appliedDate: "Apr.28, 2025",
     name: "Rupal Gupta",
     email: "rupalgupta@gmail.com",
     job: "UI/UX Designer",
-    company: "mix3D.ai",
+    company: "Recrivio",
     location: "Pune",
     experience: 4,
     currentctc: 10,
@@ -70,7 +71,7 @@ function StatusBadge({ status }: { status: string }) {
       ? "bg-red-100 text-red-700"
       : "bg-yellow-100 text-yellow-700";
   return (
-    <span className={`px-4 py-2 rounded-full text-base font-semibold ${color}`}>
+    <span className={`px-4 py-2 rounded-full text-sm font-medium ${color}`}>
       {status}
     </span>
   );
@@ -78,33 +79,17 @@ function StatusBadge({ status }: { status: string }) {
 
 function CandidateCard({ candidate }: { candidate: (typeof candidates)[0] }) {
   return (
-    <div className="bg-white rounded-2xl shadow-sm p-6 mb-8 flex flex-col gap-4 relative">
-      <div className="flex items-start gap-4">
-        <div className="w-16 h-16 rounded-full bg-neutral-200 flex items-center justify-center">
-          <svg
-            className="w-10 h-10 text-neutral-400"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M15.75 7.5a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 19.125a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21c-2.676 0-5.216-.584-7.499-1.875z"
-            />
-          </svg>
-        </div>
+    <div className="bg-white rounded-2xl shadow-sm p-4 mb-6 flex flex-col gap-2 relative">
+      <div className="flex items-start gap-2">
+        <IoPersonCircleSharp className="w-16 h-16 text-neutral-500" />
         <div className="flex-1">
           <div className="flex items-start justify-between">
             <div>
-              <div className="text-2xl font-bold text-neutral-900 leading-tight">
+              <div className="text-lg md:text-2xl font-semibold text-neutral-900 leading-tight">
                 {candidate.name}
               </div>
-              <div className="text-lg text-neutral-500">{candidate.email}</div>
-              <div className="text-lg text-neutral-500">
-                {candidate.location}
-              </div>
+              <div className="text-neutral-500">{candidate.email}</div>
+              <div className="text-neutral-500">{candidate.location}</div>
             </div>
             <button className="text-neutral-400 hover:text-neutral-600 p-2">
               <HiDotsVertical className="w-6 h-6" />
@@ -112,64 +97,21 @@ function CandidateCard({ candidate }: { candidate: (typeof candidates)[0] }) {
           </div>
         </div>
       </div>
-      <div className="flex flex-wrap items-center gap-4 mt-2">
+      <div className="flex flex-wrap items-center gap-1.5 mt-2">
         <StatusBadge status={candidate.status} />
-        <span className="text-neutral-500 text-lg">&bull;</span>
-        <span className="text-neutral-500 text-lg">
+        <span className="text-neutral-500 text-xl">&bull;</span>
+        <span className="text-neutral-500">
           Applied on {candidate.appliedDate}
         </span>
       </div>
       <div className="flex justify-end mt-2">
-        <button className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 py-3 rounded-xl text-lg">
+        <button className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-xl text-lg">
           View
         </button>
       </div>
     </div>
   );
 }
-
-const filterOptions = [
-  {
-    label: (
-      <>
-        Sort by <span className="underline ml-1">Name(A-Z)</span>
-      </>
-    ),
-    icon: <FaCaretDown className="ml-2 w-4 h-4" />,
-    key: "sort",
-  },
-  {
-    label: "App. Status",
-    icon: <FaCaretDown className="ml-2 w-4 h-4" />,
-    key: "status",
-  },
-  {
-    label: "Years of Exp.",
-    icon: <FaCaretDown className="ml-2 w-4 h-4" />,
-    key: "exp",
-  },
-  {
-    label: "Active Jobs",
-    icon: <FaCaretDown className="ml-2 w-4 h-4" />,
-    key: "jobs",
-  },
-  {
-    label: "Company",
-    icon: <FaCaretDown className="ml-2 w-4 h-4" />,
-    key: "company",
-  },
-];
-
-const allFiltersButton = {
-  label: (
-    <>
-      <span>All Filters</span>
-      <CiFilter className="ml-2 w-4 h-4" />
-    </>
-  ),
-  key: "all-filters",
-  className: "ml-auto",
-};
 
 const tableHeaders = [
   {
@@ -179,185 +121,476 @@ const tableHeaders = [
   },
   {
     label: "ID",
-    className: "p-3 text-left font-bold text-neutral-700",
+    className: "p-3 text-left font-semibold text-neutral-700",
   },
   {
     label: "Applied Date",
-    className: "p-3 text-left font-bold text-neutral-700",
+    className: "p-3 text-left font-semibold text-neutral-700",
   },
   {
     label: "Candidate Name",
-    className: "p-3 text-left font-bold text-neutral-700",
+    className: "p-3 text-left font-semibold text-neutral-700",
   },
   {
     label: "Job",
-    className: "p-3 text-left font-bold text-neutral-700",
+    className: "p-3 text-left font-semibold text-neutral-700",
   },
   {
     label: "Company",
-    className: "p-3 text-left font-bold text-neutral-700",
+    className: "p-3 text-left font-semibold text-neutral-700",
   },
   {
     label: "Location",
-    className: "p-3 text-left font-bold text-neutral-700",
+    className: "p-3 text-left font-semibold text-neutral-700",
   },
   {
     label: "Years of Exp.",
-    className: "p-3 text-left font-bold text-neutral-700",
+    className: "p-3 text-left font-semibold text-neutral-700",
   },
   {
     label: "Current CTC",
-    className: "p-3 text-left font-bold text-neutral-700",
+    className: "p-3 text-left font-semibold text-neutral-700",
   },
   {
     label: "Expected CTC",
-    className: "p-3 text-left font-bold text-neutral-700",
+    className: "p-3 text-left font-semibold text-neutral-700",
   },
   {
     label: "App. Status",
-    className: "p-3 text-left font-bold text-neutral-700",
+    className: "p-3 text-left font-semibold text-neutral-700",
   },
   { label: "", className: "p-3" },
 ];
+
+const jobOptions = [
+  "All",
+  "Frontend Developer",
+  "UI/UX Designer",
+  "Java Developer",
+  "Financial Controller",
+  "Graphic Designer",
+];
+
+const ctcOptions = [
+  "All",
+  "1-4 Lakhs",
+  "4-7 Lakhs",
+  "7-10 Lakhs",
+  "10-13 Lakhs",
+  "13-16 Lakhs",
+  "16-19 Lakhs",
+  "19-22 Lakhs",
+] as const;
 
 export default function Candidates() {
   const context = useContext(SidebarContext);
   if (!context) throw new Error("No sidebar context found");
   const { collapsed } = context;
 
+  // Filter state
+  const [sortBy, setSortBy] = useState("az"); // az, za, recent
+  const [statusFilter, setStatusFilter] = useState<string[]>(["All"]);
+  const [expFilter, setExpFilter] = useState<string[]>(["All"]);
+  const [jobFilter, setJobFilter] = useState<string[]>(["All"]);
+  const [companyFilter, setCompanyFilter] = useState<string[]>(["All"]);
+  const [locationFilter, setLocationFilter] = useState<string[]>(["All"]);
+  const [currentCtcRange, setCurrentCtcRange] = useState<string[]>(["All"]);
+  const [expectedCtcRange, setExpectedCtcRange] = useState<string[]>(["All"]);
+
+  // Temporary filter states for modal
+  const [tempSortBy, setTempSortBy] = useState(sortBy);
+  const [tempStatusFilter, setTempStatusFilter] = useState(statusFilter);
+  const [tempExpFilter, setTempExpFilter] = useState(expFilter);
+  const [tempJobFilter, setTempJobFilter] = useState(jobFilter);
+  const [tempCompanyFilter, setTempCompanyFilter] = useState(companyFilter);
+  const [tempLocationFilter, setTempLocationFilter] = useState(locationFilter);
+  const [tempCurrentCtcRange, setTempCurrentCtcRange] =
+    useState(currentCtcRange);
+  const [tempExpectedCtcRange, setTempExpectedCtcRange] =
+    useState(expectedCtcRange);
+
+  // Filter options
+  const statusOptions = ["All", "Accepted", "Rejected", "On Hold"];
+  const expOptions = ["All", "1 - 3", "3 - 5", "5 - 7", "7 - 9", "9 - Above"];
+
+  // Get unique companies and locations from candidates
+  const companyOptions = [
+    "All",
+    ...Array.from(new Set(candidates.map((c) => c.company))),
+  ];
+  const locationOptions = [
+    "All",
+    ...Array.from(new Set(candidates.map((c) => c.location))),
+  ];
+
+  // Handlers for temporary filters
+  const createFilterHandler = (
+    currentFilter: string[],
+    setFilter: React.Dispatch<React.SetStateAction<string[]>>
+  ) => {
+    return (option: string) => {
+      if (option === "All") {
+        setFilter(["All"]);
+      } else {
+        let newFilter = currentFilter.filter((item) => item !== "All");
+        if (currentFilter.includes(option)) {
+          newFilter = newFilter.filter((item) => item !== option);
+        } else {
+          newFilter = [...newFilter, option];
+        }
+        if (newFilter.length === 0) newFilter = ["All"];
+        setFilter(newFilter);
+      }
+    };
+  };
+
+  const handleTempStatusChange = createFilterHandler(
+    tempStatusFilter,
+    setTempStatusFilter
+  );
+  const handleTempExpChange = createFilterHandler(
+    tempExpFilter,
+    setTempExpFilter
+  );
+  const handleTempJobChange = createFilterHandler(
+    tempJobFilter,
+    setTempJobFilter
+  );
+  const handleTempCompanyChange = createFilterHandler(
+    tempCompanyFilter,
+    setTempCompanyFilter
+  );
+  const handleTempLocationChange = createFilterHandler(
+    tempLocationFilter,
+    setTempLocationFilter
+  );
+  const handleTempCurrentCtcChange = createFilterHandler(
+    tempCurrentCtcRange,
+    setTempCurrentCtcRange
+  );
+  const handleTempExpectedCtcChange = createFilterHandler(
+    tempExpectedCtcRange,
+    setTempExpectedCtcRange
+  );
+
+  const applyFilters = () => {
+    setSortBy(tempSortBy);
+    setStatusFilter(tempStatusFilter);
+    setExpFilter(tempExpFilter);
+    setJobFilter(tempJobFilter);
+    setCompanyFilter(tempCompanyFilter);
+    setLocationFilter(tempLocationFilter);
+    setCurrentCtcRange(tempCurrentCtcRange);
+    setExpectedCtcRange(tempExpectedCtcRange);
+    setShowFilters(false);
+  };
+
+  const resetTempFilters = () => {
+    setTempSortBy(sortBy);
+    setTempStatusFilter(statusFilter);
+    setTempExpFilter(expFilter);
+    setTempJobFilter(jobFilter);
+    setTempCompanyFilter(companyFilter);
+    setTempLocationFilter(locationFilter);
+    setTempCurrentCtcRange(currentCtcRange);
+    setTempExpectedCtcRange(expectedCtcRange);
+  };
+
+  const filterOptions = [
+    {
+      id: "status",
+      label: "Application Status",
+      type: "checkbox" as const,
+      options: statusOptions,
+      selected: tempStatusFilter,
+      onChange: handleTempStatusChange,
+    },
+    {
+      id: "experience",
+      label: "Years of Experience",
+      type: "checkbox" as const,
+      options: expOptions,
+      selected: tempExpFilter,
+      onChange: handleTempExpChange,
+    },
+    {
+      id: "jobs",
+      label: "Active Jobs",
+      type: "checkbox" as const,
+      options: jobOptions,
+      selected: tempJobFilter,
+      onChange: handleTempJobChange,
+    },
+    {
+      id: "company",
+      label: "Hiring Companies",
+      type: "checkbox" as const,
+      options: companyOptions,
+      selected: tempCompanyFilter,
+      onChange: handleTempCompanyChange,
+    },
+    {
+      id: "currentCtc",
+      label: "Current CTC (per annum)",
+      type: "checkbox" as const,
+      options: ctcOptions,
+      selected: tempCurrentCtcRange,
+      onChange: handleTempCurrentCtcChange,
+    },
+    {
+      id: "expectedCtc",
+      label: "Expected CTC (per annum)",
+      type: "checkbox" as const,
+      options: ctcOptions,
+      selected: tempExpectedCtcRange,
+      onChange: handleTempExpectedCtcChange,
+    },
+    {
+      id: "location",
+      label: "Location",
+      type: "checkbox" as const,
+      options: locationOptions,
+      selected: tempLocationFilter,
+      onChange: handleTempLocationChange,
+    },
+  ];
+
+  // Filtering logic
+  let filteredCandidates = candidates.filter((c) => {
+    // Status
+    if (!statusFilter.includes("All") && !statusFilter.includes(c.status))
+      return false;
+    // Experience
+    if (!expFilter.includes("All")) {
+      let match = false;
+      for (const exp of expFilter) {
+        if (exp === "1 - 3" && c.experience >= 1 && c.experience <= 3)
+          match = true;
+        if (exp === "3 - 5" && c.experience > 3 && c.experience <= 5)
+          match = true;
+        if (exp === "5 - 7" && c.experience > 5 && c.experience <= 7)
+          match = true;
+        if (exp === "7 - 9" && c.experience > 7 && c.experience <= 9)
+          match = true;
+        if (exp === "9 - Above" && c.experience > 9) match = true;
+      }
+      if (!match) return false;
+    }
+    // Job
+    if (!jobFilter.includes("All") && !jobFilter.includes(c.job)) return false;
+    // Company
+    if (!companyFilter.includes("All") && !companyFilter.includes(c.company))
+      return false;
+    // Location
+    if (!locationFilter.includes("All") && !locationFilter.includes(c.location))
+      return false;
+    // Current CTC
+    if (!currentCtcRange.includes("All")) {
+      let match = false;
+      for (const range of currentCtcRange) {
+        if (range === "1-4 Lakhs" && c.currentctc >= 1 && c.currentctc < 4)
+          match = true;
+        if (range === "4-7 Lakhs" && c.currentctc >= 4 && c.currentctc < 7)
+          match = true;
+        if (range === "7-10 Lakhs" && c.currentctc >= 7 && c.currentctc < 10)
+          match = true;
+        if (range === "10-13 Lakhs" && c.currentctc >= 10 && c.currentctc < 13)
+          match = true;
+        if (range === "13-16 Lakhs" && c.currentctc >= 13 && c.currentctc < 16)
+          match = true;
+        if (range === "16-19 Lakhs" && c.currentctc >= 16 && c.currentctc < 19)
+          match = true;
+        if (range === "19-22 Lakhs" && c.currentctc >= 19 && c.currentctc < 22)
+          match = true;
+      }
+      if (!match) return false;
+    }
+    // Expected CTC
+    if (!expectedCtcRange.includes("All")) {
+      let match = false;
+      for (const range of expectedCtcRange) {
+        if (range === "1-4 Lakhs" && c.expectedctc >= 1 && c.expectedctc < 4)
+          match = true;
+        if (range === "4-7 Lakhs" && c.expectedctc >= 4 && c.expectedctc < 7)
+          match = true;
+        if (range === "7-10 Lakhs" && c.expectedctc >= 7 && c.expectedctc < 10)
+          match = true;
+        if (
+          range === "10-13 Lakhs" &&
+          c.expectedctc >= 10 &&
+          c.expectedctc < 13
+        )
+          match = true;
+        if (
+          range === "13-16 Lakhs" &&
+          c.expectedctc >= 13 &&
+          c.expectedctc < 16
+        )
+          match = true;
+        if (
+          range === "16-19 Lakhs" &&
+          c.expectedctc >= 16 &&
+          c.expectedctc < 19
+        )
+          match = true;
+        if (
+          range === "19-22 Lakhs" &&
+          c.expectedctc >= 19 &&
+          c.expectedctc < 22
+        )
+          match = true;
+      }
+      if (!match) return false;
+    }
+    return true;
+  });
+
+  // Sorting logic
+  filteredCandidates = [...filteredCandidates].sort((a, b) => {
+    if (sortBy === "az") return a.name.localeCompare(b.name);
+    if (sortBy === "za") return b.name.localeCompare(a.name);
+    if (sortBy === "recent")
+      return (
+        new Date(b.appliedDate).getTime() - new Date(a.appliedDate).getTime()
+      );
+    return 0;
+  });
+
+  // Modal state
+  const [showFilters, setShowFilters] = useState(false);
+
   return (
-    <div
-      className={`transition-all duration-300 h-full px-3 md:px-0 ${
-        collapsed ? "md:ml-20" : "md:ml-64"
-      } pt-4`}
-    >
-      <div className="max-w-8xl mx-auto px-2 md:px-4 py-4">
-        {/* Back Navigation and Title */}
-        <div className="flex items-center gap-2 mb-4">
-          <Link
-            href="/dashboard"
-            className="flex items-center text-neutral-500 hover:text-neutral-700 font-semibold text-lg"
-          >
-            <HiOutlineArrowCircleLeft className="w-8 h-8 mr-2" />
-            <span>Back to Dashboard</span>
-          </Link>
-          <span className="text-lg text-neutral-300 font-light">/</span>
-          <span className="text-lg font-bold text-neutral-900">Candidates</span>
-        </div>
-        {/* Filters for Mobile */}
-        <div className="flex flex-row gap-2 mb-6 items-center w-full md:hidden">
-          {/* Sort by */}
-          <button className="bg-blue-700 hover:bg-blue-800 text-white font-semibold px-6 py-1 text-xs rounded-full flex items-center gap-2">
-            <span>Sort by</span>
-            <FaCaretDown className="w-4 h-4" />
-          </button>
-          {/* App. Status */}
-          <button className="bg-black bg-opacity-90 text-white font-semibold px-6 py-2 rounded-full flex items-center border border-neutral-700 gap-2">
-            <span>App. Status</span>
-            <FaCaretDown className="w-4 h-4" />
-          </button>
-          {/* All Filters */}
-          <button className="bg-neutral-100 text-neutral-700 font-semibold px-6 py-2 rounded-full flex items-center gap-2">
-            <CiFilter className="w-5 h-5" />
-            <span>All Filters</span>
-          </button>
-        </div>
-        {/* Filters for Desktop */}
-        <div className="hidden md:flex flex-row gap-2 mb-6 items-center w-full">
-          {filterOptions.map((filter) => (
-            <button
-              key={filter.key}
-              className="border px-4 py-2 rounded-full bg-white text-neutral-700 text-sm font-medium flex items-center"
+      <div
+        className={`transition-all duration-300 h-full px-3 md:px-0 ${
+          collapsed ? "md:ml-20" : "md:ml-64"
+        } pt-4`}
+      >
+        <div className="max-w-8xl mx-auto px-2 md:px-4 py-4">
+          {/* Back Navigation and Title */}
+          <div className="flex items-center gap-2 mb-4">
+            <Link
+              href="/dashboard"
+              className="flex items-center text-neutral-500 hover:text-neutral-700 font-semibold text-lg"
             >
-              {filter.label}
-              {filter.icon}
+              <HiOutlineArrowCircleLeft className="w-8 h-8 mr-2" />
+              <span>Back to Dashboard</span>
+            </Link>
+            <span className="text-lg text-neutral-300 font-light">/</span>
+            <span className="text-lg font-bold text-neutral-900">Candidates</span>
+          </div>
+          {/* Filters Modal Trigger */}
+          <div className="mb-4 flex justify-end">
+            <button
+              className="flex items-center gap-2 px-4 py-2 bg-neutral-100 hover:bg-neutral-200 rounded-lg border border-neutral-300 font-semibold text-neutral-700 cursor-pointer"
+              onClick={() => setShowFilters(true)}
+            >
+              <CiFilter className="w-5 h-5" />
+              <span>All Filters</span>
             </button>
-          ))}
-          <button
-            key={allFiltersButton.key}
-            className="border px-4 py-2 rounded-full bg-white text-neutral-700 text-sm font-medium flex items-center ml-auto"
-          >
-            {allFiltersButton.label}
-          </button>
-        </div>
-        {/* Mobile Cards */}
-        <div className="block md:hidden">
-          {candidates.map((c, i) => (
-            <CandidateCard key={i} candidate={c} />
-          ))}
-        </div>
-        {/* Desktop Table */}
-        <div className="hidden md:block overflow-x-auto bg-white rounded-2xl shadow-sm relative [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-          <table className="min-w-full divide-y divide-neutral-200">
-            <thead className="bg-neutral-100 border border-neutral-200">
-              <tr>
-                {tableHeaders.map((header, idx) => (
-                  <th
-                    key={idx}
-                    className={`${header.className} ${
-                      idx === 0
-                        ? "sticky left-0 bg-neutral-100 z-30"
-                        : idx === 1
-                        ? "sticky left-11 bg-neutral-100 z-30"
-                        : idx === tableHeaders.length - 2
-                        ? "sticky right-31 bg-neutral-100 z-30 min-w-32"
-                        : idx === tableHeaders.length - 1
-                        ? "sticky right-0 bg-neutral-100 z-30 min-w-31"
-                        : "min-w-30 px-2"
-                    }`}
-                  >
-                    {header.label}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-neutral-100">
-              {candidates.map((c, i) => (
-                <tr key={i}>
-                  <td className="px-4 py-4 sticky left-0 bg-white z-20">
-                    <input type="checkbox" />
-                  </td>
-                  <td className="px-2 py-4 text-neutral-700 sticky left-11 bg-white z-20">
-                    {c.id}
-                  </td>
-                  <td className="px-2 py-4 text-neutral-700 min-w-32">
-                    {c.appliedDate}
-                  </td>
-                  <td className="px-2 py-4 text-neutral-700 min-w-40">
-                    {c.name}
-                  </td>
-                  <td className="px-2 py-4 text-neutral-700 min-w-36">
-                    {c.job}
-                  </td>
-                  <td className="px-2 py-4 text-neutral-700 min-w-30">
-                    {c.company}
-                  </td>
-                  <td className="px-2 py-4 text-neutral-700 min-w-28">
-                    {c.location}
-                  </td>
-                  <td className="px-2 py-4 text-neutral-700 min-w-32">
-                    {c.experience}
-                  </td>
-                  <td className="px-2 py-4 text-neutral-700 min-w-32">
-                    {c.currentctc}
-                  </td>
-                  <td className="px-2 py-4 text-neutral-700 min-w-36">
-                    {c.expectedctc}
-                  </td>
-                  <td className="px-2 py-4 sticky right-31 bg-white z-20">
-                    <StatusBadge status={c.status} />
-                  </td>
-                  <td className="px-3 py-4 sticky right-0 bg-white z-20">
-                    <button className="bg-blue-700 hover:bg-blue-800 text-white font-semibold px-6 py-2 rounded-lg">
-                      View
-                    </button>
-                  </td>
+          </div>
+          {/* Filters Modal */}
+          <FiltersModal
+            show={showFilters}
+            onClose={() => {
+              resetTempFilters();
+              setShowFilters(false);
+            }}
+            sortBy={tempSortBy}
+            setSortBy={setTempSortBy}
+            filterOptions={filterOptions}
+            onClearAll={() => {
+              setTempSortBy("az");
+              setTempStatusFilter(["All"]);
+              setTempExpFilter(["All"]);
+              setTempJobFilter(["All"]);
+              setTempCompanyFilter(["All"]);
+              setTempLocationFilter(["All"]);
+              setTempCurrentCtcRange(["All"]);
+              setTempExpectedCtcRange(["All"]);
+            }}
+            onApply={applyFilters}
+          />
+          {/* Mobile Cards */}
+          <div className="block md:hidden">
+            {filteredCandidates.map((c, i) => (
+              <CandidateCard key={i} candidate={c} />
+            ))}
+          </div>
+          {/* Desktop Table */}
+          <div className="hidden md:block overflow-x-auto bg-white rounded-2xl shadow-sm relative [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+            <table className="min-w-full divide-y divide-neutral-200">
+              <thead className="bg-neutral-100 border border-neutral-200">
+                <tr>
+                  {tableHeaders.map((header, idx) => (
+                    <th
+                      key={idx}
+                      className={`${header.className} ${
+                        idx === 0
+                          ? "sticky left-0 bg-neutral-100 z-30"
+                          : idx === 1
+                          ? "sticky left-11 bg-neutral-100 z-30"
+                          : idx === tableHeaders.length - 2
+                          ? "sticky right-31 bg-neutral-100 z-30 min-w-32"
+                          : idx === tableHeaders.length - 1
+                          ? "sticky right-0 bg-neutral-100 z-30 min-w-31"
+                          : "min-w-30 px-2"
+                      }`}
+                    >
+                      {header.label}
+                    </th>
+                  ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="bg-white divide-y divide-neutral-100">
+                {filteredCandidates.map((c, i) => (
+                  <tr key={i}>
+                    <td className="px-4 py-4 sticky left-0 bg-white z-20">
+                      <input
+                        type="checkbox"
+                        className="accent-green-600 w-5 h-5"
+                      />
+                    </td>
+                    <td className="px-2 py-4 text-neutral-700 sticky left-11 bg-white z-20">
+                      {c.id}
+                    </td>
+                    <td className="px-2 py-4 text-neutral-700 min-w-32">
+                      {c.appliedDate}
+                    </td>
+                    <td className="px-2 py-4 text-neutral-700 min-w-40">
+                      {c.name}
+                    </td>
+                    <td className="px-2 py-4 text-neutral-700 min-w-36">
+                      {c.job}
+                    </td>
+                    <td className="px-2 py-4 text-neutral-700 min-w-30">
+                      {c.company}
+                    </td>
+                    <td className="px-2 py-4 text-neutral-700 min-w-28">
+                      {c.location}
+                    </td>
+                    <td className="px-2 py-4 text-neutral-700 min-w-32">
+                      {c.experience}
+                    </td>
+                    <td className="px-2 py-4 text-neutral-700 min-w-32">
+                      {c.currentctc}
+                    </td>
+                    <td className="px-2 py-4 text-neutral-700 min-w-36">
+                      {c.expectedctc}
+                    </td>
+                    <td className="px-2 py-4 sticky right-31 bg-white z-20">
+                      <StatusBadge status={c.status} />
+                    </td>
+                    <td className="px-3 py-4 sticky right-0 bg-white z-20">
+                      <button className="bg-blue-700 hover:bg-blue-800 text-white font-semibold px-6 py-2 rounded-lg">
+                        View
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
-    </div>
   );
 }

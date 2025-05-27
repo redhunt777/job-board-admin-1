@@ -61,10 +61,10 @@ export default function DashboardPage() {
   return (
     <div
       className={`transition-all duration-300 min-h-full px-3 ${
-        collapsed ? "md:ml-0" : "md:ml-64"
+        collapsed ? "md:ml-20" : "md:ml-64"
       } md:pt-0 pt-4`}
     >
-      <div className="max-w-7xl mx-auto px-2 py-8">
+      <div className="max-w-8xl mx-auto px-2 py-8">
         <h1 className="text-3xl font-bold text-neutral-800 mb-4">Dashboard</h1>
         {/* Stat Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
