@@ -1,8 +1,10 @@
 import { IoSearch } from "react-icons/io5";
 import { FaCaretDown } from "react-icons/fa";
-import { useContext, Suspense } from "react";
+import { useContext, Suspense, useState, useRef, useEffect } from "react";
 import { SidebarContext } from "@/components/sidebar";
 import Image from "next/image";
+import { createClient } from "@/utils/supabase/client";
+import { useRouter } from "next/navigation";
 
 function SearchBar() {
   return (
@@ -18,22 +20,59 @@ function SearchBar() {
 }
 
 function UserButton() {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  const handleSignOut = async () => {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.push("/login");
+  };
+
   return (
-    <button
-      role="button"
-      className="md:absolute md:right-10 flex items-center bg-neutral-200 rounded-3xl px-2 py-2"
-    >
-      <div className="flex items-center justify-center bg-gradient-to-b from-blue-600 to-blue-700 shadow-lg rounded-full p-2">
-        <Image
-          src="/logomark-white.svg"
-          alt="logo"
-          width={12}
-          height={12}
-          className="h-3 w-3"
-        />
-      </div>
-      <FaCaretDown className="w-5 h-5 text-neutral-500" />
-    </button>
+    <div className="md:absolute md:right-10" ref={dropdownRef}>
+      <button
+        role="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center bg-neutral-200 rounded-3xl px-2 py-2 cursor-pointer"
+      >
+        <div className="flex items-center justify-center bg-gradient-to-b from-blue-600 to-blue-700 shadow-lg rounded-full p-2">
+          <Image
+            src="/logomark-white.svg"
+            alt="logo"
+            width={12}
+            height={12}
+            className="h-3 w-3"
+          />
+        </div>
+        <FaCaretDown className="w-5 h-5 text-neutral-500" />
+      </button>
+
+      {isOpen && (
+        <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg z-50">
+          <button
+            onClick={handleSignOut}
+            className="w-full text-left px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-100 cursor-pointer"
+          >
+            Sign out
+          </button>
+        </div>
+      )}
+    </div>
   );
 }
 
