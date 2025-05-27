@@ -1,6 +1,6 @@
 "use client";
 import { SidebarContext } from "@/components/sidebar";
-import { useContext, useState } from "react";
+import { useContext, useState, useEffect } from "react";
 import { GoPlus } from "react-icons/go";
 import { IoList } from "react-icons/io5";
 import { FaCaretDown } from "react-icons/fa";
@@ -10,6 +10,7 @@ import { HiOutlineArrowCircleLeft } from "react-icons/hi";
 import { MdCurrencyRupee } from "react-icons/md";
 import { IoLocationOutline } from "react-icons/io5";
 import { FaChevronRight } from "react-icons/fa";
+import { createClient } from "@/utils/supabase/client";
 
 export default function Jobs() {
   const context = useContext(SidebarContext);
@@ -20,78 +21,36 @@ export default function Jobs() {
 
   const [viewMode, setViewMode] = useState("board"); // 'board' or 'list'
 
-  const jobData = [
-    {
-      id: 1,
-      title: "Software Engineer",
-      company: "Tech Solutions",
-      location: "Remote",
-      salary: "80,000-120,000",
-    },
-    {
-      id: 2,
-      title: "Product Manager",
-      company: "Innovatech",
-      location: "New York, NY",
-      salary: "90,000-130,000",
-    },
-    {
-      id: 3,
-      title: "Data Analyst",
-      company: "Data Insights",
-      location: "San Francisco, CA",
-      salary: "70,000-100,000",
-    },
-    {
-      id: 4,
-      title: "UX Designer",
-      company: "Creative Minds",
-      location: "Austin, TX",
-      salary: "75,000-110,000",
-    },
-    {
-      id: 5,
-      title: "DevOps Engineer",
-      company: "Cloud Solutions",
-      location: "Seattle, WA",
-      salary: "85,000-125,000",
-    },
-    {
-      id: 6,
-      title: "Marketing Specialist",
-      company: "Brand Builders",
-      location: "Chicago, IL",
-      salary: "65,000-95,000",
-    },
-    {
-      id: 7,
-      title: "Sales Executive",
-      company: "Sales Pros",
-      location: "Miami, FL",
-      salary: "60,000-90,000",
-    },
-    {
-      id: 8,
-      title: "System Administrator",
-      company: "IT Services",
-      location: "Boston, MA",
-      salary: "70,000-100,000",
-    },
-    {
-      id: 9,
-      title: "Network Engineer",
-      company: "Network Solutions",
-      location: "Denver, CO",
-      salary: "75,000-110,000",
-    },
-    {
-      id: 10,
-      title: "Content Writer",
-      company: "Content Creators",
-      location: "Los Angeles, CA",
-      salary: "50,000-80,000",
-    },
-  ];
+  const [jobs, setJobs] = useState<any[]>([]);
+
+  useEffect(() => {
+      const fetchJobs = async () => {
+        const supabase = createClient();
+        const { data, error } = await supabase.from('jobs').select('*').order('created_at', { ascending: false })
+
+        if (error) {
+          console.error('Error fetching jobs:', error);
+        } else if (data) {
+          // Sanitize job data
+          // Ensure all fields are present and have default values if missing
+          // Convert admin_id to string and provide default values for other fields
+          // This is a basic sanitization, you can adjust it based on your requirements
+          const sanitizedJobs = data.map((job) => ({
+            ...job,
+            job_id: job.job_id, 
+            admin_id: String(job.admin_id),
+            job_title: job.job_title || 'Untitled Job',
+            company_name: job.company_name || 'Unknown Company',
+            job_location: job.job_location || 'Remote',
+            salary_range: job.salary_range || 'Not specified',
+          }));
+          setJobs(sanitizedJobs);
+        }
+      };
+
+      fetchJobs();
+    }, []);
+
 
   return (
     <div
@@ -205,15 +164,18 @@ export default function Jobs() {
             </div>
           </div>
         </div>
-        <div
-          className={`grid ${
-            viewMode === "board"
-              ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
-              : "grid-cols-1"
-          } gap-4`}
-        >
-          {jobData.map((job) => (
-            <JobCard key={job.id} job={job} />
+            <div className={`grid ${viewMode === "board" ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3" : "grid-cols-1"} gap-4`}>
+          {(jobs ?? []).map((job) => (
+            <JobCard
+              key={job.job_id}
+              job={{
+                id: Number(job.job_id), 
+                title: job.job_title ?? "",
+                company: job.company_name ?? "",
+                location: job.job_location ?? "",
+                salary: job.salary_range ?? "",
+              }}
+            />
           ))}
         </div>
       </div>
