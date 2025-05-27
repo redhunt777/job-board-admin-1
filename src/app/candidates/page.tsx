@@ -4,7 +4,7 @@ import { useContext, useState } from "react";
 import { SidebarContext } from "@/components/sidebar";
 import { CiFilter } from "react-icons/ci";
 import { HiOutlineArrowCircleLeft, HiDotsVertical } from "react-icons/hi";
-import Link from "next/link";
+import { IoPersonCircleSharp } from "react-icons/io5";import Link from "next/link";
 import FiltersModal from "@/components/filters-modal";
 
 const candidates = [
@@ -40,7 +40,7 @@ const candidates = [
     name: "Rajesh Kumar",
     email: "rajesh@gmail.com",
     job: "UI/UX Designer",
-    company: "mix3D.ai",
+    company: "Recrivio",
     location: "Ranchi",
     experience: 4,
     currentctc: 10,
@@ -53,7 +53,7 @@ const candidates = [
     name: "Rupal Gupta",
     email: "rupalgupta@gmail.com",
     job: "UI/UX Designer",
-    company: "mix3D.ai",
+    company: "Recrivio",
     location: "Pune",
     experience: 4,
     currentctc: 10,
@@ -79,26 +79,12 @@ function StatusBadge({ status }: { status: string }) {
 function CandidateCard({ candidate }: { candidate: (typeof candidates)[0] }) {
   return (
     <div className="bg-white rounded-2xl shadow-sm p-6 mb-8 flex flex-col gap-4 relative">
-      <div className="flex items-start gap-4">
-        <div className="w-16 h-16 rounded-full bg-neutral-200 flex items-center justify-center">
-          <svg
-            className="w-10 h-10 text-neutral-400"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M15.75 7.5a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 19.125a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21c-2.676 0-5.216-.584-7.499-1.875z"
-            />
-          </svg>
-        </div>
+      <div className="flex items-start gap-2">
+          <IoPersonCircleSharp className="w-16 h-16 text-neutral-500" />
         <div className="flex-1">
           <div className="flex items-start justify-between">
             <div>
-              <div className="text-2xl font-bold text-neutral-900 leading-tight">
+              <div className="text-2xl font-semibold text-neutral-900 leading-tight">
                 {candidate.name}
               </div>
               <div className="text-lg text-neutral-500">{candidate.email}</div>
@@ -112,9 +98,9 @@ function CandidateCard({ candidate }: { candidate: (typeof candidates)[0] }) {
           </div>
         </div>
       </div>
-      <div className="flex flex-wrap items-center gap-4 mt-2">
+      <div className="flex flex-wrap items-center gap-1.5 mt-2">
         <StatusBadge status={candidate.status} />
-        <span className="text-neutral-500 text-lg">&bull;</span>
+        <span className="text-neutral-500 text-xl">&bull;</span>
         <span className="text-neutral-500 text-lg">
           Applied on {candidate.appliedDate}
         </span>

@@ -31,7 +31,7 @@ const FiltersModal: React.FC<FiltersModalProps> = ({
 }) => {
   if (!show) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-3">
       <div
         className="bg-white rounded-2xl p-0 border border-neutral-200 max-w-2xl w-full h-9/10 relative animate-fadeIn flex flex-col"
       >
