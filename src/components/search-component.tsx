@@ -33,8 +33,8 @@ export default function SearchComponent() {
         </div>
 
         {/* Mobile Search Icon */}
-        <button className="md:hidden bg-neutral-200 rounded-full p-2 ml-10">
-          <IoSearch className="w-6 h-6 text-neutral-500" />
+        <button className="md:hidden rounded-full p-2 ml-10">
+          <IoSearch className="w-6 h-6 text-neutral-700" />
         </button>
 
         <button

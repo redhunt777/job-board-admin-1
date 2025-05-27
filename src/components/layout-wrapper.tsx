@@ -6,7 +6,12 @@ import Sidebar from "@/components/sidebar";
 import SearchComponent from "@/components/search-component";
 import BottomNav from "@/components/bottom-nav";
 
-export default function LayoutWrapper({ children }: { children: React.ReactNode }) {
+interface LayoutWrapperProps {
+  children: React.ReactNode;
+  hideBottomNav?: boolean;
+}
+
+export default function LayoutWrapper({ children, hideBottomNav = false }: LayoutWrapperProps) {
   const pathname = usePathname();
   const isAuthPage = ['/login', '/register', '/reset-password'].includes(pathname);
 
@@ -17,7 +22,7 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
       <main className="pb-32 md:pb-0">
         {children}
       </main>
-      {!isAuthPage && <BottomNav />}
+      {!isAuthPage && !hideBottomNav && <BottomNav />}
     </>
   );
 } 

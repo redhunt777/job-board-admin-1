@@ -1,5 +1,5 @@
 import { RxCross2 } from "react-icons/rx";
-import React from "react";
+import { useEffect } from "react";
 
 interface FilterOption {
   id: string;
@@ -29,11 +29,27 @@ const FiltersModal: React.FC<FiltersModalProps> = ({
   onClearAll,
   onApply,
 }) => {
+  useEffect(() => {
+    const handleEscapeKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    if (show) {
+      document.addEventListener('keydown', handleEscapeKey);
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleEscapeKey);
+    };
+  }, [show, onClose]);
+
   if (!show) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-3">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50">
       <div
-        className="bg-white rounded-2xl p-0 border border-neutral-200 max-w-2xl w-full h-9/10 relative animate-fadeIn flex flex-col"
+        className="bg-white md:rounded-2xl p-0 border border-neutral-200 max-w-2xl w-full h-full md:h-9/10 relative animate-fadeIn flex flex-col"
       >
         {/* Fixed Header */}
         <div className="flex items-center justify-between rounded-t-2xl px-6 py-4 border-b border-neutral-200 sticky top-0 bg-white z-10">
@@ -50,7 +66,7 @@ const FiltersModal: React.FC<FiltersModalProps> = ({
         <div className="flex-1 overflow-y-auto px-6 py-2">
           <div className="mb-4 py-4 border-b border-neutral-200">
             <div className="font-semibold text-lg mb-2">Sort By</div>
-            <div className="flex gap-8">
+            <div className="flex flex-col md:flex-row gap-4 md:gap-8">
               <label className="flex items-center gap-2 cursor-pointer">
                 <input type="radio" checked={sortBy === "az"} onChange={() => setSortBy("az")}
                   className="accent-green-600 w-5 h-5" />
@@ -74,8 +90,8 @@ const FiltersModal: React.FC<FiltersModalProps> = ({
               <div className="font-semibold text-lg mb-2">{filter.label}</div>
               <div className={`flex gap-8 flex-wrap ${
                 ['jobs', 'company', 'currentCtc', 'expectedCtc', 'location'].includes(filter.id) 
-                ? 'grid grid-cols-2 gap-x-8 gap-y-2' 
-                : 'flex gap-8'
+                ? 'grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2' 
+                : 'flex flex-col md:flex-row gap-4 md:gap-8'
               }`}>
                 {filter.options.map((option) => (
                   <label key={option} className="flex items-center gap-2 cursor-pointer">

@@ -6,10 +6,22 @@ import { GoPeople } from "react-icons/go";
 import { HiOutlineChatAlt2 } from "react-icons/hi";
 
 const navItems = [
-  { to: "/dashboard", icon: <BiHomeAlt className="w-6 h-6" />, label: "Dashboard" },
+  {
+    to: "/dashboard",
+    icon: <BiHomeAlt className="w-6 h-6" />,
+    label: "Dashboard",
+  },
   { to: "/jobs", icon: <BsBriefcase className="w-6 h-6" />, label: "Jobs" },
-  { to: "/candidates", icon: <GoPeople className="w-6 h-6" />, label: "Candidates" },
-  { to: "/inbox", icon: <HiOutlineChatAlt2 className="w-6 h-6" />, label: "Inbox" },
+  {
+    to: "/candidates",
+    icon: <GoPeople className="w-6 h-6" />,
+    label: "Candidates",
+  },
+  {
+    to: "/inbox",
+    icon: <HiOutlineChatAlt2 className="w-6 h-6" />,
+    label: "Inbox",
+  },
 ];
 
 export default function BottomNav() {
@@ -23,7 +35,7 @@ export default function BottomNav() {
           <Link
             key={item.to}
             href={item.to}
-            className={`flex flex-col items-center justify-center px-6 py-2 text-white transition-colors duration-200 rounded-t-2xl rounded-b-lg ${
+            className={`flex flex-col items-center justify-center px-4 py-2 text-white transition-colors duration-200 rounded-t-2xl rounded-b-lg ${
               isActive ? "bg-blue-900" : "hover:bg-blue-900"
             }`}
           >
