@@ -14,7 +14,7 @@ interface LayoutWrapperProps {
 
 export default function LayoutWrapper({ children, hideBottomNav = false }: LayoutWrapperProps) {
   const pathname = usePathname();
-  const isAuthPage = ['/login', '/register', '/reset-password'].includes(pathname);
+  const isAuthPage = ['/login', '/register', '/reset-password', `/forgot-password`].includes(pathname);
 
   return (
     <>
