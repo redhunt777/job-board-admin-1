@@ -74,7 +74,7 @@ const AdminLogin = () => {
             </span>
           </div>
           <Link
-            href="/reset-password"
+            href="/forgot-password"
             className="text-blue-600 font-medium text-base text-center mb-8 hover:underline"
           >
             Forgot Password?
