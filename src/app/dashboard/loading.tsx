@@ -26,7 +26,6 @@ export default function DashboardLoading() {
             </div>
           ))}
         </div>
-        {/* You can add more skeleton loaders here for other dashboard sections if needed */}
       </div>
     </div>
   );
