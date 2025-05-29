@@ -40,12 +40,11 @@ const ForgotPasswordForm = () => {
                 : ""
             }`}
           >
-            <h1 className="text-center text-neutral-800 font-semibold text-2xl sm:text-4xl mb-4">
-              Reset Password
+            <h1 className="text-center text-[#151515] font-semibold text-2xl sm:text-4xl mb-4">
+              Forgot Password?
             </h1>
-            <p className="text-center text-neutral-500 mb-8">
-              Enter your registered email address to receive a password rest link for resetting your password.
-            </p>
+            <p className="text-center text-[#606167] mb-8">     
+              Please enter your registered email address below. We'll send you a password reset link in the next step, so you can securely create a new password and regain access to your account.            </p>
             <form
               onSubmit={handleEmailsubmit}
               className="w-full flex flex-col items-center gap-4"
@@ -73,6 +72,13 @@ const ForgotPasswordForm = () => {
               >
                 Send Reset Link
               </button>
+              {
+                error && (
+                  <p className="text-red-500 text-sm mt-2">
+                    {error}
+                  </p>
+                )
+              }
             </form>
           </div>
 

@@ -33,5 +33,5 @@ export async function admin_email_signup(formData: FormData) {
   }
 
   revalidatePath('/', 'layout')
-  redirect('/login?message=Otp-invited! Please check your email to confirm your account.')
+  redirect('/login?message=Please check your email to confirm your account.')
 }

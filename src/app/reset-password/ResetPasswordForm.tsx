@@ -4,7 +4,6 @@ import { useState } from "react";
 import { IoMdEye, IoMdEyeOff, IoMdCheckmark } from "react-icons/io";
 import { motion } from "framer-motion";
 import { createClient } from "../../utils/supabase/client";
-import { error } from "console";
 
 
 const ResetPasswordForm = () => {

@@ -27,8 +27,12 @@ export default function Jobs() {
   useEffect(() => {
       const fetchJobs = async () => {
         const supabase = createClient();
-        const { data, error } = await supabase.from('jobs').select('*').order('created_at', { ascending: false })
-
+        // Fetch jobs from the Supabase database
+        const { data, error } = await supabase
+          .from('jobs')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(10); // Fetch only the latest 10 jobs
         if (error) {
           console.error('Error fetching jobs:', error);
         } else if (data) {

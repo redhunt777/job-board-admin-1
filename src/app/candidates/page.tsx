@@ -1,67 +1,82 @@
 "use client";
 
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { SidebarContext } from "@/components/sidebar";
 import { CiFilter } from "react-icons/ci";
 import { HiOutlineArrowCircleLeft, HiDotsVertical } from "react-icons/hi";
 import { IoPersonCircleSharp } from "react-icons/io5";
 import Link from "next/link";
 import FiltersModal from "@/components/filters-modal";
+import { createClient } from "@/utils/supabase/client";
 
-const candidates = [
-  {
-    id: "25622626",
-    appliedDate: "Apr.28, 2025",
-    name: "Abhinav Kumar",
-    email: "abhinav@gmail.com",
-    job: "UI/UX Designer",
-    company: "mix3D.ai",
-    location: "Ranchi",
-    experience: 4,
-    currentctc: 10,
-    expectedctc: 12,
-    status: "Accepted",
-  },
-  {
-    id: "25622627",
-    appliedDate: "Apr.28, 2025",
-    name: "Bhavesh Kumar",
-    email: "bhavesh@gmail.com",
-    job: "UI/UX Designer",
-    company: "mix3D.ai",
-    location: "Siliguri",
-    experience: 4,
-    currentctc: 10,
-    expectedctc: 12,
-    status: "Rejected",
-  },
-  {
-    id: "25622628",
-    appliedDate: "Apr.28, 2025",
-    name: "Rajesh Kumar",
-    email: "rajesh@gmail.com",
-    job: "UI/UX Designer",
-    company: "Recrivio",
-    location: "Ranchi",
-    experience: 4,
-    currentctc: 10,
-    expectedctc: 12,
-    status: "On Hold",
-  },
-  {
-    id: "25622629",
-    appliedDate: "Apr.28, 2025",
-    name: "Rupal Gupta",
-    email: "rupalgupta@gmail.com",
-    job: "UI/UX Designer",
-    company: "Recrivio",
-    location: "Pune",
-    experience: 4,
-    currentctc: 10,
-    expectedctc: 12,
-    status: "Accepted",
-  },
-];
+// const candidates = [
+//   {
+//     id: "25622626",
+//     appliedDate: "Apr.28, 2025",
+//     name: "Abhinav Kumar",
+//     email: "abhinav@gmail.com",
+//     job: "UI/UX Designer",
+//     company: "mix3D.ai",
+//     location: "Ranchi",
+//     experience: 4,
+//     currentctc: 10,
+//     expectedctc: 12,
+//     status: "Accepted",
+//   },
+//   {
+//     id: "25622627",
+//     appliedDate: "Apr.28, 2025",
+//     name: "Bhavesh Kumar",
+//     email: "bhavesh@gmail.com",
+//     job: "UI/UX Designer",
+//     company: "mix3D.ai",
+//     location: "Siliguri",
+//     experience: 4,
+//     currentctc: 10,
+//     expectedctc: 12,
+//     status: "Rejected",
+//   },
+//   {
+//     id: "25622628",
+//     appliedDate: "Apr.28, 2025",
+//     name: "Rajesh Kumar",
+//     email: "rajesh@gmail.com",
+//     job: "UI/UX Designer",
+//     company: "Recrivio",
+//     location: "Ranchi",
+//     experience: 4,
+//     currentctc: 10,
+//     expectedctc: 12,
+//     status: "On Hold",
+//   },
+//   {
+//     id: "25622629",
+//     appliedDate: "Apr.28, 2025",
+//     name: "Rupal Gupta",
+//     email: "rupalgupta@gmail.com",
+//     job: "UI/UX Designer",
+//     company: "Recrivio",
+//     location: "Pune",
+//     experience: 4,
+//     currentctc: 10,
+//     expectedctc: 12,
+//     status: "Accepted",
+//   },
+// ];
+
+type candidates = {
+  id: string;
+  appliedDate: string;
+  name: string;
+  email: string;
+  job: string;
+  company: string;
+  location: string;
+  experience: number;
+  currentctc: number;
+  expectedctc: number;
+  status: string;
+};
 
 function StatusBadge({ status }: { status: string }) {
   const color =
@@ -77,7 +92,7 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-function CandidateCard({ candidate }: { candidate: (typeof candidates)[0] }) {
+function CandidateCard({ candidate }: { candidate: candidates }) {
   return (
     <div className="bg-white rounded-2xl shadow-sm p-4 mb-6 flex flex-col gap-2 relative">
       <div className="flex items-start gap-2">
@@ -182,10 +197,63 @@ const ctcOptions = [
   "19-22 Lakhs",
 ] as const;
 
+// type of component props
 export default function Candidates() {
   const context = useContext(SidebarContext);
   if (!context) throw new Error("No sidebar context found");
   const { collapsed } = context;
+  const [candidates, setCandidates] = useState<candidates[]>([]);
+
+  // Supabase client
+  const supabase = createClient();
+  // Fetch candidates data
+  useEffect(() => {
+    async function loadCandidates() {
+    const { data, error } = await supabase
+            .from("job_applications")
+            .select(`
+                application_id,
+                applied_date,
+                application_status,
+                candidates (
+                    name,
+                    email,
+                    current_ctc,
+                    expected_ctc
+                ),
+                jobs (
+                    job_title,
+                    company_name,
+                    job_location,
+                    experience_level
+                )
+            `)
+            .order("applied_date", { ascending: false })
+            .limit(50);
+     
+      if (error) {
+        console.error("Error fetching candidates:", error);
+      } else {
+        console.log("Fetched candidates:", data);
+        setCandidates(
+          data?.map((item) => ({
+            id: item.application_id,
+            appliedDate: item.applied_date,
+            name: item.candidates.name,
+            email: item.candidates.email,
+            job: item.jobs.job_title,
+            company: item.jobs.company_name ?? "",
+            location: item.jobs.job_location ?? "",
+            experience: 4,
+            currentctc: item.candidates.current_ctc ?? 0,
+            expectedctc: item.candidates.expected_ctc ?? 0,
+            status: item.application_status.charAt(0).toUpperCase() + item.application_status.slice(1).toLowerCase(),
+          })) || []
+        );
+      }
+    }
+    loadCandidates();
+  }, []);
 
   // Filter state
   const [sortBy, setSortBy] = useState("az"); // az, za, recent

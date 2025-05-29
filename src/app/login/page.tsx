@@ -3,7 +3,8 @@ import { useEffect, useState } from "react";
 import { IoMdEye, IoMdEyeOff } from "react-icons/io";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { admin_email_login, checkUserLoggedIn } from "@/app/login/actions";
+import { admin_email_login } from "./actions";
+import { createClient } from "@/utils/supabase/client";
 
 const AdminLogin = () => {
   const searchParams = useSearchParams();
@@ -12,12 +13,14 @@ const AdminLogin = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
+  const supabase = createClient();
   // Check if the user is already logged in
   useEffect(() => {
     const checkLoginStatus = async () => {
-      const isLoggedIn = await checkUserLoggedIn();
-      if (isLoggedIn) {
+      const { data } = await supabase.auth.getUser();
+      if (data?.user) {
         // Redirect to the dashboard if already logged in
+        console.log("User is already logged in:", data.user);
         window.location.href = "/dashboard";
       }
     };

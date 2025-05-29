@@ -58,6 +58,190 @@ export type Database = {
         }
         Relationships: []
       }
+      candidates: {
+        Row: {
+          additional_doc_link: string | null
+          address: string | null
+          created_at: string | null
+          current_ctc: number | null
+          disability: boolean | null
+          dob: string | null
+          email: string
+          expected_ctc: number | null
+          gender: string | null
+          id: string
+          linkedin_url: string | null
+          mobile_number: string | null
+          name: string
+          notice_period: string | null
+          portfolio_url: string | null
+          resume_link: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          additional_doc_link?: string | null
+          address?: string | null
+          created_at?: string | null
+          current_ctc?: number | null
+          disability?: boolean | null
+          dob?: string | null
+          email: string
+          expected_ctc?: number | null
+          gender?: string | null
+          id: string
+          linkedin_url?: string | null
+          mobile_number?: string | null
+          name: string
+          notice_period?: string | null
+          portfolio_url?: string | null
+          resume_link?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          additional_doc_link?: string | null
+          address?: string | null
+          created_at?: string | null
+          current_ctc?: number | null
+          disability?: boolean | null
+          dob?: string | null
+          email?: string
+          expected_ctc?: number | null
+          gender?: string | null
+          id?: string
+          linkedin_url?: string | null
+          mobile_number?: string | null
+          name?: string
+          notice_period?: string | null
+          portfolio_url?: string | null
+          resume_link?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      education: {
+        Row: {
+          college_university: string
+          degree: string | null
+          email: string
+          end_date: string | null
+          field_of_study: string | null
+          id: string
+          start_date: string | null
+        }
+        Insert: {
+          college_university: string
+          degree?: string | null
+          email: string
+          end_date?: string | null
+          field_of_study?: string | null
+          id?: string
+          start_date?: string | null
+        }
+        Update: {
+          college_university?: string
+          degree?: string | null
+          email?: string
+          end_date?: string | null
+          field_of_study?: string | null
+          id?: string
+          start_date?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "education_email_fkey"
+            columns: ["email"]
+            isOneToOne: false
+            referencedRelation: "candidates"
+            referencedColumns: ["email"]
+          },
+        ]
+      }
+      experience: {
+        Row: {
+          company_name: string
+          currently_working: boolean | null
+          email: string
+          end_date: string | null
+          id: string
+          job_title: string
+          job_type: string | null
+          start_date: string
+        }
+        Insert: {
+          company_name: string
+          currently_working?: boolean | null
+          email: string
+          end_date?: string | null
+          id?: string
+          job_title: string
+          job_type?: string | null
+          start_date: string
+        }
+        Update: {
+          company_name?: string
+          currently_working?: boolean | null
+          email?: string
+          end_date?: string | null
+          id?: string
+          job_title?: string
+          job_type?: string | null
+          start_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "experience_email_fkey"
+            columns: ["email"]
+            isOneToOne: false
+            referencedRelation: "candidates"
+            referencedColumns: ["email"]
+          },
+        ]
+      }
+      job_applications: {
+        Row: {
+          application_id: string
+          application_status: string
+          applied_date: string
+          created_at: string
+          job_id: string
+          updated_at: string
+          user_email: string
+        }
+        Insert: {
+          application_id?: string
+          application_status?: string
+          applied_date?: string
+          created_at?: string
+          job_id: string
+          updated_at?: string
+          user_email: string
+        }
+        Update: {
+          application_id?: string
+          application_status?: string
+          applied_date?: string
+          created_at?: string
+          job_id?: string
+          updated_at?: string
+          user_email?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_applications_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["job_id"]
+          },
+          {
+            foreignKeyName: "job_applications_user_email_fkey"
+            columns: ["user_email"]
+            isOneToOne: false
+            referencedRelation: "candidates"
+            referencedColumns: ["email"]
+          },
+        ]
+      }
       jobs: {
         Row: {
           admin_id: string
