@@ -12,6 +12,7 @@ import { IoLocationOutline } from "react-icons/io5";
 import { FaChevronRight } from "react-icons/fa";
 import { createClient } from "@/utils/supabase/client";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 export default function Jobs() {
   const context = useContext(SidebarContext);
@@ -19,6 +20,7 @@ export default function Jobs() {
     throw new Error("No sidebar context found");
   }
   const { collapsed } = context;
+  const router = useRouter();
 
   const [viewMode, setViewMode] = useState("board"); // 'board' or 'list'
 
@@ -63,7 +65,6 @@ export default function Jobs() {
         collapsed ? "md:ml-20" : "md:ml-64"
       } md:pt-0 pt-4`}
     >
-      <div></div>
       <div className="mt-4 px-2 md:px-4 py-4 ">
         <div className="flex items-center gap-2 mb-4">
           <Link
@@ -73,7 +74,7 @@ export default function Jobs() {
             <HiOutlineArrowCircleLeft className="w-8 h-8 mr-2" />
             <p>Back to Dashboard</p>
           </Link>
-          <span className="text-lg text-neutral-300 font-light">/</span>
+          <span className="text-lg text-neutral-300">/</span>
           <span className="text-lg font-bold text-neutral-900">Jobs</span>
         </div>
 
@@ -89,7 +90,7 @@ export default function Jobs() {
           <div>
             <button
               type="submit"
-              onClick={() => alert("Add Job functionality not implemented yet")}
+              onClick={() => router.push("/jobs/add-job")}
               aria-label="Add Job"
               className="bg-blue-600 hover:bg-blue-700 text-white sm:font-medium sm:text-xl rounded-lg py-2 transition-colors cursor-pointer px-5 flex items-center gap-2"
             >
