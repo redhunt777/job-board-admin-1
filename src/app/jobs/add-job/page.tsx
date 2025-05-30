@@ -120,14 +120,38 @@ export default function AddJob() {
       }
       const url = `https://${process.env.NEXT_PUBLIC_AWS_BUCKET_NAME}.s3.${process.env.NEXT_PUBLIC_AWS_BUCKET_REGION}.amazonaws.com/${key}`;
 
-      console.log("Job submitted with details:", {
-        companyLogo: url,
-        companyName,
-        jobDescription,
-        jobMetadata,
-      });     
-      
-
+      // sending to supabase
+      try{
+      const { data, error } = await supabase
+        .from("jobs")
+        .insert([
+          {
+            company_logo_url: url,
+            company_name: companyName,
+            job_title: jobMetadata.jobTitle,
+            job_type: jobMetadata.jobType,
+            job_location_type: jobMetadata.jobLocationType,
+            job_location: jobMetadata.jobLocation,
+            working_type: jobMetadata.workingType,
+            min_experience_needed: Number(jobMetadata.experience.min),
+            max_experience_needed: Number(jobMetadata.experience.max),
+            min_salary: Number(jobMetadata.salary.min), 
+            max_salary: Number(jobMetadata.salary.max),
+            job_description: jobDescription,
+            admin_id: userId, 
+          },
+        ]);
+      if (error) {
+        console.log("Error inserting job:", error);
+        alert("Failed to create job. Please try again.");
+        return;
+      }
+      }
+      catch(error) {
+        console.log("Error inserting job:", error);
+        alert("Failed to create job. Please try again.");
+        return;
+      }
       // Redirect or show success message
       alert("Company logo uploaded successfully!");
       router.push("/jobs");
@@ -289,8 +313,8 @@ export default function AddJob() {
                         required
                       >
                         <option value="">Select</option>
-                        <option>Full Time</option>
-                        <option>Part Time</option>
+                        <option>Full-Time</option>
+                        <option>Part-Time</option>
                         <option>Internship</option>
                         <option>Contract</option>
                       </select>

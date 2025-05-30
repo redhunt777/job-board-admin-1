@@ -185,6 +185,7 @@ export default function Jobs() {
                 location: job.job_location ?? "",
                 min_salary: job.min_salary ?? "",
                 max_salary: job.max_salary ?? "",
+                company_logo: job.company_logo ?? "/demo.png" // Use a default logo if none is provided
               }}
             />
           ))}
@@ -201,15 +202,15 @@ type Job = {
   location: string;
   min_salary: number;
   max_salary: number;
-};
-
+  company_logo?: string; 
+}
 const JobCard = ({ job }: { job: Job }) => {
   return (
     <div className="bg-white rounded-2xl shadow-sm p-6 mb-4">
       <div className="flex items-center justify-between mb-4">
         <div>
           <Image
-            src="/demo.png"
+            src={job.company_logo || "/demo.png"} // Use a default logo if none is provided
             alt="company logo"
             width={56}
             height={56}
