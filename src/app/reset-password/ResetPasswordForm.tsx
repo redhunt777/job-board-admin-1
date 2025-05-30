@@ -16,7 +16,7 @@ const ResetPasswordForm = () => {
   const handlePasswordSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     // Here you would handle password reset logic
-    const {error} = await supabase.auth.updateUser({ password: 'new_password' })
+    const {error} = await supabase.auth.updateUser({ password: password })
     if (error) {
       console.error("Error updating password:", error);
       setError("Failed to update password. Please try again.");

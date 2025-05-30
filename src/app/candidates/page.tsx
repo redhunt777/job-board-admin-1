@@ -210,26 +210,27 @@ export default function Candidates() {
   useEffect(() => {
     async function loadCandidates() {
     const { data, error } = await supabase
-            .from("job_applications")
-            .select(`
-                application_id,
-                applied_date,
-                application_status,
-                candidates (
-                    name,
-                    email,
-                    current_ctc,
-                    expected_ctc
-                ),
-                jobs (
-                    job_title,
-                    company_name,
-                    job_location,
-                    experience_level
-                )
-            `)
-            .order("applied_date", { ascending: false })
-            .limit(50);
+  .from("job_applications")
+  .select(`
+    application_id,
+    applied_date,
+    application_status,
+    candidate_profiles (
+      name,
+      candidate_email,
+      current_ctc,
+      expected_ctc
+    ),
+    jobs (
+      job_title,
+      company_name,
+      job_location,
+      min_experience_needed,
+      max_experience_needed
+    )
+  `)
+  .order("applied_date", { ascending: false })
+  .limit(50);
      
       if (error) {
         console.error("Error fetching candidates:", error);
@@ -239,15 +240,20 @@ export default function Candidates() {
           data?.map((item) => ({
             id: item.application_id,
             appliedDate: item.applied_date,
-            name: item.candidates.name,
-            email: item.candidates.email,
-            job: item.jobs.job_title,
-            company: item.jobs.company_name ?? "",
-            location: item.jobs.job_location ?? "",
-            experience: 4,
-            currentctc: item.candidates.current_ctc ?? 0,
-            expectedctc: item.candidates.expected_ctc ?? 0,
-            status: item.application_status.charAt(0).toUpperCase() + item.application_status.slice(1).toLowerCase(),
+            name: item.candidate_profiles?.name ?? "Hello",
+            email: item.candidate_profiles?.candidate_email ?? "",
+            job: item.jobs?.job_title ?? "",
+            company: item.jobs?.company_name ?? "",
+            location: item.jobs?.job_location ?? "",
+            experience:
+              item.jobs?.min_experience_needed != null && item.jobs?.max_experience_needed != null
+                ? (item.jobs.min_experience_needed + item.jobs.max_experience_needed) / 2
+                : item.jobs?.min_experience_needed ?? item.jobs?.max_experience_needed ?? 0,
+            currentctc: item.candidate_profiles?.current_ctc ?? 0,
+            expectedctc: item.candidate_profiles?.expected_ctc ?? 0,
+            status: item.application_status
+              ? item.application_status.charAt(0).toUpperCase() + item.application_status.slice(1).toLowerCase()
+              : "",
           })) || []
         );
       }
@@ -278,7 +284,7 @@ export default function Candidates() {
     useState(expectedCtcRange);
 
   // Filter options
-  const statusOptions = ["All", "Accepted", "Rejected", "On Hold"];
+  const statusOptions = ["All", "Accepted", "Rejected", "Pending"];
   const expOptions = ["All", "1 - 3", "3 - 5", "5 - 7", "7 - 9", "9 - Above"];
 
   // Get unique companies and locations from candidates

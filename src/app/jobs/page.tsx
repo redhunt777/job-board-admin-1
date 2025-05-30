@@ -49,7 +49,8 @@ export default function Jobs() {
             job_title: job.job_title || 'Untitled Job',
             company_name: job.company_name || 'Unknown Company',
             job_location: job.job_location || 'Remote',
-            salary_range: job.salary_range || 'Not specified',
+            max_salary: job.max_salary,
+            min_salary: job.min_salary
           }));
           setJobs(sanitizedJobs);
         }
@@ -58,6 +59,9 @@ export default function Jobs() {
       fetchJobs();
     }, []);
 
+    const handleAddJob = async () => {
+      router.push("/jobs/add-job");
+    }
 
   return (
     <div
@@ -90,7 +94,7 @@ export default function Jobs() {
           <div>
             <button
               type="submit"
-              onClick={() => router.push("/jobs/add-job")}
+              onClick={handleAddJob}
               aria-label="Add Job"
               className="bg-blue-600 hover:bg-blue-700 text-white sm:font-medium sm:text-xl rounded-lg py-2 transition-colors cursor-pointer px-5 flex items-center gap-2"
             >
@@ -179,7 +183,8 @@ export default function Jobs() {
                 title: job.job_title ?? "",
                 company: job.company_name ?? "",
                 location: job.job_location ?? "",
-                salary: job.salary_range ?? "",
+                min_salary: job.min_salary ?? "",
+                max_salary: job.max_salary ?? "",
               }}
             />
           ))}
@@ -194,7 +199,8 @@ type Job = {
   title: string;
   company: string;
   location: string;
-  salary: string;
+  min_salary: number;
+  max_salary: number;
 };
 
 const JobCard = ({ job }: { job: Job }) => {
@@ -220,7 +226,7 @@ const JobCard = ({ job }: { job: Job }) => {
           <span>
             <MdCurrencyRupee className="w-5 h-5 text-[#1E5CDC]" />
           </span>
-          <p className="text-sm text-[#606167]">{job.salary}</p>
+          <p className="text-sm text-[#606167]">${job.min_salary}-${job.max_salary}</p>
         </div>
       </div>
       <div>

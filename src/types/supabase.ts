@@ -58,62 +58,94 @@ export type Database = {
         }
         Relationships: []
       }
-      candidates: {
+      candidate_profiles: {
         Row: {
           additional_doc_link: string | null
           address: string | null
+          candidate_email: string
+          candidate_id: string | null
           created_at: string | null
           current_ctc: number | null
           disability: boolean | null
-          dob: string | null
-          email: string
           expected_ctc: number | null
           gender: string | null
-          id: string
           linkedin_url: string | null
           mobile_number: string | null
           name: string
           notice_period: string | null
           portfolio_url: string | null
+          profile_id: string
           resume_link: string | null
           updated_at: string | null
         }
         Insert: {
           additional_doc_link?: string | null
           address?: string | null
+          candidate_email: string
+          candidate_id?: string | null
           created_at?: string | null
           current_ctc?: number | null
           disability?: boolean | null
-          dob?: string | null
-          email: string
           expected_ctc?: number | null
           gender?: string | null
-          id: string
           linkedin_url?: string | null
           mobile_number?: string | null
-          name: string
+          name?: string
           notice_period?: string | null
           portfolio_url?: string | null
+          profile_id?: string
           resume_link?: string | null
           updated_at?: string | null
         }
         Update: {
           additional_doc_link?: string | null
           address?: string | null
+          candidate_email?: string
+          candidate_id?: string | null
           created_at?: string | null
           current_ctc?: number | null
           disability?: boolean | null
-          dob?: string | null
-          email?: string
           expected_ctc?: number | null
           gender?: string | null
-          id?: string
           linkedin_url?: string | null
           mobile_number?: string | null
           name?: string
           notice_period?: string | null
           portfolio_url?: string | null
+          profile_id?: string
           resume_link?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "candidate_profiles_candidate_id_fkey"
+            columns: ["candidate_id"]
+            isOneToOne: false
+            referencedRelation: "candidates"
+            referencedColumns: ["candidate_id"]
+          },
+        ]
+      }
+      candidates: {
+        Row: {
+          candidate_id: string
+          created_at: string | null
+          email: string
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          candidate_id: string
+          created_at?: string | null
+          email: string
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          candidate_id?: string
+          created_at?: string | null
+          email?: string
+          name?: string
           updated_at?: string | null
         }
         Relationships: []
@@ -122,37 +154,43 @@ export type Database = {
         Row: {
           college_university: string
           degree: string | null
-          email: string
+          education_id: string
           end_date: string | null
           field_of_study: string | null
-          id: string
+          grade_percentage: number | null
+          is_current: boolean | null
+          profile_id: string
           start_date: string | null
         }
         Insert: {
           college_university: string
           degree?: string | null
-          email: string
+          education_id?: string
           end_date?: string | null
           field_of_study?: string | null
-          id?: string
+          grade_percentage?: number | null
+          is_current?: boolean | null
+          profile_id: string
           start_date?: string | null
         }
         Update: {
           college_university?: string
           degree?: string | null
-          email?: string
+          education_id?: string
           end_date?: string | null
           field_of_study?: string | null
-          id?: string
+          grade_percentage?: number | null
+          is_current?: boolean | null
+          profile_id?: string
           start_date?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "education_email_fkey"
-            columns: ["email"]
+            foreignKeyName: "education_profile_id_fkey"
+            columns: ["profile_id"]
             isOneToOne: false
-            referencedRelation: "candidates"
-            referencedColumns: ["email"]
+            referencedRelation: "candidate_profiles"
+            referencedColumns: ["profile_id"]
           },
         ]
       }
@@ -160,40 +198,40 @@ export type Database = {
         Row: {
           company_name: string
           currently_working: boolean | null
-          email: string
           end_date: string | null
-          id: string
+          experience_id: string
           job_title: string
           job_type: string | null
+          profile_id: string
           start_date: string
         }
         Insert: {
           company_name: string
           currently_working?: boolean | null
-          email: string
           end_date?: string | null
-          id?: string
+          experience_id?: string
           job_title: string
           job_type?: string | null
+          profile_id: string
           start_date: string
         }
         Update: {
           company_name?: string
           currently_working?: boolean | null
-          email?: string
           end_date?: string | null
-          id?: string
+          experience_id?: string
           job_title?: string
           job_type?: string | null
+          profile_id?: string
           start_date?: string
         }
         Relationships: [
           {
-            foreignKeyName: "experience_email_fkey"
-            columns: ["email"]
+            foreignKeyName: "experience_profile_id_fkey"
+            columns: ["profile_id"]
             isOneToOne: false
-            referencedRelation: "candidates"
-            referencedColumns: ["email"]
+            referencedRelation: "candidate_profiles"
+            referencedColumns: ["profile_id"]
           },
         ]
       }
@@ -204,8 +242,8 @@ export type Database = {
           applied_date: string
           created_at: string
           job_id: string
+          profile_id: string
           updated_at: string
-          user_email: string
         }
         Insert: {
           application_id?: string
@@ -213,8 +251,8 @@ export type Database = {
           applied_date?: string
           created_at?: string
           job_id: string
+          profile_id: string
           updated_at?: string
-          user_email: string
         }
         Update: {
           application_id?: string
@@ -222,8 +260,8 @@ export type Database = {
           applied_date?: string
           created_at?: string
           job_id?: string
+          profile_id?: string
           updated_at?: string
-          user_email?: string
         }
         Relationships: [
           {
@@ -234,11 +272,11 @@ export type Database = {
             referencedColumns: ["job_id"]
           },
           {
-            foreignKeyName: "job_applications_user_email_fkey"
-            columns: ["user_email"]
+            foreignKeyName: "job_applications_profile_id_fkey"
+            columns: ["profile_id"]
             isOneToOne: false
-            referencedRelation: "candidates"
-            referencedColumns: ["email"]
+            referencedRelation: "candidate_profiles"
+            referencedColumns: ["profile_id"]
           },
         ]
       }
@@ -247,58 +285,67 @@ export type Database = {
           admin_id: string
           application_deadline: string | null
           benefits: string[] | null
-          company_logo: string | null
+          company_logo_url: string | null
           company_name: string | null
           created_at: string | null
-          experience_level: string | null
           job_description: string | null
           job_id: string
           job_location: string | null
+          job_location_type: string | null
           job_title: string
           job_type: string | null
-          remote_work: boolean | null
+          max_experience_needed: number | null
+          max_salary: number | null
+          min_experience_needed: number | null
+          min_salary: number | null
           requirements: string[] | null
-          salary_range: string | null
           status: string | null
           updated_at: string | null
+          working_type: string | null
         }
         Insert: {
           admin_id: string
           application_deadline?: string | null
           benefits?: string[] | null
-          company_logo?: string | null
+          company_logo_url?: string | null
           company_name?: string | null
           created_at?: string | null
-          experience_level?: string | null
           job_description?: string | null
           job_id?: string
           job_location?: string | null
+          job_location_type?: string | null
           job_title: string
           job_type?: string | null
-          remote_work?: boolean | null
+          max_experience_needed?: number | null
+          max_salary?: number | null
+          min_experience_needed?: number | null
+          min_salary?: number | null
           requirements?: string[] | null
-          salary_range?: string | null
           status?: string | null
           updated_at?: string | null
+          working_type?: string | null
         }
         Update: {
           admin_id?: string
           application_deadline?: string | null
           benefits?: string[] | null
-          company_logo?: string | null
+          company_logo_url?: string | null
           company_name?: string | null
           created_at?: string | null
-          experience_level?: string | null
           job_description?: string | null
           job_id?: string
           job_location?: string | null
+          job_location_type?: string | null
           job_title?: string
           job_type?: string | null
-          remote_work?: boolean | null
+          max_experience_needed?: number | null
+          max_salary?: number | null
+          min_experience_needed?: number | null
+          min_salary?: number | null
           requirements?: string[] | null
-          salary_range?: string | null
           status?: string | null
           updated_at?: string | null
+          working_type?: string | null
         }
         Relationships: [
           {
