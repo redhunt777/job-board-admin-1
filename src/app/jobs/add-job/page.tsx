@@ -9,14 +9,48 @@ import { FiUpload } from "react-icons/fi";
 import { FaArrowRight } from "react-icons/fa6";
 import Link from "next/link";
 import LexicalEditor from "@/components/LexicalEditor";
+import { createClient } from "@/utils/supabase/client";
+import { getSignedURL } from "@/app/jobs/actions"; 
 
 const steps = ["Company", "Job Details", "Job Description"];
 
+const computeChecksum = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      if (event.target?.result) {
+        const arrayBuffer = event.target.result as ArrayBuffer;
+        const hashBuffer = crypto.subtle.digest("SHA-256", arrayBuffer);
+        hashBuffer.then((hash) => {
+          const hashArray = Array.from(new Uint8Array(hash));
+          const hashHex = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+          resolve(hashHex);
+        }).catch(reject);
+      } else {
+        reject(new Error("Failed to read file"));
+      }
+    };
+    reader.onerror = () => reject(reader.error);
+    reader.readAsArrayBuffer(file);
+  });
+}
+
 export default function AddJob() {
+  const supabase = createClient();
   const [step, setStep] = useState(0);
   const [companyLogo, setCompanyLogo] = useState<File | null>(null);
   const [companyName, setCompanyName] = useState("");
+  const [jobMetadata, setJobMetadata] = useState({
+    jobTitle: "",
+    jobType: "",
+    jobLocationType: "",
+    jobLocation: "",
+    workingType: "",
+    experience: { min: "", max: "" },
+    salary: { min: "", max: "" },
+  });
   const [jobDescription, setJobDescription] = useState("");
+
   const router = useRouter();
   const context = useContext(SidebarContext);
   if (!context) {
@@ -30,10 +64,76 @@ export default function AddJob() {
     }
   };
 
-  const handleNext = () => {
+  const handleUploadLogo = async (file: File) => {
+      const checksum = await computeChecksum(file);
+      const signedURL = await getSignedURL(file.type, file.size, checksum, companyName);
+      if (signedURL.error) {
+        alert(signedURL.error);
+        return;
+      }
+      const url = signedURL.success?.url;
+      const key = signedURL.success?.key;
+      const userId = signedURL.success?.userId;
+      if (!url) {
+        alert("Failed to get signed URL.");
+        return;
+      }
+      const res = await fetch(url, {
+        method: "PUT",
+        headers: {
+          "Content-Type": file.type,
+        },
+        body: file,
+      });
+      if (!res.ok) {
+        throw new Error("Failed to upload company logo");
+      }
+      return { key, userId };  // Return the key and userId for further processing if needed
+    }
+
+  const handleNext = async () => {
     if (step < steps.length - 1) setStep(step + 1);
-    // else handle submit
+    else {
+      // Handle form submission logic here
+      //validate inputs
+      if (!companyLogo || !companyName || !jobDescription || !jobMetadata.jobTitle || !jobMetadata.jobType || !jobMetadata.jobLocationType || !jobMetadata.jobLocation || !jobMetadata.workingType || !jobMetadata.experience.min || !jobMetadata.experience.max || !jobMetadata.salary.min || !jobMetadata.salary.max) {
+        alert("Please fill all required fields.");
+        return;
+      }
+
+      //upload company logo to s3
+      let key: string | undefined;
+      let userId: string | undefined;
+      try {
+        const uploadResult = await handleUploadLogo(companyLogo);
+        if (!uploadResult || !uploadResult.key || !uploadResult.userId) {
+          alert("Failed to upload company logo. Please try again.");
+          return;
+        }
+        key = uploadResult.key;
+        userId = uploadResult.userId;
+      }
+      catch (error) {
+        console.log("Error uploading company logo:", error);
+        alert("Failed to upload company logo. Please try again.");
+        return;
+      }
+      const url = `https://${process.env.NEXT_PUBLIC_AWS_BUCKET_NAME}.s3.${process.env.NEXT_PUBLIC_AWS_BUCKET_REGION}.amazonaws.com/${key}`;
+
+      console.log("Job submitted with details:", {
+        companyLogo: url,
+        companyName,
+        jobDescription,
+        jobMetadata,
+      });     
+      
+
+      // Redirect or show success message
+      alert("Company logo uploaded successfully!");
+      router.push("/jobs");
+    }
   };
+
   const handleBack = () => {
     if (step > 0) setStep(step - 1);
     else router.push("/jobs");
@@ -163,6 +263,13 @@ export default function AddJob() {
                         type="text"
                         className="w-full border border-neutral-300 rounded-lg px-3 py-2 mb-4"
                         placeholder="e.g. UI/UX Designer"
+                        value={jobMetadata.jobTitle}
+                        onChange={(e) =>
+                          setJobMetadata({
+                            ...jobMetadata,
+                            jobTitle: e.target.value,
+                          })
+                        }
                         required
                       />
                     </div>
@@ -172,6 +279,13 @@ export default function AddJob() {
                       </label>
                       <select
                         className="w-full border border-neutral-300 rounded-lg px-3 py-2 mb-4"
+                        value={jobMetadata.jobType}
+                        onChange={(e) =>
+                          setJobMetadata({
+                            ...jobMetadata,
+                            jobType: e.target.value,
+                          })
+                        }
                         required
                       >
                         <option value="">Select</option>
@@ -187,6 +301,13 @@ export default function AddJob() {
                       </label>
                       <select
                         className="w-full border border-neutral-300 rounded-lg px-3 py-2 mb-4"
+                        value={jobMetadata.jobLocationType}
+                        onChange={(e) =>
+                          setJobMetadata({
+                            ...jobMetadata,
+                            jobLocationType: e.target.value,
+                          })
+                        }
                         required
                       >
                         <option value="">Select</option>
@@ -201,6 +322,13 @@ export default function AddJob() {
                       </label>
                       <select
                         className="w-full border border-neutral-300 rounded-lg px-3 py-2 mb-4"
+                        value={jobMetadata.jobLocation}
+                        onChange={(e) =>
+                          setJobMetadata({
+                            ...jobMetadata,
+                            jobLocation: e.target.value,
+                          })
+                        }
                         required
                       >
                         <option value="">Select</option>
@@ -218,6 +346,13 @@ export default function AddJob() {
                       </label>
                       <select
                         className="w-full border border-neutral-300 rounded-lg px-3 py-2 mb-4"
+                        value={jobMetadata.workingType}
+                        onChange={(e) =>
+                          setJobMetadata({
+                            ...jobMetadata,
+                            workingType: e.target.value,
+                          })
+                        }
                         required
                       >
                         <option value="">Select</option>
@@ -235,6 +370,17 @@ export default function AddJob() {
                     <div className="flex gap-2">
                       <select
                         className="w-full border border-neutral-300 rounded-lg px-3 py-2"
+
+                        value={jobMetadata.experience.min}
+                        onChange={(e) =>
+                          setJobMetadata({
+                            ...jobMetadata,
+                            experience: {
+                              ...jobMetadata.experience,
+                              min: e.target.value,
+                            },
+                          })
+                        }
                         required
                       >
                         <option value="">Min.</option>
@@ -246,6 +392,16 @@ export default function AddJob() {
                       </select>
                       <select
                         className="w-full border border-neutral-300 rounded-lg px-3 py-2"
+                        value={jobMetadata.experience.max}
+                        onChange={(e) =>
+                          setJobMetadata({
+                            ...jobMetadata,
+                            experience: {
+                              ...jobMetadata.experience,
+                              max: e.target.value,
+                            },
+                          })
+                        }
                         required
                       >
                         <option value="">Max</option>
@@ -267,6 +423,16 @@ export default function AddJob() {
                     <div className="flex gap-2">
                       <select
                         className="w-full border border-neutral-300 rounded-lg px-3 py-2"
+                        value={jobMetadata.salary.min}
+                        onChange={(e) =>
+                          setJobMetadata({
+                            ...jobMetadata,
+                            salary: {
+                              ...jobMetadata.salary,
+                              min: e.target.value,
+                            },
+                          })
+                        }
                         required
                       >
                         <option value="">Min.</option>
@@ -278,6 +444,16 @@ export default function AddJob() {
                       </select>
                       <select
                         className="w-full border border-neutral-300 rounded-lg px-3 py-2"
+                        value={jobMetadata.salary.max}
+                        onChange={(e) =>
+                          setJobMetadata({
+                            ...jobMetadata,
+                            salary: {
+                              ...jobMetadata.salary,
+                              max: e.target.value,
+                            },
+                          })
+                        }
                         required
                       >
                         <option value="">Max</option>
@@ -298,7 +474,7 @@ export default function AddJob() {
                   </label>
                   <LexicalEditor
                     value={jobDescription}
-                    onChange={setJobDescription}
+                    onChange={(setValue) => setJobDescription(setValue)}
                   />
                 </div>
               )}
