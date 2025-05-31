@@ -26,7 +26,10 @@ function UserButton() {
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
         setIsOpen(false);
       }
     }
@@ -63,12 +66,30 @@ function UserButton() {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg z-50">
+        <div className="absolute right-0 mt-2 w-48 bg-white rounded-b-xl shadow-2xl z-50 py-4 px-4 flex flex-col gap-3">
+          <button
+            className="w-full text-left text-neutral-800 font-medium hover:font-semibold rounded transition px-0 cursor-pointer"
+            onClick={() => router.push("/profile")}
+          >
+            Edit Profile
+          </button>
+          <button
+            className="w-full text-left text-neutral-800 font-medium hover:font-semibold rounded transition px-0 cursor-pointer"
+            onClick={() => router.push("/settings")}
+          >
+            Settings
+          </button>
+          <button
+            className="w-full text-left text-neutral-800 font-medium hover:font-semibold rounded transition px-0 cursor-pointer"
+            onClick={() => router.push("/help")}
+          >
+            Help Center
+          </button>
           <button
             onClick={handleSignOut}
-            className="w-full text-left px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-100 cursor-pointer"
+            className="w-full text-left text-red-600 rounded transition px-0 font-medium hover:font-semibold cursor-pointer"
           >
-            Sign out
+            Log out
           </button>
         </div>
       )}
@@ -91,7 +112,11 @@ export default function SearchComponent() {
     >
       <div className="container mx-auto flex items-center justify-between md:justify-center px-4 md:px-0 relative">
         {/* Mobile Logo */}
-        <Suspense fallback={<div className="h-12 w-40 bg-neutral-200 animate-pulse rounded" />}>
+        <Suspense
+          fallback={
+            <div className="h-12 w-40 bg-neutral-200 animate-pulse rounded" />
+          }
+        >
           <div className="md:hidden">
             <Image
               src="/wordmark-blue.svg"
@@ -104,7 +129,11 @@ export default function SearchComponent() {
         </Suspense>
 
         {/* Search Bar - Hidden on Mobile */}
-        <Suspense fallback={<div className="hidden md:block w-1/3 h-10 bg-neutral-200 animate-pulse rounded-xl" />}>
+        <Suspense
+          fallback={
+            <div className="hidden md:block w-1/3 h-10 bg-neutral-200 animate-pulse rounded-xl" />
+          }
+        >
           <SearchBar />
         </Suspense>
 
@@ -113,7 +142,11 @@ export default function SearchComponent() {
           <IoSearch className="w-6 h-6 text-neutral-700" />
         </button>
 
-        <Suspense fallback={<div className="h-10 w-32 bg-neutral-200 animate-pulse rounded-3xl" />}>
+        <Suspense
+          fallback={
+            <div className="h-10 w-32 bg-neutral-200 animate-pulse rounded-3xl" />
+          }
+        >
           <UserButton />
         </Suspense>
       </div>

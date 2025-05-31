@@ -12,9 +12,8 @@ import {
   REMOVE_LIST_COMMAND,
   $isListNode,
   ListNode,
-  ListType,
 } from "@lexical/list";
-import React, { useCallback, useState, useEffect } from "react";
+import { useCallback, useState, useEffect, useRef } from "react";
 import {
   FaBold,
   FaItalic,
@@ -25,9 +24,11 @@ import {
   FaAlignRight,
   FaListOl,
   FaListUl,
+  FaPalette,
 } from "react-icons/fa";
 
 const FONT_SIZE_COMMAND = createCommand("FONT_SIZE_COMMAND");
+const TEXT_COLOR_COMMAND = createCommand<string>("TEXT_COLOR_COMMAND");
 
 const FONT_SIZE_OPTIONS = [
   { value: "small", label: "14" },
@@ -47,7 +48,9 @@ export default function ToolbarPlugin() {
     strikethrough: false,
     align: "left",
     listType: null as ListFormat,
+    color: "#000000",
   });
+  const colorPickerRef = useRef<HTMLInputElement>(null);
 
   const updateActiveFormats = useCallback(() => {
     editor.getEditorState().read(() => {
@@ -56,9 +59,16 @@ export default function ToolbarPlugin() {
 
       const format = selection.format;
       const element = selection.anchor.getNode().getParent();
-      const listType = $isListNode(element) 
-        ? ((element as ListNode).__listType === "number" ? "ordered" : "unordered")
+      const listType = $isListNode(element)
+        ? (element as ListNode).__listType === "number"
+          ? "ordered"
+          : "unordered"
         : null;
+
+      // Get the current text color from the selection
+      const textNode = selection.anchor.getNode();
+      const textElement = editor.getElementByKey(textNode.getKey());
+      const currentColor = textElement?.style.color || "#000000";
 
       setActiveFormats({
         bold: (format & 1) === 1,
@@ -67,6 +77,7 @@ export default function ToolbarPlugin() {
         strikethrough: (format & 8) === 8,
         align: element?.getFormatType() || "left",
         listType,
+        color: currentColor,
       });
     });
   }, [editor]);
@@ -87,6 +98,15 @@ export default function ToolbarPlugin() {
     [editor]
   );
 
+  const handleColorChange = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const color = event.target.value;
+      editor.dispatchCommand(TEXT_COLOR_COMMAND, color);
+      setActiveFormats((prev) => ({ ...prev, color }));
+    },
+    [editor]
+  );
+
   const getButtonClassName = (
     format: keyof typeof activeFormats,
     value?: string
@@ -95,7 +115,8 @@ export default function ToolbarPlugin() {
     const isActive =
       activeFormats[format] === true ||
       (format === "align" && activeFormats.align === value) ||
-      (format === "listType" && activeFormats.listType === value);
+      (format === "listType" && activeFormats.listType === value) ||
+      (format === "color" && activeFormats.color === value);
 
     return `${baseClass} ${isActive ? "bg-neutral-200" : ""}`;
   };
@@ -199,6 +220,24 @@ export default function ToolbarPlugin() {
       >
         ⨯
       </button>
+      <div className="relative">
+        <button
+          type="button"
+          title="Text Color"
+          onClick={() => colorPickerRef.current?.click()}
+          className={getButtonClassName("color", activeFormats.color)}
+          style={{ color: activeFormats.color }}
+        >
+          <FaPalette />
+        </button>
+        <input
+          ref={colorPickerRef}
+          type="color"
+          value={activeFormats.color}
+          onChange={handleColorChange}
+          className="absolute opacity-0 w-0 h-0"
+        />
+      </div>
     </div>
   );
 }
