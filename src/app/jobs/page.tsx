@@ -11,7 +11,6 @@ import { MdCurrencyRupee } from "react-icons/md";
 import { IoLocationOutline } from "react-icons/io5";
 import { FaChevronRight } from "react-icons/fa";
 import { createClient } from "@/utils/supabase/client";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 
 export default function Jobs() {
@@ -50,7 +49,8 @@ export default function Jobs() {
             company_name: job.company_name || 'Unknown Company',
             job_location: job.job_location || 'Remote',
             max_salary: job.max_salary,
-            min_salary: job.min_salary
+            min_salary: job.min_salary,
+            company_logo: job.company_logo_url || '/demo.png', 
           }));
           setJobs(sanitizedJobs);
         }
@@ -179,7 +179,7 @@ export default function Jobs() {
             <JobCard
               key={job.job_id}
               job={{
-                id: Number(job.job_id), 
+                id: job.job_id ?? "", 
                 title: job.job_title ?? "",
                 company: job.company_name ?? "",
                 location: job.job_location ?? "",
@@ -196,7 +196,7 @@ export default function Jobs() {
 }
 
 type Job = {
-  id: number;
+  id: string;
   title: string;
   company: string;
   location: string;
@@ -205,11 +205,12 @@ type Job = {
   company_logo?: string; 
 }
 const JobCard = ({ job }: { job: Job }) => {
+  const router = useRouter();
   return (
     <div className="bg-white rounded-2xl shadow-sm p-6 mb-4">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <Image
+          <img
             src={job.company_logo || "/demo.png"} // Use a default logo if none is provided
             alt="company logo"
             width={56}
@@ -243,7 +244,10 @@ const JobCard = ({ job }: { job: Job }) => {
         <button
           type="button"
           className="text-[#151515] mr-0 ml-auto font-medium text-sm py-2 flex items-center gap-2"
-          onClick={() => alert(`Viewing details for ${job.title}`)}
+          onClick={() => {
+            router.push(`/jobs/job-details?jobId=${job.id}`); // Navigate to the job details page
+          }
+        }
         >
           View Details <FaChevronRight className="w-4 h-4" />
         </button>
