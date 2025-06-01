@@ -8,61 +8,7 @@ import { IoPersonCircleSharp } from "react-icons/io5";
 import Link from "next/link";
 import FiltersModal from "@/components/filters-modal";
 import { createClient } from "@/utils/supabase/client";
-
-// const candidates = [
-//   {
-//     id: "25622626",
-//     appliedDate: "Apr.28, 2025",
-//     name: "Abhinav Kumar",
-//     email: "abhinav@gmail.com",
-//     job: "UI/UX Designer",
-//     company: "mix3D.ai",
-//     location: "Ranchi",
-//     experience: 4,
-//     currentctc: 10,
-//     expectedctc: 12,
-//     status: "Accepted",
-//   },
-//   {
-//     id: "25622627",
-//     appliedDate: "Apr.28, 2025",
-//     name: "Bhavesh Kumar",
-//     email: "bhavesh@gmail.com",
-//     job: "UI/UX Designer",
-//     company: "mix3D.ai",
-//     location: "Siliguri",
-//     experience: 4,
-//     currentctc: 10,
-//     expectedctc: 12,
-//     status: "Rejected",
-//   },
-//   {
-//     id: "25622628",
-//     appliedDate: "Apr.28, 2025",
-//     name: "Rajesh Kumar",
-//     email: "rajesh@gmail.com",
-//     job: "UI/UX Designer",
-//     company: "Recrivio",
-//     location: "Ranchi",
-//     experience: 4,
-//     currentctc: 10,
-//     expectedctc: 12,
-//     status: "On Hold",
-//   },
-//   {
-//     id: "25622629",
-//     appliedDate: "Apr.28, 2025",
-//     name: "Rupal Gupta",
-//     email: "rupalgupta@gmail.com",
-//     job: "UI/UX Designer",
-//     company: "Recrivio",
-//     location: "Pune",
-//     experience: 4,
-//     currentctc: 10,
-//     expectedctc: 12,
-//     status: "Accepted",
-//   },
-// ];
+import CandidatesDetailsOverlay from "@/components/candidates-details-overlay";
 
 type candidates = {
   id: string;
@@ -203,6 +149,13 @@ export default function Candidates() {
   if (!context) throw new Error("No sidebar context found");
   const { collapsed } = context;
   const [candidates, setCandidates] = useState<candidates[]>([]);
+  const [ candidatesDetailsOverlay, setCandidatesDetailsOverlay ] = useState<{
+    candidate: candidates | null;
+    show: boolean;
+  }>({
+    candidate: null,
+    show: false,
+  });
 
   // Supabase client
   const supabase = createClient();
@@ -655,7 +608,8 @@ export default function Candidates() {
                       <StatusBadge status={c.status} />
                     </td>
                     <td className="px-3 py-4 sticky right-0 bg-white z-20">
-                      <button className="bg-blue-700 hover:bg-blue-800 text-white font-semibold px-6 py-2 rounded-lg">
+                      <button className="bg-blue-700 hover:bg-blue-800 text-white font-semibold px-6 py-2 rounded-lg"
+                        onClick={() => setCandidatesDetailsOverlay({ candidate: c, show: true })}>
                         View
                       </button>
                     </td>
@@ -664,6 +618,13 @@ export default function Candidates() {
               </tbody>
             </table>
           </div>
+          {/* Candidate Details Overlay */}
+          {candidatesDetailsOverlay.show && candidatesDetailsOverlay.candidate && (
+            <CandidatesDetailsOverlay
+              candidatesDetailsOverlay={candidatesDetailsOverlay}
+              setCandidatesDetailsOverlay={setCandidatesDetailsOverlay}
+            />
+          )}
         </div>
       </div>
   );
