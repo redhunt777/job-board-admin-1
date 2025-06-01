@@ -23,6 +23,7 @@ export default function AddJob() {
   const [number_of_candidates, setNumberOfCandidates] = useState(0);
   const [jobMetadata, setJobMetadata] = useState({
     jobTitle: "",
+    jobAdmin: "",
     jobType: "",
     jobLocationType: "",
     jobLocation: "",
@@ -65,6 +66,7 @@ export default function AddJob() {
         companyName: data.company_name,
         jobDescription: data.job_description,
         company_logo_url: data.company_logo_url || "",
+        jobAdmin: data.admin_id,
       });
     }
   }
@@ -85,6 +87,29 @@ export default function AddJob() {
     }
 
     return data ? data.length : 0;
+  };
+
+  const handleDeleteJob = async () => {
+    const { data: user } = await supabase.auth.getUser();
+    if (jobMetadata.jobAdmin != user.id) {
+      alert("only the job creator can delete the job");
+      return;
+    }
+    if (
+      !confirm(
+        "Are you sure you want to delete this job? This action cannot be undone."
+      )
+    ) {
+      return;
+    }
+    const { error } = await supabase.from("jobs").delete().eq("job_id", jobId);
+    if (error) {
+      console.log("Error deleting job:", error);
+      return;
+    }
+    console.log("Job deleted successfully");
+    alert("Job deleted successfully");
+    window.location.href = "/jobs";
   };
 
   useEffect(() => {
@@ -245,9 +270,8 @@ export default function AddJob() {
                     </button>
                     <button
                       className="text-[#FFFFFF] text-sm font-semibold bg-[#C62828] px-3 py-2 rounded-lg cursor-pointer hover:bg-[#B71C1C] transition-colors"
-                      onClick={() => {
-                        alert("Delete functionality is not implemented yet.");
-                      }}
+                      onClick={handleDeleteJob}
+                      type="button"
                     >
                       <FaRegTrashAlt className="h-5 w-5 inline mr-2" />
                       Delete
@@ -265,8 +289,8 @@ export default function AddJob() {
                 </div>
               </div>
             )}
-            {step === 1 && <></>}
-            {step === 2 && <></>}
+            {step === 1 && <>Candidates Register</>}
+            {step === 2 && <>Settings</>}
           </div>
         </div>
       </div>
