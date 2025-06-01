@@ -53,6 +53,7 @@ export default function Sidebar() {
             width={collapsed ? 44 : 176}
             className="h-11 w-full object-contain"
             priority
+            draggable={false}
           />
           <div className="flex justify-end mt-10 mr-1 -mb-2">
             <button

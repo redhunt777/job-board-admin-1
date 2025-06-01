@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, FormEvent } from "react";
+import React, { useState } from "react";
 import { IoMdEye, IoMdEyeOff } from "react-icons/io";
 import "react-phone-number-input/style.css"
 import PhoneInput from "react-phone-number-input"
@@ -15,11 +15,6 @@ const AdminRegister = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const searchParams = useSearchParams();
-
-  // const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-  //   e.preventDefault();
-  //   // registration logic here
-  // };
 
   return (
     <div className="container mx-auto px-4">
@@ -110,9 +105,9 @@ const AdminRegister = () => {
             </div>
           </div>
           {
-            searchParams.get('error') && (
+            searchParams.get("error") && (
               <div className="text-red-500 font-medium text-lg">
-                {searchParams.get('error')}
+                {searchParams.get("error")}
               </div>
             )
           }

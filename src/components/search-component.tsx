@@ -53,7 +53,7 @@ function UserButton() {
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center bg-neutral-200 rounded-3xl px-2 py-2 cursor-pointer"
       >
-        <div className="flex items-center justify-center bg-gradient-to-b from-blue-600 to-blue-700 shadow-lg rounded-full p-2">
+        <div className="flex items-center justify-center bg-gradient-to-b from-blue-800 to-blue-900 shadow-lg rounded-full p-2">
           <Image
             src="/logomark-white.svg"
             alt="logo"
