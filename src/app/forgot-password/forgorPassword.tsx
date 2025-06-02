@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from "react";
 import { createClient } from "../../utils/supabase/client";
 
@@ -10,10 +12,13 @@ const ForgotPasswordForm = () => {
     e.preventDefault();
     // Here you would send the OTP to the email
     const supabase = createClient();
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${process.env.NEXT_PUBLIC_URL}reset-password`,
-    });
-    if (error) {
+    const { error: resetError } = await supabase.auth.resetPasswordForEmail(
+      email,
+      {
+        redirectTo: `${process.env.NEXT_PUBLIC_URL}reset-password`,
+      }
+    );
+    if (resetError) {
       setError("Failed to send reset link. Please try again.");
       console.error("Error sending reset link:", error);
       setStep("email");

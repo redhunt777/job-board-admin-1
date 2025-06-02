@@ -8,7 +8,6 @@ import {
   memo,
   useCallback,
 } from "react";
-import { useAppSelector } from "@/store/hooks";
 import Image from "next/image";
 import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
@@ -57,10 +56,13 @@ const UserButton = memo(() => {
     router.push("/login");
   }, [router]);
 
-  const handleNavigation = useCallback((path: string) => {
-    router.push(path);
-    setIsOpen(false);
-  }, [router]);
+  const handleNavigation = useCallback(
+    (path: string) => {
+      router.push(path);
+      setIsOpen(false);
+    },
+    [router]
+  );
 
   const toggleDropdown = useCallback(() => {
     setIsOpen((prev) => !prev);
@@ -144,14 +146,8 @@ const SearchIcon = memo(() => (
 SearchIcon.displayName = "SearchIcon";
 
 const SearchComponent = memo(() => {
-  const collapsed = useAppSelector((state) => state.ui.sidebar.collapsed);
-
   return (
-    <div
-      className={`w-full py-6 border-b border-neutral-200 transition-all duration-300 ${
-        collapsed ? "md:ml-20" : "md:ml-20"
-      }`}
-    >
+    <div className="w-full py-6 border-b border-neutral-200 transition-all duration-300 md:ml-20">
       <div className="container mx-auto flex items-center justify-between md:justify-center px-4 md:px-0 relative">
         {/* Mobile Logo */}
         <Suspense
