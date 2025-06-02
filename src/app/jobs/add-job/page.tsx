@@ -3,8 +3,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { HiOutlineArrowCircleLeft } from "react-icons/hi";
 import Image from "next/image";
-import { useContext } from "react";
-import { SidebarContext } from "@/components/sidebar";
+import { useAppSelector } from "@/store/hooks";
 import { FiUpload } from "react-icons/fi";
 import { FaArrowRight } from "react-icons/fa6";
 import Link from "next/link";
@@ -52,11 +51,7 @@ export default function AddJob() {
   const [jobDescription, setJobDescription] = useState("");
 
   const router = useRouter();
-  const context = useContext(SidebarContext);
-  if (!context) {
-    throw new Error("No sidebar context found");
-  }
-  const { collapsed } = context;
+  const collapsed = useAppSelector((state) => state.ui.sidebar.collapsed);
 
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {

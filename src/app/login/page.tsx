@@ -27,7 +27,6 @@ const AdminLogin = () => {
     checkLoginStatus();
   }, []);
 
-
   return (
     <div className="container mx-auto px-4">
       <div className="flex flex-col justify-center items-center bg-white rounded-xl shadow max-w-xl mx-auto p-6 sm:p-10 my-12">
@@ -82,20 +81,16 @@ const AdminLogin = () => {
           >
             Forgot Password?
           </Link>
-          {
-          searchParams.get('error') && (
+          {searchParams.get("error") && (
             <div className="text-red-500 font-medium text-lg">
-              {searchParams.get('error')}
+              {searchParams.get("error")}
             </div>
-          )
-          }
-          {
-          searchParams.get('message') && (
+          )}
+          {searchParams.get("message") && (
             <div className="text-green-500 font-medium text-lg">
-              {searchParams.get('message')}
+              {searchParams.get("message")}
             </div>
-          )
-          }
+          )}
           <button
             formAction={admin_email_login}
             className="w-full bg-blue-600 hover:bg-blue-700 text-white sm:font-medium text- sm:text-2xl rounded-lg py-3 mb-2 transition-colors cursor-pointer"

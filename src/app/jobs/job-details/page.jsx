@@ -1,8 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { HiOutlineArrowCircleLeft } from "react-icons/hi";
-import { useContext } from "react";
-import { SidebarContext } from "@/components/sidebar";
+import { useAppSelector } from "@/store/hooks";
 import Link from "next/link";
 import { createClient } from "@/utils/supabase/client";
 import { useSearchParams } from "next/navigation";
@@ -19,7 +18,7 @@ const steps = ["Job Details", "Candidates", "Settings"];
 export default function AddJob() {
   const supabase = createClient();
   const [step, setStep] = useState(0);
-  const { collapsed } = useContext(SidebarContext);
+  const collapsed = useAppSelector((state) => state.ui.sidebar.collapsed);
   const [number_of_candidates, setNumberOfCandidates] = useState(0);
   const [jobMetadata, setJobMetadata] = useState({
     jobTitle: "",

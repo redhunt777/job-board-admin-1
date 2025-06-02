@@ -1,5 +1,4 @@
 "use client";
-import { useState, createContext, useContext } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { BiHomeAlt } from "react-icons/bi";
@@ -8,35 +7,16 @@ import { GoPeople, GoGear } from "react-icons/go";
 import { HiOutlineChatAlt2 } from "react-icons/hi";
 import { FiSidebar } from "react-icons/fi";
 import Image from "next/image";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { toggleSidebar } from "@/store/features/uiSlice";
 
-interface SidebarContextType {
-  collapsed: boolean;
-  setCollapsed: (value: boolean | ((prev: boolean) => boolean)) => void;
-}
-
-export const SidebarContext = createContext<SidebarContextType | undefined>(
-  undefined
-);
-
-interface SidebarProviderProps {
-  children: React.ReactNode;
-}
-
-export function SidebarProvider({ children }: SidebarProviderProps) {
-  const [collapsed, setCollapsed] = useState(false);
-  return (
-    <SidebarContext.Provider value={{ collapsed, setCollapsed }}>
-      {children}
-    </SidebarContext.Provider>
-  );
+export function SidebarProvider({ children }: { children: React.ReactNode }) {
+  return <>{children}</>;
 }
 
 export default function Sidebar() {
-  const context = useContext(SidebarContext);
-  if (!context) {
-    throw new Error("Sidebar must be used within a SidebarProvider");
-  }
-  const { collapsed, setCollapsed } = context;
+  const dispatch = useAppDispatch();
+  const collapsed = useAppSelector((state) => state.ui.sidebar.collapsed);
 
   return (
     <aside
@@ -57,7 +37,7 @@ export default function Sidebar() {
           />
           <div className="flex justify-end mt-10 mr-1 -mb-2">
             <button
-              onClick={() => setCollapsed((c: boolean) => !c)}
+              onClick={() => dispatch(toggleSidebar())}
               className="cursor-pointer"
               aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
             >

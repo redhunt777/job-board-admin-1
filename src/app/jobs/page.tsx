@@ -1,6 +1,6 @@
 "use client";
-import { SidebarContext } from "@/components/sidebar";
-import { useContext, useState, useEffect } from "react";
+import { useAppSelector } from "@/store/hooks";
+import { useState, useEffect } from "react";
 import { GoPlus } from "react-icons/go";
 import { IoList } from "react-icons/io5";
 import { FaCaretDown } from "react-icons/fa";
@@ -14,11 +14,7 @@ import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
 
 export default function Jobs() {
-  const context = useContext(SidebarContext);
-  if (!context) {
-    throw new Error("No sidebar context found");
-  }
-  const { collapsed } = context;
+  const collapsed = useAppSelector((state) => state.ui.sidebar.collapsed);
   const router = useRouter();
 
   const [viewMode, setViewMode] = useState("board"); // 'board' or 'list'

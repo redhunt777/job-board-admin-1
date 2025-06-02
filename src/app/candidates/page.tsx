@@ -1,7 +1,7 @@
 "use client";
 
-import { useContext, useEffect, useState } from "react";
-import { SidebarContext } from "@/components/sidebar";
+import { useEffect, useState } from "react";
+import { useAppSelector } from "@/store/hooks";
 import { CiFilter } from "react-icons/ci";
 import { HiOutlineArrowCircleLeft, HiDotsVertical } from "react-icons/hi";
 import { IoPersonCircleSharp } from "react-icons/io5";
@@ -145,9 +145,7 @@ const ctcOptions = [
 
 // type of component props
 export default function Candidates() {
-  const context = useContext(SidebarContext);
-  if (!context) throw new Error("No sidebar context found");
-  const { collapsed } = context;
+  const collapsed = useAppSelector((state) => state.ui.sidebar.collapsed);
   const [candidates, setCandidates] = useState<candidates[]>([]);
   const [ candidatesDetailsOverlay, setCandidatesDetailsOverlay ] = useState<{
     candidate: candidates | null;

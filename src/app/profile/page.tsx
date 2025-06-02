@@ -1,18 +1,17 @@
 "use client";
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect } from "react";
 import { HiOutlineArrowCircleLeft } from "react-icons/hi";
 import Link from "next/link";
 import Image from "next/image";
 import PhoneInput from "react-phone-number-input";
 import "react-phone-number-input/style.css";
 import { createClient } from "@/utils/supabase/client";
-import { SidebarContext } from "@/components/sidebar";
+import { useAppSelector } from "@/store/hooks";
 import { FiEdit3 } from "react-icons/fi";
 import { IoMdEye, IoMdEyeOff } from "react-icons/io";
 
 export default function Profile() {
-  const context = useContext(SidebarContext);
-  const { collapsed } = context || { collapsed: false };
+  const collapsed = useAppSelector((state) => state.ui.sidebar.collapsed);
   const [loading, setLoading] = useState(true);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");

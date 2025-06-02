@@ -1,7 +1,6 @@
 import { IoSearch } from "react-icons/io5";
 import { FaCaretDown } from "react-icons/fa";
 import {
-  useContext,
   Suspense,
   useState,
   useRef,
@@ -9,7 +8,7 @@ import {
   memo,
   useCallback,
 } from "react";
-import { SidebarContext } from "@/components/sidebar";
+import { useAppSelector } from "@/store/hooks";
 import Image from "next/image";
 import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
@@ -145,11 +144,7 @@ const SearchIcon = memo(() => (
 SearchIcon.displayName = "SearchIcon";
 
 const SearchComponent = memo(() => {
-  const context = useContext(SidebarContext);
-  if (!context) {
-    throw new Error("SearchComponent must be used within a SidebarProvider");
-  }
-  const { collapsed } = context;
+  const collapsed = useAppSelector((state) => state.ui.sidebar.collapsed);
 
   return (
     <div

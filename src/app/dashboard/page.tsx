@@ -1,7 +1,6 @@
 "use client";
 
-import { useContext } from "react";
-import { SidebarContext } from "@/components/sidebar";
+import { useAppSelector } from "@/store/hooks";
 import { HiOutlineBuildingOffice2 } from "react-icons/hi2";
 import { TiDocumentDelete } from "react-icons/ti";
 import { BsBriefcase } from "react-icons/bs";
@@ -52,11 +51,7 @@ const stats = [
 ];
 
 export default function DashboardPage() {
-  const context = useContext(SidebarContext);
-  if (!context) {
-    throw new Error("No sidebar context found");
-  }
-  const { collapsed } = context;
+  const collapsed = useAppSelector((state) => state.ui.sidebar.collapsed);
 
   return (
     <div

@@ -85,7 +85,7 @@ const ResumeSection = memo(
             PDF
           </div>
           <div className="text-neutral-800 font-semibold">
-            {`${candidateName}.pdf` || "Resume"}
+            {candidateName ? `${candidateName}.pdf` : "Resume"}
             <div className="text-neutral-400 text-sm font-normal">844 KB</div>
           </div>
           <div>

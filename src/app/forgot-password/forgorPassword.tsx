@@ -1,23 +1,19 @@
-'use client';
-
 import { useState } from "react";
 import { createClient } from "../../utils/supabase/client";
-
 
 const ForgotPasswordForm = () => {
   const [email, setEmail] = useState("");
   const [step, setStep] = useState<"email" | "emailsent">("email");
   const [error, setError] = useState<string | null>(null);
 
-
   const handleEmailsubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     // Here you would send the OTP to the email
     const supabase = createClient();
-    const {error} = await supabase.auth.resetPasswordForEmail(email, {
-     redirectTo: `${process.env.NEXT_PUBLIC_URL}reset-password`,
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${process.env.NEXT_PUBLIC_URL}reset-password`,
     });
-    if(error){
+    if (error) {
       setError("Failed to send reset link. Please try again.");
       console.error("Error sending reset link:", error);
       setStep("email");
@@ -33,18 +29,17 @@ const ForgotPasswordForm = () => {
           {/* Email Step */}
           <div
             className={`slide${
-              step === "email"
-                ? " active"
-                : step === "emailsent" 
-                ? " left"
-                : ""
+              step === "email" ? " active" : step === "emailsent" ? " left" : ""
             }`}
           >
             <h1 className="text-center text-[#151515] font-semibold text-2xl sm:text-4xl mb-4">
               Forgot Password?
             </h1>
-            <p className="text-center text-[#606167] mb-8">     
-              Please enter your registered email address below. We'll send you a password reset link in the next step, so you can securely create a new password and regain access to your account.            </p>
+            <p className="text-center text-[#606167] mb-8">
+              Please enter your registered email address below. We'll send you a
+              password reset link in the next step, so you can securely create a
+              new password and regain access to your account.{" "}
+            </p>
             <form
               onSubmit={handleEmailsubmit}
               className="w-full flex flex-col items-center gap-4"
@@ -72,13 +67,7 @@ const ForgotPasswordForm = () => {
               >
                 Send Reset Link
               </button>
-              {
-                error && (
-                  <p className="text-red-500 text-sm mt-2">
-                    {error}
-                  </p>
-                )
-              }
+              {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
             </form>
           </div>
 
@@ -96,20 +85,21 @@ const ForgotPasswordForm = () => {
               Check your E-mail
             </h1>
             <p className="text-center text-[#606167] mb-8">
-              We've sent a password reset link to your registered email address. Please 
-              check your inbox and follow the instructions to reset 
-              your password.</p>
+              We've sent a password reset link to your registered email address.
+              Please check your inbox and follow the instructions to reset your
+              password.
+            </p>
             <button
               onClick={() => window.open("https://mail.google.com", "_blank")}
               className="w-full bg-[#1E5CDC] hover:bg-blue-700 text-white font-medium text-2xl rounded-lg py-3 transition-colors cursor-pointer mt-4"
             >
               Open MailBox
             </button>
-            </div>
+          </div>
         </div>
       </div>
     </div>
   );
 };
 
-export default ForgotPasswordForm; 
+export default ForgotPasswordForm;
