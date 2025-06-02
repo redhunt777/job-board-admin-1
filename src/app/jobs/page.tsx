@@ -243,7 +243,7 @@ const JobCard = ({ job }: { job: Job }) => {
       <div className="flex items-center justify-between">
         <button
           type="button"
-          className="text-[#151515] mr-0 ml-auto font-medium text-sm py-2 flex items-center gap-2"
+          className="text-[#151515] mr-0 ml-auto font-medium text-sm py-2 flex items-center gap-2 cursor-pointer"
           onClick={() => {
             router.push(`/jobs/job-details?jobId=${job.id}`); // Navigate to the job details page
           }

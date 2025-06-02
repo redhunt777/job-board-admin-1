@@ -608,7 +608,7 @@ export default function Candidates() {
                       <StatusBadge status={c.status} />
                     </td>
                     <td className="px-3 py-4 sticky right-0 bg-white z-20">
-                      <button className="bg-blue-700 hover:bg-blue-800 text-white font-semibold px-6 py-2 rounded-lg"
+                      <button className="bg-blue-700 hover:bg-blue-800 text-white font-semibold px-6 py-2 rounded-lg cursor-pointer"
                         onClick={() => setCandidatesDetailsOverlay({ candidate: c, show: true })}>
                         View
                       </button>

@@ -1,12 +1,21 @@
 import { IoSearch } from "react-icons/io5";
 import { FaCaretDown } from "react-icons/fa";
-import { useContext, Suspense, useState, useRef, useEffect } from "react";
+import {
+  useContext,
+  Suspense,
+  useState,
+  useRef,
+  useEffect,
+  memo,
+  useCallback,
+} from "react";
 import { SidebarContext } from "@/components/sidebar";
 import Image from "next/image";
 import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
 
-function SearchBar() {
+// Memoized SearchBar component
+const SearchBar = memo(() => {
   return (
     <div className="hidden md:block relative w-1/3 bg-neutral-200 rounded-xl">
       <IoSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-400 w-5 h-5" />
@@ -17,43 +26,55 @@ function SearchBar() {
       />
     </div>
   );
-}
+});
 
-function UserButton() {
+SearchBar.displayName = "SearchBar";
+
+// Memoized UserButton component
+const UserButton = memo(() => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
-        setIsOpen(false);
-      }
+  const handleClickOutside = useCallback((event: MouseEvent) => {
+    if (
+      dropdownRef.current &&
+      !dropdownRef.current.contains(event.target as Node)
+    ) {
+      setIsOpen(false);
     }
+  }, []);
 
+  useEffect(() => {
     document.addEventListener("mousedown", handleClickOutside);
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, []);
+  }, [handleClickOutside]);
 
-  const handleSignOut = async () => {
+  const handleSignOut = useCallback(async () => {
     const supabase = createClient();
     await supabase.auth.signOut();
     router.push("/login");
-  };
+  }, [router]);
+
+  const handleNavigation = useCallback((path: string) => {
+    router.push(path);
+    setIsOpen(false);
+  }, [router]);
+
+  const toggleDropdown = useCallback(() => {
+    setIsOpen((prev) => !prev);
+  }, []);
 
   return (
     <div className="md:absolute md:right-10" ref={dropdownRef}>
       <button
         role="button"
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={toggleDropdown}
         className="flex items-center bg-neutral-200 rounded-3xl px-2 py-2 cursor-pointer"
       >
-        <div className="flex items-center justify-center bg-gradient-to-b from-blue-800 to-blue-900 shadow-lg rounded-full p-2">
+        <div className="flex items-center justify-center bg-gradient-to-b from-blue-600 to-blue-700 shadow-lg rounded-full p-2">
           <Image
             src="/logomark-white.svg"
             alt="logo"
@@ -69,19 +90,19 @@ function UserButton() {
         <div className="absolute right-0 mt-2 w-48 bg-white rounded-b-xl shadow-2xl z-50 py-4 px-4 flex flex-col gap-3">
           <button
             className="w-full text-left text-neutral-800 font-medium hover:font-semibold rounded transition px-0 cursor-pointer"
-            onClick={() => router.push("/profile")}
+            onClick={() => handleNavigation("/profile")}
           >
             Edit Profile
           </button>
           <button
             className="w-full text-left text-neutral-800 font-medium hover:font-semibold rounded transition px-0 cursor-pointer"
-            onClick={() => router.push("/settings")}
+            onClick={() => handleNavigation("/settings")}
           >
             Settings
           </button>
           <button
             className="w-full text-left text-neutral-800 font-medium hover:font-semibold rounded transition px-0 cursor-pointer"
-            onClick={() => router.push("/help")}
+            onClick={() => handleNavigation("/help")}
           >
             Help Center
           </button>
@@ -95,9 +116,35 @@ function UserButton() {
       )}
     </div>
   );
-}
+});
 
-export default function SearchComponent() {
+UserButton.displayName = "UserButton";
+
+// Memoized MobileLogo component
+const MobileLogo = memo(() => (
+  <div className="md:hidden">
+    <Image
+      src="/wordmark-blue.svg"
+      alt="logo"
+      height={48}
+      width={160}
+      className="h-12 w-auto"
+    />
+  </div>
+));
+
+MobileLogo.displayName = "MobileLogo";
+
+// Memoized SearchIcon component
+const SearchIcon = memo(() => (
+  <button className="md:hidden rounded-full p-2 ml-10">
+    <IoSearch className="w-6 h-6 text-neutral-700" />
+  </button>
+));
+
+SearchIcon.displayName = "SearchIcon";
+
+const SearchComponent = memo(() => {
   const context = useContext(SidebarContext);
   if (!context) {
     throw new Error("SearchComponent must be used within a SidebarProvider");
@@ -117,15 +164,7 @@ export default function SearchComponent() {
             <div className="h-12 w-40 bg-neutral-200 animate-pulse rounded" />
           }
         >
-          <div className="md:hidden">
-            <Image
-              src="/wordmark-blue.svg"
-              alt="logo"
-              height={48}
-              width={160}
-              className="h-12 w-auto"
-            />
-          </div>
+          <MobileLogo />
         </Suspense>
 
         {/* Search Bar - Hidden on Mobile */}
@@ -138,9 +177,7 @@ export default function SearchComponent() {
         </Suspense>
 
         {/* Mobile Search Icon */}
-        <button className="md:hidden rounded-full p-2 ml-10">
-          <IoSearch className="w-6 h-6 text-neutral-700" />
-        </button>
+        <SearchIcon />
 
         <Suspense
           fallback={
@@ -152,4 +189,8 @@ export default function SearchComponent() {
       </div>
     </div>
   );
-}
+});
+
+SearchComponent.displayName = "SearchComponent";
+
+export default SearchComponent;
