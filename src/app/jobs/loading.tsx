@@ -25,4 +25,4 @@ export default function JobsLoading() {
       </div>
     </div>
   );
-} 
+}

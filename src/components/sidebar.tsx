@@ -93,7 +93,13 @@ interface SidebarLinkProps {
 
 function SidebarLink({ icon, label, to, collapsed }: SidebarLinkProps) {
   const pathname = usePathname();
-  const isActive = pathname === to;
+  const isActive = pathname === to || (
+    (to === "/jobs" && pathname.startsWith("/jobs")) ||
+    (to === "/candidates" && pathname.startsWith("/candidates")) ||
+    (to === "/inbox" && pathname.startsWith("/inbox")) ||
+    (to === "/dashboard" && pathname.startsWith("/dashboard")) ||
+    (to === "/settings" && pathname.startsWith("/settings"))
+  );
   const router = useRouter();
 
   const handleMouseDown = (e: React.MouseEvent) => {

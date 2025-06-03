@@ -58,10 +58,10 @@ export default function JobsClientComponent({ initialJobs }: JobsClientComponent
 
         <div className="flex items-center justify-between my-6">
           <div>
-            <h1 className="text-2xl font-semibold text-[#151515]">
+            <h1 className="text-2xl font-semibold text-neutral-900">
               Manage All Jobs
             </h1>
-            <p className="text-sm text-[#606167] mt-2">
+            <p className="text-sm text-neutral-500 mt-2">
               Manage your job listings and applications with ease.
             </p>
           </div>
@@ -84,8 +84,8 @@ export default function JobsClientComponent({ initialJobs }: JobsClientComponent
               onClick={() => setViewMode("board")}
               className={`flex items-center gap-2 cursor-pointer px-4 py-2 rounded-3xl text-sm transition-colors ${
                 viewMode === "board"
-                  ? "bg-[#1E5CDC] text-white hover:bg-[#1A4BB0]"
-                  : "border border-[#606167] text-[#606167] hover:text-[#4B5563]"
+                  ? "bg-blue-600 text-white hover:bg-blue-700"
+                  : "border border-neutral-500 text-neutral-500 hover:text-neutral-700"
               }`}
             >
               <svg
@@ -108,8 +108,8 @@ export default function JobsClientComponent({ initialJobs }: JobsClientComponent
               onClick={() => setViewMode("list")}
               className={`flex items-center gap-2 cursor-pointer px-4 py-2 rounded-3xl text-sm transition-colors ${
                 viewMode === "list"
-                  ? "bg-[#1E5CDC] text-white hover:bg-[#1A4BB0]"
-                  : "border border-[#606167] text-[#606167] hover:text-[#4B5563]"
+                  ? "bg-blue-600 text-white hover:bg-blue-700"
+                  : "border border-neutral-500 text-neutral-500 hover:text-neutral-700"
               }`}
             >
               <IoList className="w-5 h-5" />
@@ -117,23 +117,23 @@ export default function JobsClientComponent({ initialJobs }: JobsClientComponent
             </button>
           </div>
 
-          <div className="flex items-center justify-center gap-2 text-sm text-[#606167]">
-            <div className="flex items-center gap-2 justify-center border-r border-[#606167] pr-2">
-              <div className="flex items-center gap-1 font-medium cursor-pointer border border-[#606167] px-4 py-2 rounded-3xl">
+          <div className="flex items-center justify-center gap-2 text-sm text-neutral-500">
+            <div className="flex items-center gap-2 justify-center border-r border-neutral-500 pr-2">
+              <div className="flex items-center gap-1 font-medium cursor-pointer border border-neutral-500 px-4 py-2 rounded-3xl">
                 Job Status
-                <FaCaretDown className="w-5 h-5 text-[#606167]" />
+                <FaCaretDown className="w-5 h-5 text-neutral-500" />
               </div>
-              <div className="flex items-center gap-1 font-medium cursor-pointer border border-[#606167] px-4 py-2 rounded-3xl">
+              <div className="flex items-center gap-1 font-medium cursor-pointer border border-neutral-500 px-4 py-2 rounded-3xl">
                 Job Location
-                <FaCaretDown className="w-5 h-5 text-[#606167]" />
+                <FaCaretDown className="w-5 h-5 text-neutral-500" />
               </div>
-              <div className="flex items-center gap-1 font-medium cursor-pointer border border-[#606167] px-4 py-2 rounded-3xl">
+              <div className="flex items-center gap-1 font-medium cursor-pointer border border-neutral-500 px-4 py-2 rounded-3xl">
                 Company
-                <FaCaretDown className="w-5 h-5 text-[#606167]" />
+                <FaCaretDown className="w-5 h-5 text-neutral-500" />
               </div>
             </div>
-            <div className="flex items-center gap-1 font-medium cursor-pointer bg-[#E5E6E8] px-4 py-2 rounded-3xl">
-              <CiFilter className="w-5 h-5 text-[#606167]" />
+            <div className="flex items-center gap-1 font-medium cursor-pointer bg-neutral-100 px-4 py-2 rounded-3xl">
+              <CiFilter className="w-5 h-5 text-neutral-500" />
               All Filters
             </div>
           </div>
@@ -191,24 +191,24 @@ const JobCard = ({ job }: { job: JobCardProps }) => {
         </div>
       </div>
       <div>
-        <div className="inline-flex items-center justify-center gap-2 mb-2 bg-[#F0F1F1] px-4 py-2 rounded-lg">
-          <MdCurrencyRupee className="w-5 h-5 text-[#1E5CDC]" />
-          <p className="text-sm text-[#606167]">${job.min_salary}-${job.max_salary}</p>
+        <div className="inline-flex items-center justify-center gap-2 mb-2 bg-neutral-100 px-4 py-2 rounded-lg">
+          <MdCurrencyRupee className="w-5 h-5 text-blue-600" />
+          <p className="text-sm text-neutral-500">${job.min_salary}-${job.max_salary}</p>
         </div>
       </div>
       <div>
-        <div className="inline-flex items-center justify-center gap-2 mb-4 bg-[#F0F1F1] px-4 py-2 rounded-lg">
-          <IoLocationOutline className="w-5 h-5 text-[#1E5CDC]" />
-          <p className="text-sm text-[#606167]">{job.location}</p>
+        <div className="inline-flex items-center justify-center gap-2 mb-4 bg-neutral-100 px-4 py-2 rounded-lg">
+          <IoLocationOutline className="w-5 h-5 text-blue-600" />
+          <p className="text-sm text-neutral-500">{job.location}</p>
         </div>
       </div>
 
       <div className="flex items-center justify-between">
         <button
           type="button"
-          className="text-[#151515] mr-0 ml-auto font-medium text-sm py-2 flex items-center gap-2 cursor-pointer"
+          className="text-neutral-900 mr-0 ml-auto font-medium text-sm py-2 flex items-center gap-2 cursor-pointer"
           onClick={() => {
-            router.push(`/jobs/job-details?jobId=${job.id}`);
+            router.push(`/jobs/job-details/${job.id}`);
           }}
         >
           View Details <FaChevronRight className="w-4 h-4" />
