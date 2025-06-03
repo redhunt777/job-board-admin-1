@@ -31,7 +31,7 @@ export default function Jobs() {
           .order('created_at', { ascending: false })
           .limit(10); // Fetch only the latest 10 jobs
         if (error) {
-          console.error('Error fetching jobs:', error);
+          console.log('Error fetching jobs:', error);
         } else if (data) {
           // Sanitize job data
           // Ensure all fields are present and have default values if missing

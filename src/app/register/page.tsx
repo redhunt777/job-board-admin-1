@@ -1,12 +1,14 @@
 "use client";
-
-import React, { useState } from "react";
+import React, { useState, FormEvent, useEffect } from "react";
 import { IoMdEye, IoMdEyeOff } from "react-icons/io";
 import "react-phone-number-input/style.css"
 import PhoneInput from "react-phone-number-input"
 import Link from "next/link";
 import { admin_email_signup } from "@/app/register/actions";
 import { useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
+import { useAppSelector } from '@/store/hooks';
+import { selectIsAuthenticated } from '@/store/features/userSlice';
 
 const AdminRegister = () => {
   const [name, setName] = useState("");
@@ -15,6 +17,16 @@ const AdminRegister = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const searchParams = useSearchParams();
+
+  const isAuthenticated = useAppSelector(selectIsAuthenticated);
+  const router = useRouter();
+
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.push('/dashboard');
+    }
+  }, [isAuthenticated, router]);
 
   return (
     <div className="container mx-auto px-4">
@@ -105,9 +117,9 @@ const AdminRegister = () => {
             </div>
           </div>
           {
-            searchParams.get("error") && (
+            searchParams.get('error') && (
               <div className="text-red-500 font-medium text-lg">
-                {searchParams.get("error")}
+                {searchParams.get('error')}
               </div>
             )
           }

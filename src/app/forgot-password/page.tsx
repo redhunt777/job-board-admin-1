@@ -1,4 +1,4 @@
-import ForgotPasswordForm from './forgorPassword';
+import ForgotPasswordForm from './forgotPassword';
 
 export const metadata = {
   title: 'Forgot Password',
