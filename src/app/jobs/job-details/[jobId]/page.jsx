@@ -24,9 +24,7 @@ export async function generateStaticParams() {
   }
 }
 
-export async function revalidate() {
-  return 1800;
-}
+export const revalidate = 1800; // 30 minutes
 
 export default async function JobDetailsPage({ params }) {
   const supabase = await createClient();
@@ -95,7 +93,7 @@ export default async function JobDetailsPage({ params }) {
     jobLocation: job.job_location,
     workingType: job.working_type,
     experience: { min: job.experience_min, max: job.experience_max },
-    salary: { min: job.max_salary, max: job.min_salary },
+    salary: { min: job.min_salary, max: job.max_salary },
     companyName: job.company_name,
     jobDescription: job.job_description,
     company_logo_url: job.company_logo_url || "",

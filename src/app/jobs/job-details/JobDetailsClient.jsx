@@ -23,13 +23,17 @@ export default function JobDetailsClient({ initialJobMetadata, initialCandidateC
   const collapsed = useAppSelector((state) => state.ui.sidebar.collapsed);
   const [jobMetadata] = useState(initialJobMetadata);
   const [number_of_candidates] = useState(initialCandidateCount);
-
   const handleDeleteJob = async () => {
-    const { data: user } = await supabase.auth.getUser();
-    if (jobMetadata.jobAdmin != user.id) {
-      alert("only the job creator can delete the job");
+    const { data, error: authError } = await supabase.auth.getUser();
+    const user = data?.user;
+    if (authError || !user) {
+      alert("Authentication error. Please log in again.");
       return;
     }
+    if (jobMetadata.jobAdmin !== user.id) {
+      alert("Only the job creator can delete the job");
+       return;
+     }
     if (
       !confirm(
         "Are you sure you want to delete this job? This action cannot be undone."

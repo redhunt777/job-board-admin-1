@@ -1,4 +1,3 @@
-"use server";
 import { createClient } from "@/utils/supabase/server"; // Use server client
 import JobsClientComponent from "./JobsClientComponent";
 
@@ -21,6 +20,8 @@ export async function generateStaticParams() {
     return [];
   }
 }
+
+export const revalidate = 1800; // 30 minutes
 
 export default async function JobsPage() {
   // Fetch jobs on the server side
