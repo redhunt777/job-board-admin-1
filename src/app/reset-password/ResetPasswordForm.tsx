@@ -4,10 +4,12 @@ import { useState } from "react";
 import { IoMdEye, IoMdEyeOff, IoMdCheckmark } from "react-icons/io";
 import { motion } from "framer-motion";
 import { createClient } from "../../utils/supabase/client";
+import { useRouter } from "next/navigation";
 
 
 const ResetPasswordForm = () => {
   const [step, setStep] = useState<"password" | "success">("password");
+  const router = useRouter();
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -117,7 +119,10 @@ const ResetPasswordForm = () => {
               <button
                 type="button"
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium text-2xl rounded-lg py-3 transition-colors cursor-pointer"
-                onClick={() => (window.location.href = "/login")}
+                onClick={() => {
+                    router.push("/login");
+                  }
+                }
               >
                 Back to Login
               </button>

@@ -12,11 +12,13 @@ import { FaRegTrashAlt } from "react-icons/fa";
 import { FiShare2 } from "react-icons/fi";
 import { FiEdit3 } from "react-icons/fi";
 import { FaCaretDown } from "react-icons/fa";
+import { useRouter } from "next/navigation";
 
 const steps = ["Job Details", "Candidates", "Settings"];
 
 export default function AddJob() {
   const supabase = createClient();
+  const router = useRouter();
   const [step, setStep] = useState(0);
   const collapsed = useAppSelector((state) => state.ui.sidebar.collapsed);
   const [number_of_candidates, setNumberOfCandidates] = useState(0);
@@ -108,7 +110,7 @@ export default function AddJob() {
     }
     console.log("Job deleted successfully");
     alert("Job deleted successfully");
-    window.location.href = "/jobs";
+    router.push("/jobs");
   };
 
   useEffect(() => {

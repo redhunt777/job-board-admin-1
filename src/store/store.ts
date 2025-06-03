@@ -1,20 +1,22 @@
 import { configureStore } from '@reduxjs/toolkit';
 import uiReducer from './features/uiSlice';
+import userReducer from './features/userSlice';
 
 const store = configureStore({
   reducer: {
     ui: uiReducer,
+    user: userReducer,
     // Add other reducers here as they are created
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: {
         // Ignore these action types
-        ignoredActions: ['your-non-serializable-action'],
+        ignoredActions: ['user/initializeAuth/fulfilled', 'user/loginUser/fulfilled'],
         // Ignore these field paths in all actions
-        ignoredActionPaths: ['meta.arg', 'payload.timestamp'],
+        ignoredActionPaths: ['meta.arg', 'payload.timestamp', 'payload.user'],
         // Ignore these paths in the state
-        ignoredPaths: ['items.dates'],
+        ignoredPaths: ['items.dates', 'user.user'],
       },
     }),
 });
