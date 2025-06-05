@@ -117,7 +117,7 @@ export default function AddJob() {
 
       // sending to supabase
       try{
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from("jobs")
         .insert([
           {
