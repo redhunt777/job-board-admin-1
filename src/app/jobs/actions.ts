@@ -17,8 +17,8 @@ const s3Client = new S3Client({
   region: process.env.NEXT_PUBLIC_AWS_BUCKET_REGION || "ap-south-1",
   credentials: {
     accessKeyId: process.env.NEXT_PUBLIC_AWS_ACCESS_KEY_ID || "",
-    secretAccessKey: process.env.NEXT_PUBLIC_AWS_SECRET_ACCESS_KEY || "",
-  },
+    secretAccessKey: process.env.NEXT_PUBLIC_AWS_SECRET_ACCESS_KEY || ""
+  }
 });
 
 const acceptedFileTypes = [
@@ -29,12 +29,7 @@ const acceptedFileTypes = [
 ];
 const maxFileSize = 2 * 1024 * 1024; // 2 MB
 
-export async function getSignedURL(
-  type: string,
-  size: number,
-  checksum: string,
-  company_name: string
-) {
+export async function getSignedURL(type: string, size: number, checksum: string, company_name: string) {
   if (!acceptedFileTypes.includes(type)) {
     return { error: "Invalid file type" };
   }
@@ -42,9 +37,7 @@ export async function getSignedURL(
     return { error: "File size exceeds the limit of 2 MB" };
   }
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
     return { error: "User not authenticated" };
   }
@@ -57,12 +50,12 @@ export async function getSignedURL(
     ChecksumSHA256: checksum,
     Metadata: {
       "user-id": user.id,
-      "file-type": type,
-    },
+      "file-type": type
+    }
   });
 
   const signedURL = await getSignedUrl(s3Client, putObject, {
-    expiresIn: 3600, // URL valid for 1 hour
+    expiresIn: 3600 // URL valid for 1 hour
   });
   if (!signedURL) {
     return { error: "Failed to generate signed URL" };
