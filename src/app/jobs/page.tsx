@@ -7,14 +7,26 @@ export default async function JobsPage() {
   const supabase = await createClient();
   
   let jobs: Array<{
-    job_id: string;
-    admin_id: string;
-    job_title: string;
-    company_name: string;
-    job_location: string;
-    max_salary: number;
-    min_salary: number;
-    company_logo: string;
+    admin_id: string
+    application_deadline: string | null
+    benefits: string[] | null
+    company_logo_url: string | null
+    company_name: string
+    created_at: string | null
+    job_description: string | null
+    job_id: string
+    job_location: string | null
+    job_location_type: string | null
+    job_title: string
+    job_type: string | null
+    max_experience_needed: number | null
+    max_salary: number | null
+    min_experience_needed: number | null
+    min_salary: number | null
+    requirements: string[] | null
+    status: string | null
+    updated_at: string | null
+    working_type: string | null
   }> = [];
 
   try {
@@ -28,16 +40,9 @@ export default async function JobsPage() {
       console.error('Error fetching jobs:', error);
     } else if (data) {
       // Sanitize job data on server
-      jobs = data.map((job) => ({
+      jobs = data.map(job => ({
         ...job,
-        job_id: String(job.job_id),
-        admin_id: String(job.admin_id),
-        job_title: job.job_title || 'Untitled Job',
-        company_name: job.company_name || 'Unknown Company',
-        job_location: job.job_location || 'Remote',
-        max_salary: job.max_salary ?? 0,
-        min_salary: job.min_salary ?? 0,
-        company_logo: job.company_logo_url || '/demo.png', 
+        company_name: job.company_name ?? '', // replace null with empty string
       }));
     }
   } catch (error) {

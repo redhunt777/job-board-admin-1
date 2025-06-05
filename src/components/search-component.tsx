@@ -9,8 +9,10 @@ import {
   useCallback,
 } from "react";
 import Image from "next/image";
-import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
+import { logoutUser } from "@/store/features/userSlice";
+import { useDispatch } from "react-redux";
+import { AppDispatch } from "@/store/store";
 
 // Memoized SearchBar component
 const SearchBar = memo(() => {
@@ -49,12 +51,18 @@ const UserButton = memo(() => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [handleClickOutside]);
+  const dispatch = useDispatch<AppDispatch>();
 
   const handleSignOut = useCallback(async () => {
-    const supabase = createClient();
-    await supabase.auth.signOut();
-    router.push("/login");
-  }, [router]);
+    try {
+      await dispatch(logoutUser());
+      router.push("/login");
+    } catch (error) {
+      console.log("Failed to log out:", error);
+    }
+    setIsOpen(false);
+   
+  }, [dispatch, router]);
 
   const handleNavigation = useCallback(
     (path: string) => {
