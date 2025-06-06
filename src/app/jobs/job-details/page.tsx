@@ -14,6 +14,8 @@ import { useSelector } from "react-redux";
 import { useAppDispatch } from "@/store/hooks";
 import { fetchJobById, deleteJob, updateJob } from "@/store/features/jobSlice";
 import type { RootState } from "@/store/store";
+import CandidatesList from "@/components/candidates_list_component";
+import { CandidateWithApplication } from "@/store/features/candidatesSlice";
 
 
 const steps = ["Job Details", "Candidates", "Settings"];
@@ -277,6 +279,12 @@ export default function JobDetailsComponent() {
     );
   }
 
+  const handleCandidateClick = (candidate: CandidateWithApplication) => {
+      // You can implement navigation to candidate detail page here
+      console.log("Candidate clicked:", candidate);
+    };
+  
+
   return (
     <div
       className={`transition-all duration-300 min-h-full md:pb-0 px-0 ${
@@ -460,12 +468,16 @@ export default function JobDetailsComponent() {
             )}
             
             {step === 1 && (
-              <div className="text-center py-12">
-                <h2 className="text-xl font-semibold mb-4">Candidates</h2>
-                <p className="text-gray-600">Candidate management feature coming soon...</p>
+              <div>
+                <CandidatesList
+                  showHeader={false} // We're showing our own header above
+                  showFilters={true}
+                  showPagination={true}
+                  showSorting={true}
+                  onCandidateClick={handleCandidateClick}
+                />
               </div>
             )}
-            
             {step === 2 && (
               <div className="text-center py-12">
                 <h2 className="text-xl font-semibold mb-4">Settings</h2>
