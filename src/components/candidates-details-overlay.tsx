@@ -1,9 +1,9 @@
 import { IoCloseSharp, IoPersonCircleSharp } from "react-icons/io5";
 import { FaAngleDown } from "react-icons/fa6";
-import { FaRegTrashAlt, FaPhone, FaMapMarkerAlt, FaCalendarAlt, FaBriefcase } from "react-icons/fa";
-import { FiDownload, FiMail, FiClock } from "react-icons/fi";
+import { FaRegTrashAlt } from "react-icons/fa";
+import { FiDownload, FiMail,  } from "react-icons/fi";
 import { memo, useCallback, useState } from "react";
-import { CandidateWithApplication } from "@/store/features/candidatesSlice";
+import { CandidateWithApplication, Education, Experience } from "@/store/features/candidatesSlice";
 
 // Memoized candidate header component
 const CandidateHeader = memo(
@@ -23,7 +23,7 @@ const CandidateHeader = memo(
       
       setIsUpdating(true);
       try {
-        await onStatusUpdate(candidate.application_id, newStatus);
+        onStatusUpdate(candidate.application_id, newStatus);
       } finally {
         setIsUpdating(false);
       }
@@ -38,13 +38,8 @@ const CandidateHeader = memo(
               {candidate?.name}
             </h2>
             <p className="text-neutral-500 mb-1">
-              Applied for: {candidate?.job_title}
+              Job Application: {candidate?.job_title}
             </p>
-            {candidate?.company_name && (
-              <p className="text-sm text-neutral-400">
-                at {candidate.company_name}
-              </p>
-            )}
           </div>
         </div>
         
@@ -75,7 +70,7 @@ const CandidateHeader = memo(
             className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors cursor-pointer flex items-center gap-2"
           >
             <FiMail className="w-4 h-4" />
-            Email
+            Message
           </button>
           
           <button
@@ -88,7 +83,6 @@ const CandidateHeader = memo(
             }}
           >
             <FaRegTrashAlt className="w-4 h-4 text-red-700" />
-            Delete
           </button>
         </div>
       </div>
@@ -103,8 +97,7 @@ const ResumeSection = memo(
   ({ candidate }: { candidate: CandidateWithApplication | null }) => (
     <div className="mb-6">
       <div className="font-semibold text-lg text-blue-700 mb-3 flex items-center gap-2">
-        <FiDownload className="w-5 h-5" />
-        Resume & Documents
+        Resume
       </div>
       <div className="flex items-center gap-4">
         <div className="bg-neutral-100 flex items-center gap-2 rounded-lg cursor-pointer pr-4 transition-colors hover:bg-neutral-200">
@@ -115,7 +108,7 @@ const ResumeSection = memo(
             {candidate?.name ? `${candidate.name}_Resume.pdf` : "Resume.pdf"}
             <div className="text-neutral-400 text-sm font-normal">Download Resume</div>
           </div>
-          <FiDownload className="h-5 w-5 mx-2 text-neutral-600" />
+          <FiDownload className="h-5 w-5 mx-2 text-neutral-800" />
         </div>
       </div>
     </div>
@@ -129,42 +122,37 @@ const PersonalDetails = memo(
   ({ candidate }: { candidate: CandidateWithApplication | null }) => (
     <div className="mb-6">
       <div className="font-semibold text-lg text-blue-700 mb-3 flex items-center gap-2">
-        <IoPersonCircleSharp className="w-5 h-5" />
         Personal Details
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <div className="flex items-start gap-3">
-          <FiMail className="w-4 h-4 text-neutral-500 mt-1" />
           <div>
-            <div className="font-medium text-sm text-neutral-800 mb-1">Email Address</div>
+            <div className="font-medium text-sm text-neutral-800 mb-1">Full Name</div>
+            <div className="text-sm text-neutral-600">{candidate?.name || "N/A"}</div>
+          </div>
+        </div>
+        
+        <div className="flex items-start gap-3">
+          <div>
+            <div className="font-medium text-sm text-neutral-800 mb-1">Email</div>
             <div className="text-sm text-neutral-600">{candidate?.candidate_email || "N/A"}</div>
           </div>
         </div>
         
         <div className="flex items-start gap-3">
-          <FaPhone className="w-4 h-4 text-neutral-500 mt-1" />
           <div>
-            <div className="font-medium text-sm text-neutral-800 mb-1">Phone Number</div>
-            <div className="text-sm text-neutral-600">{candidate?.mobile_number || "N/A"}</div>
-          </div>
-        </div>
-        
-        <div className="flex items-start gap-3">
-          <FaMapMarkerAlt className="w-4 h-4 text-neutral-500 mt-1" />
-          <div>
-            <div className="font-medium text-sm text-neutral-800 mb-1">Location</div>
+            <div className="font-medium text-sm text-neutral-800 mb-1">Mobile Number</div>
             <div className="text-sm text-neutral-600">
-              {candidate?.address || candidate?.job_location || "N/A"}
+              {candidate?.mobile_number|| "N/A"}
             </div>
           </div>
         </div>
         
         <div className="flex items-start gap-3">
-          <FaCalendarAlt className="w-4 h-4 text-neutral-500 mt-1" />
           <div>
-            <div className="font-medium text-sm text-neutral-800 mb-1">Applied Date</div>
+            <div className="font-medium text-sm text-neutral-800 mb-1">Date of Birth</div>
             <div className="text-sm text-neutral-600">
-              {candidate?.applied_date 
+              {candidate?.dob
                 ? new Date(candidate.applied_date).toLocaleDateString('en-US', {
                     year: 'numeric',
                     month: 'long',
@@ -177,117 +165,116 @@ const PersonalDetails = memo(
         </div>
         
         <div className="flex items-start gap-3">
-          <FiClock className="w-4 h-4 text-neutral-500 mt-1" />
           <div>
-            <div className="font-medium text-sm text-neutral-800 mb-1">Notice Period</div>
-            <div className="text-sm text-neutral-600">{candidate?.notice_period || "N/A"}</div>
-          </div>
-        </div>
-        
-        <div className="flex items-start gap-3">
-          <FaBriefcase className="w-4 h-4 text-neutral-500 mt-1" />
-          <div>
-            <div className="font-medium text-sm text-neutral-800 mb-1">Gender</div>
-            <div className="text-sm text-neutral-600">{candidate?.gender || "N/A"}</div>
+            <div className="font-medium text-sm text-neutral-800 mb-1">Address</div>
+            <div className="text-sm text-neutral-600">{candidate?.address || "N/A"}</div>
           </div>
         </div>
       </div>
     </div>
   )
 );
-
 PersonalDetails.displayName = "PersonalDetails";
 
-// Memoized salary details component
-const SalaryDetails = memo(
-  ({ candidate }: { candidate: CandidateWithApplication | null }) => (
+//memoized experience details component
+const ExperienceDetails = memo(
+  ({ candidate }: { candidate: CandidateWithApplication | null }) => (  
     <div className="mb-6">
       <div className="font-semibold text-lg text-blue-700 mb-3">
-        Salary Information
+        Experience Details
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-          <div className="font-medium text-sm text-green-800 mb-1">Current CTC</div>
-          <div className="text-lg font-semibold text-green-700">
-            {candidate?.current_ctc ? `₹${candidate.current_ctc}L` : "Not specified"}
+      {candidate?.experience?.map((exp: Experience, index: number) => (
+        <div key={index} className="mb-4">
+          <div className="flex items-center gap-4 mb-2">
+            <div>
+              <svg width="48" height="49" viewBox="0 0 48 49" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <g clipPath="url(#clip0_1_13956)">
+              <rect width="48" height="48" transform="translate(0 0.5)" fill="#3A434E"/>
+              <rect x="25" y="8.5" width="18" height="40" fill="#A1B2C6"/>
+              <rect x="6" y="21.5" width="22" height="27" fill="#7C8EA3"/>
+              </g>
+              <defs>
+              <clipPath id="clip0_1_13956">
+              <rect width="48" height="48" fill="white" transform="translate(0 0.5)"/>
+              </clipPath>
+              </defs>
+            </svg>
           </div>
-        </div>
-        
-        <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-          <div className="font-medium text-sm text-blue-800 mb-1">Expected CTC</div>
-          <div className="text-lg font-semibold text-blue-700">
-            {candidate?.expected_ctc ? `₹${candidate.expected_ctc}L` : "Not specified"}
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-);
-
-SalaryDetails.displayName = "SalaryDetails";
-
-// Memoized job details component
-const JobDetails = memo(
-  ({ candidate }: { candidate: CandidateWithApplication | null }) => (
-    <div className="mb-6">
-      <div className="font-semibold text-lg text-blue-700 mb-3">
-        Job Requirements
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-          <div className="font-medium text-sm text-neutral-800 mb-1">Position</div>
-          <div className="text-sm text-neutral-600">{candidate?.job_title || "N/A"}</div>
-        </div>
-        
-        <div>
-          <div className="font-medium text-sm text-neutral-800 mb-1">Company</div>
-          <div className="text-sm text-neutral-600">{candidate?.company_name || "N/A"}</div>
-        </div>
-        
-        <div>
-          <div className="font-medium text-sm text-neutral-800 mb-1">Experience Required</div>
-          <div className="text-sm text-neutral-600">
-            {candidate?.min_experience_needed && candidate?.max_experience_needed
-              ? `${candidate.min_experience_needed}-${candidate.max_experience_needed} years`
-              : "N/A"
+          <div>
+            <div className="text-neutral-800 font-medium">
+              {exp.job_title || "Job Title"}  
+            </div>
+            <div className="font-normal text-neutral-600">{exp.company_name || "Company Name"}</div>
+            <div className="font-noraml text-neutral-400 text-sm">{exp.currently_working === true ? "Currently working here" : 
+              `${exp.start_date ? new Date(exp.start_date).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+              }) : "Start Date"} - ${exp.end_date ? new Date(exp.end_date).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+              }) : "End Date"}`
             }
+            </div>
           </div>
         </div>
-        
-        <div>
-          <div className="font-medium text-sm text-neutral-800 mb-1">Job Location</div>
-          <div className="text-sm text-neutral-600">{candidate?.job_location || "N/A"}</div>
-        </div>
       </div>
+      ))}
     </div>
   )
 );
 
-JobDetails.displayName = "JobDetails";
+ExperienceDetails.displayName = "ExperienceDetails";
 
-// Memoized status badge component
-const StatusBadge = memo(({ status }: { status: string }) => {
-  const getStatusStyle = (status: string) => {
-    switch (status.toLowerCase()) {
-      case "accepted":
-        return "bg-green-100 text-green-700 border-green-200";
-      case "rejected":
-        return "bg-red-100 text-red-700 border-red-200";
-      case "pending":
-        return "bg-yellow-100 text-yellow-700 border-yellow-200";
-      default:
-        return "bg-gray-100 text-gray-700 border-gray-200";
-    }
-  };
-
-  return (
-    <span className={`px-3 py-1 rounded-full text-sm font-medium border ${getStatusStyle(status)}`}>
-      {status.charAt(0).toUpperCase() + status.slice(1)}
-    </span>
-  );
-});
-
-StatusBadge.displayName = "StatusBadge";
+const EducationDetails = memo(
+  ({ candidate }: { candidate: CandidateWithApplication | null }) => (
+    <div className="mb-6">
+      <div className="font-semibold text-lg text-blue-700 mb-3">
+        Education Details
+      </div>
+      {candidate?.education?.map((edu: Education, index: number) => (
+        <div key={index} className="mb-4">
+          <div className="flex items-center gap-4 mb-2">
+            <div>
+              <svg width="48" height="49" viewBox="0 0 48 49" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <g clipPath="url(#clip0_1_13956)">
+                  <rect width="48" height="48" transform="translate(0 0.5)" fill="#3A434E"/>
+                  <rect x="25" y="8.5" width="18" height="40" fill="#A1B2C6"/>
+                  <rect x="6" y="21.5" width="22" height="27" fill="#7C8EA3"/>
+                </g>
+                <defs>
+                  <clipPath id="clip0_1_13956">
+                    <rect width="48" height="48" fill="white" transform="translate(0 0.5)"/>
+                  </clipPath>
+                </defs>
+              </svg>
+            </div>
+            <div>
+              <div className="text-neutral-800 font-medium">
+                {edu.degree || "Degree"}  
+              </div>
+              <div className="font-normal text-neutral-600">{edu.college_university || "Institution Name"}</div>
+              
+              <div className="font-noraml text-neutral-400 text-sm">{edu.is_current === true ? "Currently Study here" : 
+                `${edu.start_date ? new Date(edu.start_date).toLocaleDateString('en-US', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric'
+                }) : "Start Date"} - ${edu.end_date ? new Date(edu.end_date).toLocaleDateString('en-US', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric'
+                }) : "End Date"}`
+               }
+              </div>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+);
 
 const CandidatesDetailsOverlay = memo(
   ({
@@ -307,7 +294,7 @@ const CandidatesDetailsOverlay = memo(
 
     const handleStatusUpdate = useCallback(async (applicationId: string, status: string) => {
       if (onStatusUpdate) {
-        await onStatusUpdate(applicationId, status);
+        onStatusUpdate(applicationId, status);
       }
     }, [onStatusUpdate]);
 
@@ -333,17 +320,10 @@ const CandidatesDetailsOverlay = memo(
             />
 
             <div className="p-6 space-y-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-xl font-semibold text-neutral-900">Application Details</h3>
-                <StatusBadge status={candidate.application_status} />
-              </div>
-
               <ResumeSection candidate={candidate} />
               <PersonalDetails candidate={candidate} />
-              <SalaryDetails candidate={candidate} />
-              <JobDetails candidate={candidate} />
-              
-              {/* Additional Notes Section */}
+              <ExperienceDetails candidate={candidate} />
+              <EducationDetails candidate={candidate} />
               <div>
                 <div className="font-semibold text-lg text-blue-700 mb-3">
                   Additional Information

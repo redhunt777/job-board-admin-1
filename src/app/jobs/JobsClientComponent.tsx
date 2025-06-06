@@ -1,4 +1,5 @@
 "use client";
+import React from "react";
 import { useAppSelector } from "@/store/hooks";
 import { useState, useEffect } from "react";
 import { GoPlus } from "react-icons/go";
@@ -7,19 +8,17 @@ import { FaCaretDown } from "react-icons/fa";
 import { CiFilter } from "react-icons/ci";
 import Link from "next/link";
 import { HiOutlineArrowCircleLeft } from "react-icons/hi";
-import { MdCurrencyRupee } from "react-icons/md";
-import { IoLocationOutline } from "react-icons/io5";
-import { FaChevronRight } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
 import { selectJobs } from "@/store/features/jobSlice";
+import { JobListComponent, JobCard } from "@/components/Job-card&list-component";
 
-type Job = {
+export type Job = {
   admin_id: string
   application_deadline: string | null
   benefits: string[] | null
   company_logo_url: string | null
-  company_name: string
+  company_name: string | null
   created_at: string | null
   job_description: string | null
   job_id: string
@@ -128,6 +127,7 @@ export default function JobsClientComponent({ initialJobs }: JobsClientComponent
       } md:pt-0 pt-4`}
     >
       <div className="mt-4 px-2 md:px-4 py-4">
+        { /* Header section with back link and title */}
         <div className="flex items-center gap-2 mb-4">
           <Link
             href="/dashboard"
@@ -140,13 +140,14 @@ export default function JobsClientComponent({ initialJobs }: JobsClientComponent
           <span className="text-lg font-bold text-neutral-900">Jobs</span>
         </div>
 
+        {/* Manage Jobs plus add job section */}
         <div className="flex items-center justify-between my-6">
           <div>
             <h1 className="text-2xl font-semibold text-neutral-900">
               Manage All Jobs
             </h1>
             <p className="text-sm text-[#606167] mt-2">
-              Manage your job listings and applications with ease. ({jobsFromStore.length} jobs)
+              Manage your job listings and applications with ease.
             </p>
           </div>
           <div>
@@ -162,7 +163,9 @@ export default function JobsClientComponent({ initialJobs }: JobsClientComponent
           </div>
         </div>
 
+        {/* View mode toggle and filters */}
         <div className="flex items-center justify-between mb-4">
+          { /* View mode toggle buttons */}
           <div className="flex item-center justify-center gap-2">
             <button
               onClick={() => setViewMode("board")}
@@ -187,7 +190,6 @@ export default function JobsClientComponent({ initialJobs }: JobsClientComponent
               </svg>
               Board
             </button>
-
             <button
               onClick={() => setViewMode("list")}
               className={`flex items-center gap-2 cursor-pointer px-4 py-2 rounded-3xl text-sm transition-colors ${
@@ -201,6 +203,7 @@ export default function JobsClientComponent({ initialJobs }: JobsClientComponent
             </button>
           </div>
 
+          {/* Filters section */}
           <div className="flex items-center justify-center gap-2 text-sm text-neutral-500">
             <div className="flex items-center gap-2 justify-center border-r border-neutral-500 pr-2">
               <div className="flex items-center gap-1 font-medium cursor-pointer border border-neutral-500 px-4 py-2 rounded-3xl">
@@ -216,7 +219,7 @@ export default function JobsClientComponent({ initialJobs }: JobsClientComponent
                 <FaCaretDown className="w-5 h-5 text-neutral-500" />
               </div>
             </div>
-            <div className="flex items-center gap-1 font-medium cursor-pointer bg-neutral-100 px-4 py-2 rounded-3xl">
+            <div className="flex items-center gap-1 font-medium cursor-pointer bg-neutral-200 px-4 py-2 rounded-3xl">
               <CiFilter className="w-5 h-5 text-neutral-500" />
               All Filters
             </div>
@@ -240,92 +243,33 @@ export default function JobsClientComponent({ initialJobs }: JobsClientComponent
               Add Your First Job
             </button>
           </div>
-        ) : (
-          <div className={`grid ${viewMode === "board" ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3" : "grid-cols-1"} gap-4`}>
-            {jobsFromStore.map((job) => (
-              <JobCard
-                key={job.job_id}
-                job={{
-                  id: job.job_id,
-                  title: job.job_title,
-                  company_name: job.company_name ?? "",
-                  location: job.job_location ?? "Remote",
-                  min_salary: job.min_salary ?? 0,
-                  max_salary: job.max_salary ?? 0,
-                  company_logo_url: job.company_logo_url ? job.company_logo_url : "/demo.png"
-                }}
-              />
-            ))}
-          </div>
-        )}
+      ) : (
+        <>
+          {viewMode === "board" ? (
+            <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4`}>
+              {jobsFromStore.map((job) => (
+                <JobCard
+                  key={job.job_id}
+                  job={{
+                    id: job.job_id,
+                    title: job.job_title,
+                    company_name: job.company_name ?? "",
+                    location: job.job_location ?? "Remote",
+                    min_salary: job.min_salary ?? 0,
+                    max_salary: job.max_salary ?? 0,
+                    company_logo_url: job.company_logo_url ? job.company_logo_url : "/demo.png"
+                  }}
+                />
+              ))}
+            </div>
+          ) : (
+            <>
+            <JobListComponent jobsFromStore={jobsFromStore} />
+            </>
+          )}
+        </>
+      )}
       </div>
     </div>
   );
 }
-
-type JobCardProps = {
-  id: string;
-  title: string;
-  company_name: string;
-  location: string;
-  min_salary: number;
-  max_salary: number;
-  company_logo_url?: string;
-}
-
-const JobCard = ({ job }: { job: JobCardProps }) => {
-  const router = useRouter();
-  
-  const formatSalary = (min: number, max: number) => {
-    if (min === 0 && max === 0) return "Salary not specified";
-    if (min === max) return `${min.toLocaleString()}`;
-    return `${min.toLocaleString()} - ${max.toLocaleString()}`;
-  };
-  
-  return (
-    <div className="bg-white rounded-2xl shadow-sm p-6 mb-4 hover:shadow-md transition-shadow duration-200">
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <img
-            src={job.company_logo_url || "/demo.png"}
-            alt={`${job.company_name} logo`}
-            width={56}
-            height={56}
-            className="w-14 h-14 rounded-xl object-cover"
-            onError={(e) => {
-              const target = e.target as HTMLImageElement;
-              target.src = "/demo.png";
-            }}
-          />
-        </div>
-        <div className="flex-1 ml-4">
-          <h2 className="text-xl font-semibold text-[#151515] line-clamp-2">{job.title}</h2>
-          <p className="text-sm text-[#83858C] mt-1">{job.company_name}</p>
-        </div>
-      </div>
-      <div className="space-y-2">
-        <div className="inline-flex items-center justify-center gap-2 bg-[#F0F1F1] px-4 py-2 rounded-lg">
-          <MdCurrencyRupee className="w-5 h-5 text-[#1E5CDC]" />
-          <p className="text-sm text-[#606167]">{formatSalary(job.min_salary, job.max_salary)}</p>
-        </div>
-        <div className="inline-flex items-center justify-center gap-2 bg-[#F0F1F1] px-4 py-2 rounded-lg">
-          <IoLocationOutline className="w-5 h-5 text-[#1E5CDC]" />
-          <p className="text-sm text-[#606167]">{job.location}</p>
-        </div>
-      </div>
-
-      <div className="flex items-center justify-between mt-4">
-        <button
-          type="button"
-          className="text-[#151515] mr-0 ml-auto font-medium text-sm py-2 flex items-center gap-2 cursor-pointer hover:text-[#1E5CDC] transition-colors"
-         onClick={() => {
-          const params = new URLSearchParams({ jobId: job.id });
-          router.push(`jobs/job-details?${params.toString()}`);
-        }}  
-        >
-          View Details <FaChevronRight className="w-4 h-4" />
-        </button>
-      </div>
-    </div>
-  );
-};

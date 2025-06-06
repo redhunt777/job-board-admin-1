@@ -36,6 +36,7 @@ export type CandidateWithApplication = {
     current_ctc: number | null;
     expected_ctc: number | null;
     notice_period: string | null;
+    dob: string | null;
 
     // Job fields
     job_id: string;
@@ -57,8 +58,8 @@ export type CandidateWithApplication = {
     job_status: string | null;
 
     // Related data
-    education?: Education[];
-    experience?: Experience[];
+    education?: Education[] | null; // Nullable array
+    experience?: Experience[] | null; // Nullable array
 };
 
 // Improved filter types with proper constraints
@@ -127,7 +128,29 @@ export const fetchJobApplications = createAsyncThunk(
             expected_ctc,
             notice_period,
             created_at,
-            updated_at
+            updated_at,
+            dob,
+            education (
+              education_id,
+              profile_id,
+              degree,
+              college_university,
+              field_of_study,
+              grade_percentage,
+              is_current,
+              start_date,
+              end_date
+            ),
+            experience (
+              experience_id,
+              profile_id,
+              company_name,
+              job_title,
+              job_type,
+              start_date,
+              end_date,
+              currently_working
+            )
           ),
           jobs!job_applications_job_id_fkey (
             job_id,
@@ -149,8 +172,7 @@ export const fetchJobApplications = createAsyncThunk(
             status,
             created_at
           )
-        `)
-                .order('applied_date', { ascending: false });
+        `).order('applied_date', { ascending: false });
 
             // Apply filters with proper type checking
             if (filters.status && filters.status !== 'All') {
@@ -213,6 +235,7 @@ export const fetchJobApplications = createAsyncThunk(
                     current_ctc: profile.current_ctc,
                     expected_ctc: profile.expected_ctc,
                     notice_period: profile.notice_period,
+                    dob: profile.dob,
 
                     // Job fields
                     job_id: job.job_id,
@@ -232,6 +255,10 @@ export const fetchJobApplications = createAsyncThunk(
                     benefits: job.benefits,
                     application_deadline: job.application_deadline,
                     job_status: job.status,
+
+                    // Related data
+                    education: profile.education || [],
+                    experience: profile.experience || [],
                 };
             });
 
@@ -548,6 +575,7 @@ const candidatesSlice = createSlice({
                         current_ctc: profile.current_ctc,
                         expected_ctc: profile.expected_ctc,
                         notice_period: profile.notice_period,
+                        dob: profile.dob,
 
                         // Job fields
                         job_id: job.job_id,
