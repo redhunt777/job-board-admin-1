@@ -16,30 +16,25 @@ export default function LayoutWrapper({ children, hideBottomNav = false }: Layou
   const pathname = usePathname();
   const isAuthPage = ['/login', '/register', '/reset-password', `/forgot-password`].includes(pathname);
 
+  if (isAuthPage) {
+    return <LogoHeader />;
+  }
+
   return (
-    <>
-      {isAuthPage ? (
-        <LogoHeader />
-      ) : (
-        <Suspense fallback={<div className="w-64 h-screen bg-neutral-100 animate-pulse" />}>
-          <Sidebar />
-        </Suspense>
-      )}
-      {!isAuthPage && (
-        <Suspense fallback={<div className="h-16 bg-neutral-100 animate-pulse" />}>
-          <SearchComponent />
-        </Suspense>
-      )}
+    <Suspense fallback={
+      <div className="min-h-screen">
+        <div className="w-64 h-screen bg-neutral-100 animate-pulse" />
+        <div className="h-16 bg-neutral-100 animate-pulse" />
+        <div className="min-h-screen bg-neutral-100 animate-pulse" />
+        {!hideBottomNav && <div className="h-16 bg-neutral-100 animate-pulse fixed bottom-0 w-full" />}
+      </div>
+    }>
+      <Sidebar />
+      <SearchComponent />
       <main className="pb-32 md:pb-0">
-        <Suspense fallback={<div className="min-h-screen bg-neutral-100 animate-pulse" />}>
-          {children}
-        </Suspense>
+        {children}
       </main>
-      {!isAuthPage && !hideBottomNav && (
-        <Suspense fallback={<div className="h-16 bg-neutral-100 animate-pulse fixed bottom-0 w-full" />}>
-          <BottomNav />
-        </Suspense>
-      )}
-    </>
+      {!hideBottomNav && <BottomNav />}
+    </Suspense>
   );
 } 

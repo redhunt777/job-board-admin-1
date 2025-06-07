@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { BiHomeAlt } from "react-icons/bi";
 import { BsBriefcase } from "react-icons/bs";
 import { GoPeople, GoGear } from "react-icons/go";
@@ -100,20 +100,10 @@ function SidebarLink({ icon, label, to, collapsed }: SidebarLinkProps) {
     (to === "/dashboard" && pathname.startsWith("/dashboard")) ||
     (to === "/settings" && pathname.startsWith("/settings"))
   );
-  const router = useRouter();
-
-  const handleMouseDown = (e: React.MouseEvent) => {
-    // Prevent default to avoid any delay
-    e.preventDefault();
-    // Start navigation immediately
-    router.push(to);
-  };
 
   return (
     <Link
       href={to}
-      prefetch={true}
-      onMouseDown={handleMouseDown}
       className={`flex items-center gap-4 px-4 py-3 rounded-lg text-white transition-colors duration-200 \
         ${collapsed ? "justify-center" : ""} \
         ${isActive ? "bg-blue-900" : "hover:bg-blue-900"}`}
