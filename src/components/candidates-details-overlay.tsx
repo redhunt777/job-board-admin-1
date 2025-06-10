@@ -1,9 +1,13 @@
 import { IoCloseSharp, IoPersonCircleSharp } from "react-icons/io5";
 import { FaAngleDown } from "react-icons/fa6";
 import { FaRegTrashAlt } from "react-icons/fa";
-import { FiDownload, FiMail,  } from "react-icons/fi";
+import { FiDownload, FiMail } from "react-icons/fi";
 import { memo, useCallback, useState } from "react";
-import { CandidateWithApplication, Education, Experience } from "@/store/features/candidatesSlice";
+import {
+  CandidateWithApplication,
+  Education,
+  Experience,
+} from "@/store/features/candidatesSlice";
 
 // Memoized candidate header component
 const CandidateHeader = memo(
@@ -19,8 +23,13 @@ const CandidateHeader = memo(
     const [isUpdating, setIsUpdating] = useState(false);
 
     const handleStatusChange = async (newStatus: string) => {
-      if (!candidate || isUpdating || newStatus === candidate.application_status) return;
-      
+      if (
+        !candidate ||
+        isUpdating ||
+        newStatus === candidate.application_status
+      )
+        return;
+
       setIsUpdating(true);
       try {
         onStatusUpdate(candidate.application_id, newStatus);
@@ -42,17 +51,19 @@ const CandidateHeader = memo(
             </p>
           </div>
         </div>
-        
+
         <div className="flex gap-4 flex-wrap items-center">
           <div className="pr-4">
-            <span className="font-semibold text-sm text-neutral-600">Application ID</span>
+            <span className="font-semibold text-sm text-neutral-600">
+              Application ID
+            </span>
             <div className="text-neutral-800 font-mono text-sm">
               {candidate?.application_id.slice(-8) || "N/A"}
             </div>
           </div>
-          
+
           <div className="relative inline-block w-48">
-            <select 
+            <select
               className="bg-neutral-100 w-full h-full rounded-md px-3 py-2 text-neutral-800 focus:outline-none appearance-none cursor-pointer disabled:opacity-50"
               value={candidate?.application_status || ""}
               onChange={(e) => handleStatusChange(e.target.value)}
@@ -64,19 +75,25 @@ const CandidateHeader = memo(
             </select>
             <FaAngleDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-500 pointer-events-none" />
           </div>
-          
+
           <button
-            onClick={() => window.open(`mailto:${candidate?.candidate_email}`, '_blank')}
+            onClick={() =>
+              window.open(`mailto:${candidate?.candidate_email}`, "_blank")
+            }
             className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors cursor-pointer flex items-center gap-2"
           >
             <FiMail className="w-4 h-4" />
             Message
           </button>
-          
+
           <button
             className="border border-red-700 hover:border-red-800 transition-colors px-4 py-2 rounded-md cursor-pointer flex items-center gap-2"
             onClick={() => {
-              if (window.confirm('Are you sure you want to delete this application?')) {
+              if (
+                window.confirm(
+                  "Are you sure you want to delete this application?"
+                )
+              ) {
                 // Handle deletion logic here
                 onClose();
               }
@@ -106,7 +123,9 @@ const ResumeSection = memo(
           </div>
           <div className="text-neutral-800 font-semibold">
             {candidate?.name ? `${candidate.name}_Resume.pdf` : "Resume.pdf"}
-            <div className="text-neutral-400 text-sm font-normal">Download Resume</div>
+            <div className="text-neutral-400 text-sm font-normal">
+              Download Resume
+            </div>
           </div>
           <FiDownload className="h-5 w-5 mx-2 text-neutral-800" />
         </div>
@@ -127,47 +146,62 @@ const PersonalDetails = memo(
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <div className="flex items-start gap-3">
           <div>
-            <div className="font-medium text-sm text-neutral-800 mb-1">Full Name</div>
-            <div className="text-sm text-neutral-600">{candidate?.name || "N/A"}</div>
-          </div>
-        </div>
-        
-        <div className="flex items-start gap-3">
-          <div>
-            <div className="font-medium text-sm text-neutral-800 mb-1">Email</div>
-            <div className="text-sm text-neutral-600">{candidate?.candidate_email || "N/A"}</div>
-          </div>
-        </div>
-        
-        <div className="flex items-start gap-3">
-          <div>
-            <div className="font-medium text-sm text-neutral-800 mb-1">Mobile Number</div>
+            <div className="font-medium text-sm text-neutral-800 mb-1">
+              Full Name
+            </div>
             <div className="text-sm text-neutral-600">
-              {candidate?.mobile_number|| "N/A"}
+              {candidate?.name || "N/A"}
             </div>
           </div>
         </div>
-        
+
         <div className="flex items-start gap-3">
           <div>
-            <div className="font-medium text-sm text-neutral-800 mb-1">Date of Birth</div>
+            <div className="font-medium text-sm text-neutral-800 mb-1">
+              Email
+            </div>
+            <div className="text-sm text-neutral-600">
+              {candidate?.candidate_email || "N/A"}
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-start gap-3">
+          <div>
+            <div className="font-medium text-sm text-neutral-800 mb-1">
+              Mobile Number
+            </div>
+            <div className="text-sm text-neutral-600">
+              {candidate?.mobile_number || "N/A"}
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-start gap-3">
+          <div>
+            <div className="font-medium text-sm text-neutral-800 mb-1">
+              Date of Birth
+            </div>
             <div className="text-sm text-neutral-600">
               {candidate?.dob
-                ? new Date(candidate.applied_date).toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
+                ? new Date(candidate.applied_date).toLocaleDateString("en-US", {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
                   })
-                : "N/A"
-              }
+                : "N/A"}
             </div>
           </div>
         </div>
-        
+
         <div className="flex items-start gap-3">
           <div>
-            <div className="font-medium text-sm text-neutral-800 mb-1">Address</div>
-            <div className="text-sm text-neutral-600">{candidate?.address || "N/A"}</div>
+            <div className="font-medium text-sm text-neutral-800 mb-1">
+              Address
+            </div>
+            <div className="text-sm text-neutral-600">
+              {candidate?.address || "N/A"}
+            </div>
           </div>
         </div>
       </div>
@@ -178,7 +212,7 @@ PersonalDetails.displayName = "PersonalDetails";
 
 //memoized experience details component
 const ExperienceDetails = memo(
-  ({ candidate }: { candidate: CandidateWithApplication | null }) => (  
+  ({ candidate }: { candidate: CandidateWithApplication | null }) => (
     <div className="mb-6">
       <div className="font-semibold text-lg text-blue-700 mb-3">
         Experience Details
@@ -187,39 +221,66 @@ const ExperienceDetails = memo(
         <div key={index} className="mb-4">
           <div className="flex items-center gap-4 mb-2">
             <div>
-              <svg width="48" height="49" viewBox="0 0 48 49" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <g clipPath="url(#clip0_1_13956)">
-              <rect width="48" height="48" transform="translate(0 0.5)" fill="#3A434E"/>
-              <rect x="25" y="8.5" width="18" height="40" fill="#A1B2C6"/>
-              <rect x="6" y="21.5" width="22" height="27" fill="#7C8EA3"/>
-              </g>
-              <defs>
-              <clipPath id="clip0_1_13956">
-              <rect width="48" height="48" fill="white" transform="translate(0 0.5)"/>
-              </clipPath>
-              </defs>
-            </svg>
-          </div>
-          <div>
-            <div className="text-neutral-800 font-medium">
-              {exp.job_title || "Job Title"}  
+              <svg
+                width="48"
+                height="49"
+                viewBox="0 0 48 49"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <g clipPath="url(#clip0_1_13956)">
+                  <rect
+                    width="48"
+                    height="48"
+                    transform="translate(0 0.5)"
+                    fill="#3A434E"
+                  />
+                  <rect x="25" y="8.5" width="18" height="40" fill="#A1B2C6" />
+                  <rect x="6" y="21.5" width="22" height="27" fill="#7C8EA3" />
+                </g>
+                <defs>
+                  <clipPath id="clip0_1_13956">
+                    <rect
+                      width="48"
+                      height="48"
+                      fill="white"
+                      transform="translate(0 0.5)"
+                    />
+                  </clipPath>
+                </defs>
+              </svg>
             </div>
-            <div className="font-normal text-neutral-600">{exp.company_name || "Company Name"}</div>
-            <div className="font-noraml text-neutral-400 text-sm">{exp.currently_working === true ? "Currently working here" : 
-              `${exp.start_date ? new Date(exp.start_date).toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-              }) : "Start Date"} - ${exp.end_date ? new Date(exp.end_date).toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-              }) : "End Date"}`
-            }
+            <div>
+              <div className="text-neutral-800 font-medium">
+                {exp.job_title || "Job Title"}
+              </div>
+              <div className="font-normal text-neutral-600">
+                {exp.company_name || "Company Name"}
+              </div>
+              <div className="font-noraml text-neutral-400 text-sm">
+                {exp.currently_working === true
+                  ? "Currently working here"
+                  : `${
+                      exp.start_date
+                        ? new Date(exp.start_date).toLocaleDateString("en-US", {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                          })
+                        : "Start Date"
+                    } - ${
+                      exp.end_date
+                        ? new Date(exp.end_date).toLocaleDateString("en-US", {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                          })
+                        : "End Date"
+                    }`}
+              </div>
             </div>
           </div>
         </div>
-      </div>
       ))}
     </div>
   )
@@ -237,36 +298,63 @@ const EducationDetails = memo(
         <div key={index} className="mb-4">
           <div className="flex items-center gap-4 mb-2">
             <div>
-              <svg width="48" height="49" viewBox="0 0 48 49" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <svg
+                width="48"
+                height="49"
+                viewBox="0 0 48 49"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
                 <g clipPath="url(#clip0_1_13956)">
-                  <rect width="48" height="48" transform="translate(0 0.5)" fill="#3A434E"/>
-                  <rect x="25" y="8.5" width="18" height="40" fill="#A1B2C6"/>
-                  <rect x="6" y="21.5" width="22" height="27" fill="#7C8EA3"/>
+                  <rect
+                    width="48"
+                    height="48"
+                    transform="translate(0 0.5)"
+                    fill="#3A434E"
+                  />
+                  <rect x="25" y="8.5" width="18" height="40" fill="#A1B2C6" />
+                  <rect x="6" y="21.5" width="22" height="27" fill="#7C8EA3" />
                 </g>
                 <defs>
                   <clipPath id="clip0_1_13956">
-                    <rect width="48" height="48" fill="white" transform="translate(0 0.5)"/>
+                    <rect
+                      width="48"
+                      height="48"
+                      fill="white"
+                      transform="translate(0 0.5)"
+                    />
                   </clipPath>
                 </defs>
               </svg>
             </div>
             <div>
               <div className="text-neutral-800 font-medium">
-                {edu.degree || "Degree"}  
+                {edu.degree || "Degree"}
               </div>
-              <div className="font-normal text-neutral-600">{edu.college_university || "Institution Name"}</div>
-              
-              <div className="font-noraml text-neutral-400 text-sm">{edu.is_current === true ? "Currently Study here" : 
-                `${edu.start_date ? new Date(edu.start_date).toLocaleDateString('en-US', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric'
-                }) : "Start Date"} - ${edu.end_date ? new Date(edu.end_date).toLocaleDateString('en-US', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric'
-                }) : "End Date"}`
-               }
+              <div className="font-normal text-neutral-600">
+                {edu.college_university || "Institution Name"}
+              </div>
+
+              <div className="font-noraml text-neutral-400 text-sm">
+                {edu.is_current === true
+                  ? "Currently Study here"
+                  : `${
+                      edu.start_date
+                        ? new Date(edu.start_date).toLocaleDateString("en-US", {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                          })
+                        : "Start Date"
+                    } - ${
+                      edu.end_date
+                        ? new Date(edu.end_date).toLocaleDateString("en-US", {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                          })
+                        : "End Date"
+                    }`}
               </div>
             </div>
           </div>
@@ -282,9 +370,15 @@ const CandidatesDetailsOverlay = memo(
     setCandidatesDetailsOverlay,
     onStatusUpdate,
   }: {
-    candidatesDetailsOverlay: { candidate: CandidateWithApplication | null; show: boolean };
+    candidatesDetailsOverlay: {
+      candidate: CandidateWithApplication | null;
+      show: boolean;
+    };
     setCandidatesDetailsOverlay: React.Dispatch<
-      React.SetStateAction<{ candidate: CandidateWithApplication | null; show: boolean }>
+      React.SetStateAction<{
+        candidate: CandidateWithApplication | null;
+        show: boolean;
+      }>
     >;
     onStatusUpdate?: (applicationId: string, status: string) => void;
   }) => {
@@ -292,13 +386,17 @@ const CandidatesDetailsOverlay = memo(
       setCandidatesDetailsOverlay({ candidate: null, show: false });
     }, [setCandidatesDetailsOverlay]);
 
-    const handleStatusUpdate = useCallback(async (applicationId: string, status: string) => {
-      if (onStatusUpdate) {
-        onStatusUpdate(applicationId, status);
-      }
-    }, [onStatusUpdate]);
+    const handleStatusUpdate = useCallback(
+      async (applicationId: string, status: string) => {
+        if (onStatusUpdate) {
+          onStatusUpdate(applicationId, status);
+        }
+      },
+      [onStatusUpdate]
+    );
 
-    if (!candidatesDetailsOverlay.show || !candidatesDetailsOverlay.candidate) return null;
+    if (!candidatesDetailsOverlay.show || !candidatesDetailsOverlay.candidate)
+      return null;
 
     const candidate = candidatesDetailsOverlay.candidate;
 

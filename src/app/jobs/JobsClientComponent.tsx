@@ -247,9 +247,9 @@ export default function JobsClientComponent({ initialJobs }: JobsClientComponent
         <>
           {viewMode === "board" ? (
             <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4`}>
-              {jobsFromStore.map((job) => (
+              {jobsFromStore.map((job, index) => (
                 <JobCard
-                  key={job.job_id}
+                  key={`${job.job_id}-${index}`}
                   job={{
                     id: job.job_id,
                     title: job.job_title,

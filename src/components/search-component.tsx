@@ -152,13 +152,15 @@ const SearchComponent = memo(() => {
   return (
     <div className="w-full py-6 border-b border-neutral-200 transition-all duration-300 md:ml-20">
       <div className="container mx-auto flex items-center justify-between md:justify-center px-4 md:px-0 relative">
-        <Suspense fallback={
-          <div className="flex items-center justify-between w-full">
-            <div className="h-12 w-40 bg-neutral-200 animate-pulse rounded" />
-            <div className="hidden md:block w-1/3 h-10 bg-neutral-200 animate-pulse rounded-xl" />
-            <div className="h-10 w-32 bg-neutral-200 animate-pulse rounded-3xl" />
-          </div>
-        }>
+        <Suspense
+          fallback={
+            <div className="flex items-center justify-between w-full">
+              <div className="h-12 w-40 bg-neutral-200 animate-pulse rounded" />
+              <div className="hidden md:block w-1/3 h-10 bg-neutral-200 animate-pulse rounded-xl" />
+              <div className="h-10 w-32 bg-neutral-200 animate-pulse rounded-3xl" />
+            </div>
+          }
+        >
           <MobileLogo />
           <SearchBar />
           <SearchIcon />
