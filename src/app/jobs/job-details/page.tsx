@@ -17,7 +17,6 @@ import type { RootState } from "@/store/store";
 import CandidatesList from "@/components/candidates_list_component";
 import { CandidateWithApplication } from "@/store/features/candidatesSlice";
 
-
 const steps = ["Job Details", "Candidates", "Settings"];
 
 type JobStatus = "active" | "closed" | "hold on";
@@ -41,17 +40,21 @@ export default function JobDetailsComponent() {
   const supabase = createClient();
   const router = useRouter();
   const dispatch = useAppDispatch();
-  
+
   const [step, setStep] = useState(0);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  
+
   const collapsed = useAppSelector((state) => state.ui.sidebar.collapsed);
-  const jobsFromStore = useSelector((state: RootState) => state.jobs.jobs || []);
+  const jobsFromStore = useSelector(
+    (state: RootState) => state.jobs.jobs || []
+  );
   const jobLoading = useSelector((state: RootState) => state.jobs.loading);
-  const deleteLoading = useSelector((state: RootState) => state.jobs.loading || false);
+  const deleteLoading = useSelector(
+    (state: RootState) => state.jobs.loading || false
+  );
   const deleteError = useSelector((state: RootState) => state.jobs.error);
-  
+
   const [numberOfCandidates, setNumberOfCandidates] = useState(0);
   const [jobMetadata, setJobMetadata] = useState<JobMetadata>({
     jobTitle: "",
@@ -75,7 +78,7 @@ export default function JobDetailsComponent() {
   // Get job from Redux store
   const getJobFromStore = () => {
     if (!jobId || jobsFromStore.length === 0) return null;
-    return jobsFromStore.find(job => job.job_id === jobId);
+    return jobsFromStore.find((job) => job.job_id === jobId);
   };
 
   // Map job data to component state
@@ -87,13 +90,13 @@ export default function JobDetailsComponent() {
       jobLocationType: jobData.job_location_type || "",
       jobLocation: jobData.job_location || "",
       workingType: jobData.working_type || "",
-      experience: { 
-        min: jobData.min_experience_needed?.toString() || "", 
-        max: jobData.max_experience_needed?.toString() || "" 
+      experience: {
+        min: jobData.min_experience_needed?.toString() || "",
+        max: jobData.max_experience_needed?.toString() || "",
       },
-      salary: { 
-        min: jobData.min_salary?.toString() || "", 
-        max: jobData.max_salary?.toString() || "" 
+      salary: {
+        min: jobData.min_salary?.toString() || "",
+        max: jobData.max_salary?.toString() || "",
       },
       companyName: jobData.company_name || "",
       jobDescription: jobData.job_description || "",
@@ -107,14 +110,16 @@ export default function JobDetailsComponent() {
     if (!jobId) return;
 
     try {
-      const result = await dispatch(updateJob({
-        job_id: jobId,
-        updates: { status: newStatus }
-      }));
+      const result = await dispatch(
+        updateJob({
+          job_id: jobId,
+          updates: { status: newStatus },
+        })
+      );
 
       if (updateJob.fulfilled.match(result)) {
         // Update local state
-        setJobMetadata(prev => ({ ...prev, status: newStatus }));
+        setJobMetadata((prev) => ({ ...prev, status: newStatus }));
         console.log("Job status updated successfully");
       } else {
         console.log("Error updating job status:", result.payload);
@@ -133,7 +138,7 @@ export default function JobDetailsComponent() {
     try {
       // Check if user is the job creator
       const { data: user } = await supabase.auth.getUser();
-      
+
       if (jobMetadata.jobAdmin !== user.user?.id) {
         alert("Only the job creator can delete this job");
         return;
@@ -156,7 +161,7 @@ export default function JobDetailsComponent() {
       if (deleteJob.fulfilled.match(result)) {
         console.log("Job deleted successfully");
         setShowDeleteModal(false);
-        
+
         // Show success message and redirect
         setTimeout(() => {
           alert("Job deleted successfully");
@@ -199,7 +204,7 @@ export default function JobDetailsComponent() {
   const formatSalary = (min: string, max: string) => {
     const minNum = parseInt(min) || 0;
     const maxNum = parseInt(max) || 0;
-    
+
     if (minNum === 0 && maxNum === 0) return "Not specified";
     if (minNum === maxNum) return `${minNum.toLocaleString()}`;
     return `${minNum.toLocaleString()} - ${maxNum.toLocaleString()}`;
@@ -211,7 +216,7 @@ export default function JobDetailsComponent() {
 
     // First check if job exists in store
     const jobFromStore = getJobFromStore();
-    
+
     if (jobFromStore) {
       // Job exists in store, use it
       setJobMetadata(mapJobDataToState(jobFromStore));
@@ -239,16 +244,18 @@ export default function JobDetailsComponent() {
     if (deleteError) {
       alert(`Error deleting job: ${deleteError}`);
       // Clear the error after showing it
-      dispatch({ type: 'jobs/clearDeleteError' });
+      dispatch({ type: "jobs/clearDeleteError" });
     }
   }, [deleteError, dispatch]);
 
   // Show loading state
   if (isLoading || jobLoading) {
     return (
-      <div className={`transition-all duration-300 min-h-full md:pb-0 px-0 ${
-        collapsed ? "md:ml-20" : "md:ml-64"
-      } md:pt-0 pt-4`}>
+      <div
+        className={`transition-all duration-300 min-h-full md:pb-0 px-0 ${
+          collapsed ? "md:ml-20" : "md:ml-64"
+        } md:pt-0 pt-4`}
+      >
         <div className="max-w-7xl w-full mx-auto mt-4 px-2 md:px-4 py-4">
           <div className="flex items-center justify-center h-64">
             <div className="text-lg text-gray-600">Loading job details...</div>
@@ -261,9 +268,11 @@ export default function JobDetailsComponent() {
   // Show error state if job not found
   if (!jobMetadata.jobTitle && !isLoading) {
     return (
-      <div className={`transition-all duration-300 min-h-full md:pb-0 px-0 ${
-        collapsed ? "md:ml-20" : "md:ml-64"
-      } md:pt-0 pt-4`}>
+      <div
+        className={`transition-all duration-300 min-h-full md:pb-0 px-0 ${
+          collapsed ? "md:ml-20" : "md:ml-64"
+        } md:pt-0 pt-4`}
+      >
         <div className="max-w-7xl w-full mx-auto mt-4 px-2 md:px-4 py-4">
           <div className="flex items-center justify-center h-64 flex-col">
             <div className="text-lg text-gray-600 mb-4">Job not found</div>
@@ -280,10 +289,9 @@ export default function JobDetailsComponent() {
   }
 
   const handleCandidateClick = (candidate: CandidateWithApplication) => {
-      // You can implement navigation to candidate detail page here
-      console.log("Candidate clicked:", candidate);
-    };
-  
+    // You can implement navigation to candidate detail page here
+    console.log("Candidate clicked:", candidate);
+  };
 
   return (
     <div
@@ -392,11 +400,15 @@ export default function JobDetailsComponent() {
                       )}
                       <span className="text-[#57595A] text-sm font-normal bg-[#F0F1F1] px-3 py-2 rounded-lg flex items-center">
                         <LiaRupeeSignSolid className="text-[#1E5CDC] text-base mr-1" />
-                        {formatSalary(jobMetadata.salary.min, jobMetadata.salary.max)}
+                        {formatSalary(
+                          jobMetadata.salary.min,
+                          jobMetadata.salary.max
+                        )}
                       </span>
                       <span className="text-[#57595A] text-sm font-normal bg-[#F0F1F1] px-3 py-2 rounded-lg flex items-center">
                         <MdOutlinePeopleAlt className="text-[#1E5CDC] text-base mr-2" />
-                        {numberOfCandidates} Applicant{numberOfCandidates !== 1 ? 's' : ''}
+                        {numberOfCandidates} Applicant
+                        {numberOfCandidates !== 1 ? "s" : ""}
                       </span>
                     </div>
                   </div>
@@ -407,7 +419,9 @@ export default function JobDetailsComponent() {
                     <div className="relative">
                       <select
                         value={jobMetadata.status}
-                        onChange={(e) => handleStatusChange(e.target.value as JobStatus)}
+                        onChange={(e) =>
+                          handleStatusChange(e.target.value as JobStatus)
+                        }
                         disabled={jobLoading}
                         className={`appearance-none text-sm font-medium px-3 py-2 rounded-lg focus:outline-none focus:ring-2 transition-colors pr-8 ${
                           jobMetadata.status === "active"
@@ -461,12 +475,13 @@ export default function JobDetailsComponent() {
                     Job Description
                   </h2>
                   <div className="text-[#57595A] text-sm font-normal whitespace-pre-wrap">
-                    {jobMetadata.jobDescription || "No job description provided."}
+                    {jobMetadata.jobDescription ||
+                      "No job description provided."}
                   </div>
                 </div>
               </div>
             )}
-            
+
             {step === 1 && (
               <div>
                 <CandidatesList
@@ -481,7 +496,9 @@ export default function JobDetailsComponent() {
             {step === 2 && (
               <div className="text-center py-12">
                 <h2 className="text-xl font-semibold mb-4">Settings</h2>
-                <p className="text-gray-600">Job settings feature coming soon...</p>
+                <p className="text-gray-600">
+                  Job settings feature coming soon...
+                </p>
               </div>
             )}
           </div>
@@ -496,12 +513,14 @@ export default function JobDetailsComponent() {
               Confirm Job Deletion
             </h3>
             <p className="text-gray-600 mb-2">
-              Are you sure you want to delete <span className="font-medium">"{jobMetadata.jobTitle}"</span>?
+              Are you sure you want to delete{" "}
+              <span className="font-medium">"{jobMetadata.jobTitle}"</span>?
             </p>
             <p className="text-gray-600 mb-6">
-              This action cannot be undone and will permanently remove the job posting and all associated data.
+              This action cannot be undone and will permanently remove the job
+              posting and all associated data.
             </p>
-            
+
             {deleteError && (
               <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
                 Error: {deleteError}

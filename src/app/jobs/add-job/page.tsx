@@ -9,7 +9,7 @@ import { FaArrowRight } from "react-icons/fa6";
 import Link from "next/link";
 import LexicalEditor from "@/components/LexicalEditor";
 import { createClient } from "@/utils/supabase/client";
-import { getSignedURL } from "@/app/jobs/actions"; 
+import { getSignedURL } from "@/app/jobs/actions";
 
 const steps = ["Company", "Job Details", "Job Description"];
 
@@ -20,11 +20,15 @@ const computeChecksum = (file: File): Promise<string> => {
       if (event.target?.result) {
         const arrayBuffer = event.target.result as ArrayBuffer;
         const hashBuffer = crypto.subtle.digest("SHA-256", arrayBuffer);
-        hashBuffer.then((hash) => {
-          const hashArray = Array.from(new Uint8Array(hash));
-          const hashHex = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
-          resolve(hashHex);
-        }).catch(reject);
+        hashBuffer
+          .then((hash) => {
+            const hashArray = Array.from(new Uint8Array(hash));
+            const hashHex = hashArray
+              .map((b) => b.toString(16).padStart(2, "0"))
+              .join("");
+            resolve(hashHex);
+          })
+          .catch(reject);
       } else {
         reject(new Error("Failed to read file"));
       }
@@ -32,7 +36,7 @@ const computeChecksum = (file: File): Promise<string> => {
     reader.onerror = () => reject(reader.error);
     reader.readAsArrayBuffer(file);
   });
-}
+};
 
 export default function AddJob() {
   const supabase = createClient();
@@ -60,38 +64,56 @@ export default function AddJob() {
   };
 
   const handleUploadLogo = async (file: File) => {
-      const checksum = await computeChecksum(file);
-      const signedURL = await getSignedURL(file.type, file.size, checksum, companyName);
-      if (signedURL.error) {
-        alert(signedURL.error);
-        return;
-      }
-      const url = signedURL.success?.url;
-      const key = signedURL.success?.key;
-      const userId = signedURL.success?.userId;
-      if (!url) {
-        alert("Failed to get signed URL.");
-        return;
-      }
-      const res = await fetch(url, {
-        method: "PUT",
-        headers: {
-          "Content-Type": file.type,
-        },
-        body: file,
-      });
-      if (!res.ok) {
-        throw new Error("Failed to upload company logo");
-      }
-      return { key, userId };  // Return the key and userId for further processing if needed
+    const checksum = await computeChecksum(file);
+    const signedURL = await getSignedURL(
+      file.type,
+      file.size,
+      checksum,
+      companyName
+    );
+    if (signedURL.error) {
+      alert(signedURL.error);
+      return;
     }
+    const url = signedURL.success?.url;
+    const key = signedURL.success?.key;
+    const userId = signedURL.success?.userId;
+    if (!url) {
+      alert("Failed to get signed URL.");
+      return;
+    }
+    const res = await fetch(url, {
+      method: "PUT",
+      headers: {
+        "Content-Type": file.type,
+      },
+      body: file,
+    });
+    if (!res.ok) {
+      throw new Error("Failed to upload company logo");
+    }
+    return { key, userId }; // Return the key and userId for further processing if needed
+  };
 
   const handleNext = async () => {
     if (step < steps.length - 1) setStep(step + 1);
     else {
       // Handle form submission logic here
       //validate inputs
-      if (!companyLogo || !companyName || !jobDescription || !jobMetadata.jobTitle || !jobMetadata.jobType || !jobMetadata.jobLocationType || !jobMetadata.jobLocation || !jobMetadata.workingType || !jobMetadata.experience.min || !jobMetadata.experience.max || !jobMetadata.salary.min || !jobMetadata.salary.max) {
+      if (
+        !companyLogo ||
+        !companyName ||
+        !jobDescription ||
+        !jobMetadata.jobTitle ||
+        !jobMetadata.jobType ||
+        !jobMetadata.jobLocationType ||
+        !jobMetadata.jobLocation ||
+        !jobMetadata.workingType ||
+        !jobMetadata.experience.min ||
+        !jobMetadata.experience.max ||
+        !jobMetadata.salary.min ||
+        !jobMetadata.salary.max
+      ) {
         alert("Please fill all required fields.");
         return;
       }
@@ -107,8 +129,7 @@ export default function AddJob() {
         }
         key = uploadResult.key;
         userId = uploadResult.userId;
-      }
-      catch (error) {
+      } catch (error) {
         console.log("Error uploading company logo:", error);
         alert("Failed to upload company logo. Please try again.");
         return;
@@ -116,10 +137,8 @@ export default function AddJob() {
       const url = `https://${process.env.NEXT_PUBLIC_AWS_BUCKET_NAME}.s3.${process.env.NEXT_PUBLIC_AWS_BUCKET_REGION}.amazonaws.com/${key}`;
 
       // sending to supabase
-      try{
-      const { error } = await supabase
-        .from("jobs")
-        .insert([
+      try {
+        const { error } = await supabase.from("jobs").insert([
           {
             company_logo_url: url,
             company_name: companyName,
@@ -130,19 +149,18 @@ export default function AddJob() {
             working_type: jobMetadata.workingType,
             min_experience_needed: Number(jobMetadata.experience.min),
             max_experience_needed: Number(jobMetadata.experience.max),
-            min_salary: Number(jobMetadata.salary.min), 
+            min_salary: Number(jobMetadata.salary.min),
             max_salary: Number(jobMetadata.salary.max),
             job_description: jobDescription,
-            admin_id: userId, 
+            admin_id: userId,
           },
         ]);
-      if (error) {
-        console.log("Error inserting job:", error);
-        alert("Failed to create job. Please try again.");
-        return;
-      }
-      }
-      catch(error) {
+        if (error) {
+          console.log("Error inserting job:", error);
+          alert("Failed to create job. Please try again.");
+          return;
+        }
+      } catch (error) {
         console.log("Error inserting job:", error);
         alert("Failed to create job. Please try again.");
         return;
@@ -389,7 +407,6 @@ export default function AddJob() {
                     <div className="flex gap-2">
                       <select
                         className="w-full border border-neutral-300 rounded-lg px-3 py-2"
-
                         value={jobMetadata.experience.min}
                         onChange={(e) =>
                           setJobMetadata({
