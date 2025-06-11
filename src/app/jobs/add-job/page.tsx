@@ -55,11 +55,15 @@ const computeChecksum = (file: File): Promise<string> => {
       if (event.target?.result) {
         const arrayBuffer = event.target.result as ArrayBuffer;
         const hashBuffer = crypto.subtle.digest("SHA-256", arrayBuffer);
-        hashBuffer.then((hash) => {
-          const hashArray = Array.from(new Uint8Array(hash));
-          const hashHex = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
-          resolve(hashHex);
-        }).catch(reject);
+        hashBuffer
+          .then((hash) => {
+            const hashArray = Array.from(new Uint8Array(hash));
+            const hashHex = hashArray
+              .map((b) => b.toString(16).padStart(2, "0"))
+              .join("");
+            resolve(hashHex);
+          })
+          .catch(reject);
       } else {
         reject(new Error("Failed to read file"));
       }
