@@ -61,3 +61,73 @@ export interface UserState {
     loading: boolean;
     error: string | null;
 }
+
+export interface FilterState {
+    status: string;
+    location: string;
+    company: string;
+    isOpen: string | false;
+}
+
+export interface JobsClientComponentProps {
+    userRole?: string;
+    userId?: string;
+    organizationId?: string;
+}
+
+// Form validation schema
+export interface FormErrors {
+    companyLogo?: string;
+    companyName?: string;
+    jobTitle?: string;
+    jobType?: string;
+    jobLocationType?: string;
+    jobLocation?: string;
+    workingType?: string;
+    experience?: string;
+    salary?: string;
+    jobDescription?: string;
+    general?: string;
+}
+
+export interface JobFormData {
+    companyLogo: File | null;
+    companyName: string;
+    jobTitle: string;
+    jobType: string;
+    jobLocationType: string;
+    jobLocation: string;
+    workingType: string;
+    minExperience: string;
+    maxExperience: string;
+    minSalary: string;
+    maxSalary: string;
+    jobDescription: string;
+    applicationDeadline: string;
+    status: string;
+}
+
+export interface JobMetadata {
+    jobTitle: string;
+    jobAdmin: string;
+    jobType: string;
+    jobLocationType: string;
+    jobLocation: string;
+    workingType: string;
+    experience: { min: string; max: string };
+    salary: { min: string; max: string };
+    companyName: string;
+    jobDescription: string;
+    company_logo_url: string;
+    status: JobStatus;
+}
+
+export type JobStatus = typeof JOB_STATUSES[number];
+export const JOB_STATUSES = ["active", "closed", "hold on"] as const;
+export const STEPS = ["Job Details", "Candidates", "Settings"] as const;
+
+export interface FormState {
+    success: boolean;
+    error?: string;
+    message?: string;
+}

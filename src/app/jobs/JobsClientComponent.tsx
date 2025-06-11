@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { GoPlus } from "react-icons/go";
 import { IoList } from "react-icons/io5";
-import { FaCaretDown } from "react-icons/fa";
 import { CiFilter } from "react-icons/ci";
 import { HiOutlineArrowCircleLeft } from "react-icons/hi";
 import {
@@ -14,185 +13,16 @@ import {
   selectJobsError,
   selectJobViewMode,
   selectJobFilters,
-  selectJobStats,
-  setJobs,
   setViewMode,
   setFilters,
   clearError,
   fetchJobs,
-  Job
 } from "@/store/features/jobSlice";
 import { JobListComponent, JobCard } from "@/components/Job-card&list-component";
-
-// Legacy Job type for backward compatibility
-export type LegacyJob = {
-  admin_id: string;
-  application_deadline: string | null;
-  benefits: string[] | null;
-  company_logo_url: string | null;
-  company_name: string | null;
-  created_at: string | null;
-  job_description: string | null;
-  job_id: string;
-  job_location: string | null;
-  job_location_type: string | null;
-  job_title: string;
-  job_type: string | null;
-  max_experience_needed: number | null;
-  max_salary: number | null;
-  min_experience_needed: number | null;
-  min_salary: number | null;
-  requirements: string[] | null;
-  status: string | null;
-  updated_at: string | null;
-  working_type: string | null;
-};
-
-interface JobsClientComponentProps {
-  initialJobs: LegacyJob[];
-  userRole?: string;
-  userId?: string;
-  organizationId?: string;
-}
-
-interface FilterState {
-  status: string;
-  location: string;
-  company: string;
-  isOpen: string | false;
-}
-
-// Transform legacy job to new job format
-const transformLegacyJob = (legacyJob: LegacyJob): Job => ({
-  id: legacyJob.job_id,
-  title: legacyJob.job_title,
-  description: legacyJob.job_description,
-  company_name: legacyJob.company_name,
-  company_logo_url: legacyJob.company_logo_url,
-  location: legacyJob.job_location,
-  job_location_type: legacyJob.job_location_type,
-  job_type: legacyJob.job_type,
-  working_type: legacyJob.working_type,
-  salary_min: legacyJob.min_salary,
-  salary_max: legacyJob.max_salary,
-  min_experience_needed: legacyJob.min_experience_needed,
-  max_experience_needed: legacyJob.max_experience_needed,
-  application_deadline: legacyJob.application_deadline,
-  status: legacyJob.status,
-  created_by: legacyJob.admin_id,
-  organization_id: null,
-  created_at: legacyJob.created_at,
-  updated_at: legacyJob.updated_at,
-});
-
-// Loading skeleton component
-const JobCardSkeleton: React.FC = () => (
-  <div className="bg-white rounded-2xl shadow-sm p-6 animate-pulse">
-    <div className="flex items-center mb-4">
-      <div className="w-14 h-14 bg-gray-300 rounded-xl"></div>
-      <div className="flex-1 ml-4">
-        <div className="h-5 bg-gray-300 rounded mb-2"></div>
-        <div className="h-4 bg-gray-300 rounded w-3/4"></div>
-      </div>
-    </div>
-    <div className="space-y-2">
-      <div className="h-8 bg-gray-300 rounded-lg w-32"></div>
-      <div className="h-8 bg-gray-300 rounded-lg w-24"></div>
-    </div>
-    <div className="mt-4">
-      <div className="h-6 bg-gray-300 rounded w-24 ml-auto"></div>
-    </div>
-  </div>
-);
-
-// Empty state component
-const EmptyState: React.FC<{ onAddJob: () => void }> = ({ onAddJob }) => (
-  <div className="flex flex-col items-center justify-center py-12 text-center">
-    <div className="w-32 h-32 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-      <IoList className="w-16 h-16 text-gray-400" />
-    </div>
-    <h3 className="text-xl font-semibold text-neutral-900 mb-2">No jobs found</h3>
-    <p className="text-neutral-600 mb-6">Get started by adding your first job posting.</p>
-    <button
-      type="button"
-      onClick={onAddJob}
-      className="bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg py-2 px-4 transition-colors cursor-pointer flex items-center gap-2"
-    >
-      <GoPlus className="h-5 w-5" />
-      Add Your First Job
-    </button>
-  </div>
-);
-
-// Error state component
-const ErrorState: React.FC<{ error: string; onRetry: () => void }> = ({ error, onRetry }) => (
-  <div className="flex flex-col items-center justify-center py-12 text-center">
-    <div className="w-32 h-32 bg-red-100 rounded-full flex items-center justify-center mb-4">
-      <svg className="w-16 h-16 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-      </svg>
-    </div>
-    <h3 className="text-xl font-semibold text-neutral-900 mb-2">Error loading jobs</h3>
-    <p className="text-neutral-600 mb-6">{error}</p>
-    <button
-      type="button"
-      onClick={onRetry}
-      className="bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg py-2 px-4 transition-colors cursor-pointer"
-    >
-      Try Again
-    </button>
-  </div>
-);
-
-// Filter dropdown component
-const FilterDropdown: React.FC<{
-  label: string;
-  value: string;
-  options: string[];
-  onChange: (value: string) => void;
-  isOpen: boolean;
-  onToggle: () => void;
-}> = ({ label, value, options, onChange, isOpen, onToggle }) => (
-  <div className="relative">
-    <button
-      onClick={onToggle}
-      className="flex items-center gap-1 font-medium cursor-pointer border border-neutral-500 px-4 py-2 rounded-3xl hover:border-neutral-700 transition-colors"
-    >
-      {value || label}
-      <FaCaretDown className={`w-4 h-4 text-neutral-500 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
-    </button>
-    {isOpen && (
-      <div className="absolute top-full left-0 mt-1 w-48 bg-white border border-neutral-200 rounded-lg shadow-lg z-10">
-        <div className="py-2">
-          <button
-            onClick={() => {
-              onChange('');
-              onToggle();
-            }}
-            className="w-full text-left px-4 py-2 hover:bg-gray-50 text-sm"
-          >
-            All {label}s
-          </button>
-          {options.map((option) => (
-            <button
-              key={option}
-              onClick={() => {
-                onChange(option);
-                onToggle();
-              }}
-              className="w-full text-left px-4 py-2 hover:bg-gray-50 text-sm"
-            >
-              {option}
-            </button>
-          ))}
-        </div>
-      </div>
-    )}
-  </div>
-);
+import { FilterState, JobsClientComponentProps } from "@/types/custom";
+import { JobCardSkeleton, EmptyState, ErrorState, FilterDropdown } from "./job_utils";
 
 export default function JobsClientComponent({
-  initialJobs = [],
   userRole,
   userId,
   organizationId
@@ -207,7 +37,6 @@ export default function JobsClientComponent({
   const error = useAppSelector(selectJobsError);
   const viewMode = useAppSelector(selectJobViewMode);
   const filters = useAppSelector(selectJobFilters);
-  const jobStats = useAppSelector(selectJobStats);
 
   // Local state
   const [initialized, setInitialized] = useState(false);
@@ -238,11 +67,7 @@ export default function JobsClientComponent({
   useEffect(() => {
     const initializeJobs = async () => {
       try {
-        if (initialJobs.length > 0) {
-          // Transform and set initial jobs
-          const transformedJobs = initialJobs.map(transformLegacyJob);
-          dispatch(setJobs(transformedJobs));
-        } else if (userRole && userId) {
+        if (userRole && userId && organizationId) {
           // Fetch jobs from API if no initial data
           await dispatch(fetchJobs({
             page: 1,
@@ -252,8 +77,11 @@ export default function JobsClientComponent({
             organizationId
           })).unwrap();
         }
+        else{
+          alert("Either you are not login or you are not a part of any organisation")
+        }
       } catch (err) {
-        console.error('Failed to initialize jobs:', err);
+        console.log('Failed to initialize jobs:', err);
       } finally {
         setInitialized(true);
       }
@@ -262,7 +90,7 @@ export default function JobsClientComponent({
     if (!initialized) {
       initializeJobs();
     }
-  }, [dispatch, initialJobs, userRole, userId, organizationId, initialized]);
+  }, [dispatch, userRole, userId, organizationId, initialized]);
 
   // Handlers
   const handleAddJob = useCallback(() => {
@@ -395,11 +223,6 @@ export default function JobsClientComponent({
             <h1 className="text-2xl font-semibold text-neutral-900">Manage All Jobs</h1>
             <p className="text-sm text-neutral-600 my-2">
               Manage your job listings and applications with ease.
-              {jobStats.total > 0 && (
-                <span className="ml-2 text-blue-600 font-medium">
-                  ({jobStats.total} total, {jobStats.active} active)
-                </span>
-              )}
             </p>
           </div>
           <div className="w-full md:w-auto mt-4 md:mt-0">
@@ -476,7 +299,9 @@ export default function JobsClientComponent({
                 onToggle={() => toggleFilterDropdown('company')}
               />
             </div>
-            <button className="flex items-center gap-1 font-medium cursor-pointer bg-neutral-200 px-4 py-2 rounded-3xl hover:bg-neutral-300 transition-colors">
+            <button className="flex items-center gap-1 font-medium cursor-pointer bg-neutral-200 px-4 py-2 rounded-3xl hover:bg-neutral-300 transition-colors"
+              onClick={()=>{alert("not yet implemented")}}
+              >
               <CiFilter className="w-5 h-5 text-neutral-500" />
               All Filters
             </button>

@@ -5,100 +5,37 @@ import { HiOutlineArrowCircleLeft } from "react-icons/hi";
 import Image from "next/image";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import type { RootState } from "@/store/store";
-import { FiUpload, FiAlertCircle } from "react-icons/fi";
+import { FiUpload } from "react-icons/fi";
 import { FaArrowRight } from "react-icons/fa6";
 import Link from "next/link";
 import LexicalEditor from "@/components/LexicalEditor";
 import { getSignedURL } from "@/app/jobs/actions";
-import { createJob } from "@/store/features//jobSlice";
-import { refreshUserData } from "@/store/features/userSlice";
+import { createJob } from "@/store/features/jobSlice";
+import { initializeAuth } from "@/store/features/userSlice";
 import type { RawJob } from "@/store/features/jobSlice";
+import type { FormErrors, JobFormData } from "@/types/custom";
+import {computeChecksum, renderError} from "./utils"
 
 const steps = ["Company", "Job Details", "Job Description"];
-
-// Form validation schema
-interface FormErrors {
-  companyLogo?: string;
-  companyName?: string;
-  jobTitle?: string;
-  jobType?: string;
-  jobLocationType?: string;
-  jobLocation?: string;
-  workingType?: string;
-  experience?: string;
-  salary?: string;
-  jobDescription?: string;
-  general?: string;
-}
-
-interface JobFormData {
-  companyLogo: File | null;
-  companyName: string;
-  jobTitle: string;
-  jobType: string;
-  jobLocationType: string;
-  jobLocation: string;
-  workingType: string;
-  minExperience: string;
-  maxExperience: string;
-  minSalary: string;
-  maxSalary: string;
-  jobDescription: string;
-  applicationDeadline: string;
-  status: string;
-}
-
-const computeChecksum = (file: File): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      if (event.target?.result) {
-        const arrayBuffer = event.target.result as ArrayBuffer;
-        const hashBuffer = crypto.subtle.digest("SHA-256", arrayBuffer);
-        hashBuffer
-          .then((hash) => {
-            const hashArray = Array.from(new Uint8Array(hash));
-            const hashHex = hashArray
-              .map((b) => b.toString(16).padStart(2, "0"))
-              .join("");
-            resolve(hashHex);
-          })
-          .catch(reject);
-      } else {
-        reject(new Error("Failed to read file"));
-      }
-    };
-    reader.onerror = () => reject(reader.error);
-    reader.readAsArrayBuffer(file);
-  });
-};
 
 export default function AddJob() {
   const dispatch = useAppDispatch();
   const router = useRouter();
   const collapsed = useAppSelector((state: RootState) => state.ui.sidebar.collapsed);
-  const { loading } = useAppSelector((state) => state.jobs);
-  const [organizationId, setOrganizationId] = useState<string | undefined>();
-  const [user_id, setUser_id] = useState<string | undefined>();
-  const [role_name, setRole] = useState<string | undefined>();
+  const loading  = useAppSelector((state: RootState) => state.jobs.loading);
+
 
   // Get user info from user slice
-  const { organization, roles, profile } = useAppSelector((state) => state.user);
+  const user = useAppSelector((state: RootState) => state.user.user);
+  const organization = useAppSelector((state: RootState) => state.user.organization);
+  const roles = useAppSelector((state: RootState) => state.user.roles);
 
-
+  // Initialize authentication if not already done
   useEffect(() => {
-    if (organization && roles && profile) {
-      setOrganizationId(organization.id)
-      setRole(roles[0]?.role.name);
-      setUser_id(profile.id)
+    if (!user || !roles || !organization) {
+        dispatch(initializeAuth());
     }
-  }, [organization, roles, profile]);
- 
-   // Load user data on component mount if not already loaded
-   useEffect(() => {
-     dispatch(refreshUserData());
-   }, [dispatch]);
-
+  }, [user, dispatch, roles, organization]);
 
   const [step, setStep] = useState(0);
   const [formData, setFormData] = useState<JobFormData>({
@@ -179,7 +116,7 @@ export default function AddJob() {
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
-
+  // Handlers
   const handleInputChange = (field: keyof JobFormData, value: string) => {
     setFormData(prev => ({
       ...prev,
@@ -201,10 +138,10 @@ export default function AddJob() {
       }
 
       // Validate file size (max 5MB)
-      if (file.size > 5 * 1024 * 1024) {
+      if (file.size > 2 * 1024 * 1024) {
         setErrors(prev => ({
           ...prev,
-          companyLogo: "File size must be less than 5MB"
+          companyLogo: "File size must be less than 2MB"
         }));
         return;
       }
@@ -265,13 +202,13 @@ export default function AddJob() {
   };
 
   const handleSubmit = async () => {
-    if (!user_id || !organizationId) {
+    if (!user?.id || !organization?.id) {
       setErrors({ general: "User authentication required. Please log in again." });
       return;
     }
 
     //check role
-    if (role_name !== "admin" && role_name !== "hr") {
+    if (roles[0].role.name !== "admin" && roles[0].role.name !== "hr") {
       setErrors({ general: "You do not have permission to create a job." });
       return;
     }
@@ -286,7 +223,7 @@ export default function AddJob() {
 
       // Prepare job data matching the database schema
       const jobData: Omit<RawJob, 'id' | 'created_at' | 'updated_at'> = {
-        organization_id: organizationId,
+        organization_id: organization?.id || null,
         title: formData.jobTitle.trim(),
         description: formData.jobDescription.trim(),
         company_name: formData.companyName.trim(),
@@ -301,7 +238,7 @@ export default function AddJob() {
         max_experience_needed: Number(formData.maxExperience),
         status: formData.status,
         application_deadline: formData.applicationDeadline || null,
-        created_by: user_id,
+        created_by: user.id,
       };
 
       // Create job using Redux action
@@ -316,7 +253,7 @@ export default function AddJob() {
         setErrors({ general: errorMessage });
       }
     } catch (error) {
-      console.error("Error creating job:", error);
+      console.log("Error creating job:", error);
       setErrors({ 
         general: error instanceof Error ? error.message : "An unexpected error occurred" 
       });
@@ -332,13 +269,6 @@ export default function AddJob() {
       router.push("/jobs");
     }
   };
-
-  const renderError = (error: string) => (
-    <div className="flex items-center gap-2 text-red-600 text-sm mt-1">
-      <FiAlertCircle className="w-4 h-4" />
-      <span>{error}</span>
-    </div>
-  );
 
   return (
     <div
@@ -669,19 +599,6 @@ export default function AddJob() {
                       </select>
                     </div>
                     {errors.salary && renderError(errors.salary)}
-                  </div>
-
-                  <div className="mt-4">
-                    <label className="block font-medium mb-2">
-                      Application Deadline (Optional)
-                    </label>
-                    <input
-                      type="date"
-                      className="w-full border border-neutral-300 rounded-lg px-3 py-2"
-                      value={formData.applicationDeadline}
-                      onChange={(e) => handleInputChange('applicationDeadline', e.target.value)}
-                      min={new Date().toISOString().split('T')[0]}
-                    />
                   </div>
                 </div>
               )}

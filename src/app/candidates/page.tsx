@@ -24,9 +24,6 @@ import {
   initializeAuth,
 } from "@/store/features/userSlice";
 
-// You'll need to get user context from your auth system
-// This is a placeholder - replace with your actual auth hook
-
 export default function Candidates() {
   const dispatch = useAppDispatch();
   const router = useRouter();
