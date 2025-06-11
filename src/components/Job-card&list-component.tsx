@@ -39,7 +39,7 @@ const JobListComponent = ({jobsFromStore}: { jobsFromStore: Job[]}) => {
             </thead>
             <tbody className="divide-y divide-gray-200">
               {jobsFromStore.map((job) => (
-                <tr key={job.job_id}>
+                <tr key={`job-row-${job.job_id}-${job.job_title}`}>
                   <td className="px-4 py-4">
                     <input type="checkbox" />
                   </td>

@@ -22,43 +22,49 @@ export const Overlay = ({ setShowOverlay, member, onSave }: OverlayProps) => {
     email: member?.email || "",
     role: member?.role || "",
   });
-  
+
   // Form validation state
   const [errors, setErrors] = useState<Partial<TeamMember>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   // Refs for focus management
   const overlayRef = useRef<HTMLDivElement>(null);
   const firstFocusableRef = useRef<HTMLInputElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
 
   // Handle escape key press
-  const handleEscapeKey = useCallback((event: KeyboardEvent) => {
-    if (event.key === "Escape") {
-      setShowOverlay(false);
-    }
-  }, [setShowOverlay]);
+  const handleEscapeKey = useCallback(
+    (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setShowOverlay(false);
+      }
+    },
+    [setShowOverlay]
+  );
 
   // Handle click outside overlay
-  const handleOverlayClick = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
-    if (event.target === event.currentTarget) {
-      setShowOverlay(false);
-    }
-  }, [setShowOverlay]);
+  const handleOverlayClick = useCallback(
+    (event: React.MouseEvent<HTMLDivElement>) => {
+      if (event.target === event.currentTarget) {
+        setShowOverlay(false);
+      }
+    },
+    [setShowOverlay]
+  );
 
   // Focus management
   useEffect(() => {
     // Add escape key listener
     document.addEventListener("keydown", handleEscapeKey);
-    
+
     // Focus first input when overlay opens
     if (firstFocusableRef.current) {
       firstFocusableRef.current.focus();
     }
-    
+
     // Prevent body scroll
     document.body.style.overflow = "hidden";
-    
+
     return () => {
       document.removeEventListener("keydown", handleEscapeKey);
       document.body.style.overflow = "unset";
@@ -68,54 +74,54 @@ export const Overlay = ({ setShowOverlay, member, onSave }: OverlayProps) => {
   // Form validation
   const validateForm = (): boolean => {
     const newErrors: Partial<TeamMember> = {};
-    
+
     if (!formData.name.trim()) {
       newErrors.name = "Name is required";
     }
-    
+
     if (!formData.email.trim()) {
       newErrors.email = "Email is required";
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = "Please enter a valid email address";
     }
-    
+
     if (!formData.role) {
       newErrors.role = "Role is required";
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   // Handle input changes
   const handleInputChange = (field: keyof TeamMember, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    
+    setFormData((prev) => ({ ...prev, [field]: value }));
+
     // Clear error when user starts typing
     if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: undefined }));
+      setErrors((prev) => ({ ...prev, [field]: undefined }));
     }
   };
 
   // Handle form submission
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
-    
+
     setIsSubmitting(true);
-    
+
     try {
       // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
       onSave({
         ...formData,
         id: member?.id || Date.now().toString(), // Generate ID for new members
       });
-      
+
       setShowOverlay(false);
     } catch (error) {
       console.log("Error saving team member:", error);
@@ -131,11 +137,13 @@ export const Overlay = ({ setShowOverlay, member, onSave }: OverlayProps) => {
       const focusableElements = overlayRef.current?.querySelectorAll(
         'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
       );
-      
+
       if (focusableElements && focusableElements.length > 0) {
         const firstElement = focusableElements[0] as HTMLElement;
-        const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement;
-        
+        const lastElement = focusableElements[
+          focusableElements.length - 1
+        ] as HTMLElement;
+
         if (event.shiftKey && document.activeElement === firstElement) {
           event.preventDefault();
           lastElement.focus();
@@ -148,14 +156,14 @@ export const Overlay = ({ setShowOverlay, member, onSave }: OverlayProps) => {
   };
 
   return (
-    <div 
+    <div
       className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
       onClick={handleOverlayClick}
       role="dialog"
       aria-modal="true"
       aria-labelledby="overlay-title"
     >
-      <div 
+      <div
         ref={overlayRef}
         className="bg-white relative rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
         onKeyDown={handleKeyDown}
@@ -168,20 +176,20 @@ export const Overlay = ({ setShowOverlay, member, onSave }: OverlayProps) => {
         >
           <IoMdClose className="w-6 h-6" />
         </button>
-        
+
         <div className="p-6">
           <h2 id="overlay-title" className="text-xl font-semibold mb-6">
             {member ? "Edit Team Member" : "Add New Team Member"}
           </h2>
-          
+
           <form onSubmit={handleSubmit} noValidate>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
               <div>
-                <label 
-                  htmlFor="member-name" 
+                <label
+                  htmlFor="member-name"
                   className="block text-sm font-medium text-gray-800 mb-2"
                 >
-                  Name 
+                  Name
                 </label>
                 <input
                   ref={firstFocusableRef}
@@ -190,8 +198,8 @@ export const Overlay = ({ setShowOverlay, member, onSave }: OverlayProps) => {
                   value={formData.name}
                   onChange={(e) => handleInputChange("name", e.target.value)}
                   className={`w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 transition-colors ${
-                    errors.name 
-                      ? "border-red-400 focus:ring-red-500" 
+                    errors.name
+                      ? "border-red-400 focus:ring-red-500"
                       : "border-gray-400 focus:ring-blue-500"
                   }`}
                   placeholder="Enter member's name"
@@ -199,18 +207,22 @@ export const Overlay = ({ setShowOverlay, member, onSave }: OverlayProps) => {
                   disabled={isSubmitting}
                 />
                 {errors.name && (
-                  <p id="name-error" className="text-red-500 text-sm mt-1" role="alert">
+                  <p
+                    id="name-error"
+                    className="text-red-500 text-sm mt-1"
+                    role="alert"
+                  >
                     {errors.name}
                   </p>
                 )}
               </div>
-              
+
               <div>
-                <label 
-                  htmlFor="member-email" 
+                <label
+                  htmlFor="member-email"
                   className="block text-sm font-medium text-gray-700 mb-2"
                 >
-                  Email 
+                  Email
                 </label>
                 <input
                   id="member-email"
@@ -218,8 +230,8 @@ export const Overlay = ({ setShowOverlay, member, onSave }: OverlayProps) => {
                   value={formData.email}
                   onChange={(e) => handleInputChange("email", e.target.value)}
                   className={`w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 transition-colors ${
-                    errors.email 
-                      ? "border-red-400 focus:ring-red-500" 
+                    errors.email
+                      ? "border-red-400 focus:ring-red-500"
                       : "border-gray-400 focus:ring-blue-500"
                   }`}
                   placeholder="Enter member's email"
@@ -227,26 +239,30 @@ export const Overlay = ({ setShowOverlay, member, onSave }: OverlayProps) => {
                   disabled={isSubmitting}
                 />
                 {errors.email && (
-                  <p id="email-error" className="text-red-500 text-sm mt-1" role="alert">
+                  <p
+                    id="email-error"
+                    className="text-red-500 text-sm mt-1"
+                    role="alert"
+                  >
                     {errors.email}
                   </p>
                 )}
               </div>
-              
+
               <div className="md:col-span-2">
-                <label 
-                  htmlFor="member-role" 
+                <label
+                  htmlFor="member-role"
                   className="block text-sm font-medium text-gray-700 mb-2"
                 >
-                  Role 
+                  Role
                 </label>
                 <select
                   id="member-role"
                   value={formData.role}
                   onChange={(e) => handleInputChange("role", e.target.value)}
                   className={`w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 appearance-none transition-colors ${
-                    errors.role 
-                      ? "border-red-400 focus:ring-red-500" 
+                    errors.role
+                      ? "border-red-400 focus:ring-red-500"
                       : "border-gray-400 focus:ring-blue-500"
                   }`}
                   aria-describedby={errors.role ? "role-error" : undefined}
@@ -260,7 +276,11 @@ export const Overlay = ({ setShowOverlay, member, onSave }: OverlayProps) => {
                   <option value="hr">HR Manager</option>
                 </select>
                 {errors.role && (
-                  <p id="role-error" className="text-red-500 text-sm mt-1" role="alert">
+                  <p
+                    id="role-error"
+                    className="text-red-500 text-sm mt-1"
+                    role="alert"
+                  >
                     {errors.role}
                   </p>
                 )}
@@ -286,8 +306,10 @@ export const Overlay = ({ setShowOverlay, member, onSave }: OverlayProps) => {
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                     Saving...
                   </>
+                ) : member ? (
+                  "Update Member"
                 ) : (
-                  member ? "Update Member" : "Add Member"
+                  "Add Member"
                 )}
               </button>
             </div>
