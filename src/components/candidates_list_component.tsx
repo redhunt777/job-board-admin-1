@@ -1,28 +1,33 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { CiFilter } from "react-icons/ci";
 import { HiDotsVertical } from "react-icons/hi";
+import { FiTrash } from "react-icons/fi";
 import { IoPersonCircleSharp } from "react-icons/io5";
 import FiltersModal from "@/components/filters-modal";
 import CandidatesDetailsOverlay from "@/components/candidates-details-overlay";
 import {
-  updateApplicationStatus,
+  updateApplicationStatusWithAccess,
   setFilters,
   clearFilters,
   setSortBy,
-  selectFilteredCandidates,
-  selectPaginatedCandidates,
+  selectFilteredCandidatesWithAccess,
+  selectPaginatedCandidatesWithAccess,
   selectCandidatesLoading,
   selectCandidatesError,
   selectFilters,
   selectSortBy,
   selectPagination,
+  selectUserContext,
+  selectHasFullAccess,
+  selectIsTAOnly,
   setPagination,
   CandidateWithApplication,
   CandidateFilters,
   SortOption,
+  fetchJobApplicationsWithAccess
 } from "@/store/features/candidatesSlice";
 import { MdErrorOutline } from "react-icons/md";
 
@@ -103,23 +108,14 @@ function CandidateCard({
   onView,
   onStatusUpdate,
   onClick,
-}: {
-  candidate: CandidateWithApplication;
+  canUpdateStatus
+}: { 
+  candidate: CandidateWithApplication; 
   onView: (candidate: CandidateWithApplication) => void;
   onStatusUpdate: (applicationId: string, status: string) => void;
   onClick?: (candidate: CandidateWithApplication) => void;
+  canUpdateStatus: boolean;
 }) {
-  const [isUpdating, setIsUpdating] = useState(false);
-
-  const handleStatusChange = async (newStatus: string) => {
-    if (isUpdating || newStatus === candidate.application_status) return;
-    setIsUpdating(true);
-    try {
-      onStatusUpdate(candidate.application_id, newStatus);
-    } finally {
-      setIsUpdating(false);
-    }
-  };
 
   const handleCardClick = () => {
     if (onClick) {
@@ -139,15 +135,66 @@ function CandidateCard({
     return "Not specified";
   };
 
+  const [isOpen, setIsOpen] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  const handleToggleDropdown = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsOpen(!isOpen);
+  };
+
+  const handleStatusChange = async (newStatus: string) => {
+    if (!canUpdateStatus) return;
+    
+    setIsUpdating(true);
+    try {
+      await onStatusUpdate(candidate.application_id, newStatus);
+    } catch (error) {
+      console.error("Failed to update status:", error);
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const handleDelete = () => {
+    // Add your delete logic here
+    console.log("Deleting candidate", candidate?.application_id);
+    
+    // You can add confirmation dialog here if needed
+    const confirmDelete = window.confirm("Are you sure you want to delete this candidate?");
+    if (confirmDelete) {
+      // Perform actual delete operation
+      console.log("Candidate deleted!");
+    }
+    
+    // Close dropdown after action
+    setIsOpen(false);
+  };
+
   return (
-    <div
-      className={`bg-white rounded-2xl shadow-sm p-4 mb-4 border hover:shadow-md transition-shadow ${
-        onClick ? "cursor-pointer" : ""
+    <div 
+      className={`bg-white rounded-2xl shadow-sm p-4 mb-4 hover:shadow-md transition-shadow ${
+        onClick ? 'cursor-pointer' : ''
       }`}
       onClick={handleCardClick}
     >
       <div className="flex items-start gap-3">
-        <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0">
+        <div className="w-16 h-16 rounded-full flex items-center justify-center flex-shrink-0">
           <IoPersonCircleSharp className="w-16 h-16 text-neutral-400" />
         </div>
 
@@ -161,11 +208,9 @@ function CandidateCard({
                 {candidate.candidate_email}
               </p>
               <p className="text-gray-500 text-sm truncate">
-                {candidate.address ||
-                  candidate.job_location ||
-                  "Location not specified"}
+                {candidate.address || "Location not specified"}
               </p>
-              <div className="mt-1">
+              <div className="mt-1 hidden sm:block">
                 <span className="text-sm text-gray-600">Applied for: </span>
                 <span className="text-sm font-medium text-gray-900">
                   {candidate.job_title}
@@ -177,30 +222,53 @@ function CandidateCard({
                   </span>
                 )}
               </div>
-              <p className="text-xs text-gray-500 mt-1">{formatSalary()}</p>
+              <p className="text-xs text-gray-500 hidden sm:block mt-1">{formatSalary()}</p>
               {candidate.notice_period && (
-                <p className="text-xs text-gray-500">
-                  Notice: {candidate.notice_period}
-                </p>
+                <p className="text-xs text-gray-500 hidden sm:block">Notice: {candidate.notice_period}</p>
               )}
             </div>
 
             <div className="flex flex-col items-end gap-2 ml-2">
-              <button className="text-gray-400 hover:text-gray-600 p-1">
-                <HiDotsVertical className="w-5 h-5" />
-              </button>
-
-              <select
-                value={candidate.application_status}
-                onChange={(e) => handleStatusChange(e.target.value)}
-                disabled={isUpdating}
-                className="text-xs border rounded px-2 py-1 min-w-20 disabled:opacity-50"
-                onClick={(e) => e.stopPropagation()} // Prevent card click when interacting with select
-              >
-                <option value="pending">Pending</option>
-                <option value="accepted">Accepted</option>
-                <option value="rejected">Rejected</option>
-              </select>
+              <div className="relative inline-block text-left" ref={dropdownRef}>
+                <button 
+                  onClick={handleToggleDropdown}
+                  className="text-gray-600 hover:text-gray-800 p-1 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  aria-label="More options"
+                >
+                  <HiDotsVertical className="w-5 h-5" />
+                </button>
+                
+                {isOpen && (
+                  <div className="absolute right-0 mt-2 w-28 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10">
+                    <ul className="py-1 text-sm text-gray-700">
+                      <li>
+                        <button
+                          onClick={handleDelete}
+                          className="block px-4 py-2 w-full text-left hover:bg-gray-100 hover:text-red-600 transition-colors duration-150"
+                        >
+                          <FiTrash className="inline mr-2" />
+                          Delete
+                        </button>
+                      </li>
+                    </ul>
+                  </div>
+                )}
+              </div>
+              
+              {/* Status update dropdown - only show if user has permission */}
+              {canUpdateStatus && (
+                <select
+                  value={candidate.application_status}
+                  onChange={(e) => handleStatusChange(e.target.value)}
+                  disabled={isUpdating}
+                  className="text-xs border rounded px-2 py-1 min-w-20 disabled:opacity-50"
+                  onClick={(e) => e.stopPropagation()} // Prevent card click when interacting with select
+                >
+                  <option value="pending">Pending</option>
+                  <option value="accepted">Accepted</option>
+                  <option value="rejected">Rejected</option>
+                </select>
+              )}
             </div>
           </div>
         </div>
@@ -212,17 +280,9 @@ function CandidateCard({
         <span className="text-sm text-gray-500">
           Applied {new Date(candidate.applied_date).toLocaleDateString()}
         </span>
-        {candidate.min_experience_needed && candidate.max_experience_needed && (
-          <>
-            <span className="text-gray-400">•</span>
-            <span className="text-sm text-gray-500">
-              {candidate.min_experience_needed}-
-              {candidate.max_experience_needed} years req.
-            </span>
-          </>
-        )}
       </div>
-
+      
+      {/* view details button */}
       <div className="flex justify-end mt-4">
         <button
           onClick={(e) => {
@@ -242,7 +302,7 @@ function CandidateCard({
 function Pagination() {
   const dispatch = useAppDispatch();
   const pagination = useAppSelector(selectPagination);
-  const filteredCandidates = useAppSelector(selectFilteredCandidates);
+  const filteredCandidates = useAppSelector(selectFilteredCandidatesWithAccess);
 
   // Early return if no data
   if (
@@ -372,15 +432,18 @@ export default function CandidatesList({
   onCandidateClick,
 }: CandidatesListProps) {
   const dispatch = useAppDispatch();
-
-  // Redux selectors
-  const paginatedCandidates = useAppSelector(selectPaginatedCandidates);
-  const filteredCandidates = useAppSelector(selectFilteredCandidates);
+  
+  // Redux selectors - using the new access-controlled selectors
+  const paginatedCandidates = useAppSelector(selectPaginatedCandidatesWithAccess);
+  const filteredCandidates = useAppSelector(selectFilteredCandidatesWithAccess);
   const loading = useAppSelector(selectCandidatesLoading);
   const error = useAppSelector(selectCandidatesError);
   const filters = useAppSelector(selectFilters);
   const sortBy = useAppSelector(selectSortBy);
-
+  const userContext = useAppSelector(selectUserContext);
+  const hasFullAccess = useAppSelector(selectHasFullAccess);
+  const isTAOnly = useAppSelector(selectIsTAOnly);
+  
   // Local state
   const [showFiltersModal, setShowFiltersModal] = useState(false);
   const [candidatesDetailsOverlay, setCandidatesDetailsOverlay] = useState<{
@@ -394,6 +457,7 @@ export default function CandidatesList({
   // Temporary filter states for modal
   const [tempFilters, setTempFilters] = useState<CandidateFilters>(filters);
   const [tempSortBy, setTempSortBy] = useState<SortOption>(sortBy);
+
 
   // Update temp filters when actual filters change
   useEffect(() => {
@@ -411,6 +475,16 @@ export default function CandidatesList({
     }
     return paginatedCandidates;
   }, [paginatedCandidates, maxItems]);
+
+  useEffect(() => {
+    console.log("Fetching candidates with access");
+    if (userContext && !loading && candidatesToDisplay.length === 0 && !error) {
+      dispatch(fetchJobApplicationsWithAccess({
+        filters: tempFilters,
+        userContext: userContext
+      }));
+    }
+}, []);
 
   // Get unique filter options from candidates
   const filterOptions = useMemo(() => {
@@ -495,12 +569,19 @@ export default function CandidatesList({
 
   // Handlers
   const handleStatusUpdate = async (applicationId: string, status: string) => {
+    if (!userContext) {
+      console.log("User context not available");
+      return;
+    }
+
     try {
-      await dispatch(
-        updateApplicationStatus({ applicationId, status })
-      ).unwrap();
+      await dispatch(updateApplicationStatusWithAccess({ 
+        applicationId, 
+        status, 
+        userContext 
+      })).unwrap();
     } catch (error) {
-      console.log("Failed to update status:", error);
+      console.error("Failed to update status:", error);
     }
   };
 
@@ -540,11 +621,23 @@ export default function CandidatesList({
     setTempSortBy("date_desc");
   };
 
+  // Determine if user can update status (admin, hr, or ta with access)
+  const canUpdateStatus = Boolean(hasFullAccess || (isTAOnly && userContext?.roles.includes('ta')));
+
   // Handle error state
   if (error) {
     return (
       <div className={className}>
         <ErrorMessage message={error} />
+      </div>
+    );
+  }
+
+  // Handle case where user context is not available
+  if (!userContext) {
+    return (
+      <div className={className}>
+        <ErrorMessage message="User context not available. Please log in again." />
       </div>
     );
   }
@@ -643,6 +736,7 @@ export default function CandidatesList({
                   onView={handleViewCandidate}
                   onStatusUpdate={handleStatusUpdate}
                   onClick={onCandidateClick}
+                  canUpdateStatus={canUpdateStatus}
                 />
               ))
             )}
@@ -677,9 +771,10 @@ export default function CandidatesList({
                   </tr>
                 ) : (
                   candidatesToDisplay.map((candidate) => (
-                    <tr
-                      key={candidate.application_id}
-                      className={`hover:bg-gray-50`}
+                    <tr 
+                      key={candidate.application_id} 
+                      className={`hover:bg-gray-50 ${onCandidateClick ? 'cursor-pointer' : ''}`}
+                      onClick={() => onCandidateClick && onCandidateClick(candidate)}
                     >
                       <td className="px-4 py-4">
                         <input
@@ -746,3 +841,4 @@ export default function CandidatesList({
     </div>
   );
 }
+

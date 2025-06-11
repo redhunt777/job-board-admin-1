@@ -1,30 +1,15 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import type { User } from "@supabase/supabase-js";
 import { loginServerAction, logoutServerAction, getUserServerAction } from "@/app/login/actions";
-
-// Type definitions
-interface UserMetadata {
-    [key: string]: any;
-    name?: string;
-    phone?: string;
-    role?: string;
-    admin_id?: string;
-}
-
-interface AuthUser extends User {
-    user_metadata: UserMetadata;
-}
-
-interface UserState {
-    user: AuthUser | null;
-    isAuthenticated: boolean;
-    loading: boolean;
-    error: string | null;
-}
+import type { CompleteUserData, UserState } from "@/types/custom";
 
 // Initial state
 const initialState: UserState = {
     user: null,
+    profile: null,
+    organization: null,
+    roles: [],
+    completeUserData: null,
     isAuthenticated: false,
     loading: false,
     error: null,
@@ -41,9 +26,30 @@ export const initializeAuth = createAsyncThunk(
                 return rejectWithValue(result.error || 'No user data returned');
             }
 
+            const completeData = result.data as CompleteUserData;
+
+            // Create a User object for backward compatibility
+            const user: User = {
+                id: completeData.id,
+                email: completeData.email,
+                email_confirmed_at: completeData.email_confirmed_at ?? undefined,
+                created_at: completeData.created_at,
+                updated_at: completeData.updated_at,
+                aud: 'authenticated',
+                role: 'authenticated',
+                app_metadata: {},
+                user_metadata: {},
+                identities: [],
+                factors: [],
+            };
+
             return {
-                user: result.data as AuthUser,
-                isAuthenticated: !!result.data
+                user,
+                profile: completeData.profile,
+                organization: completeData.organization,
+                roles: completeData.roles || [],
+                completeUserData: completeData,
+                isAuthenticated: true
             };
         } catch (error) {
             return rejectWithValue('Initialization failed');
@@ -51,30 +57,49 @@ export const initializeAuth = createAsyncThunk(
     }
 );
 
-
-
 export const loginUser = createAsyncThunk(
     'auth/loginUser',
     async (
         { email, password }: { email: string; password: string },
-        { rejectWithValue }
+        { rejectWithValue, dispatch }
     ) => {
         try {
-            const result = await loginServerAction(email, password)
+            const result = await loginServerAction(email, password);
 
             if (!result.success || !result.data || !result.data.user) {
                 return rejectWithValue(result.error || 'No user data returned');
             }
 
+            // After successful login, get the complete user data with profile
+            const userDataResult = await getUserServerAction();
+
+            if (userDataResult.success && userDataResult.data) {
+                const completeData = userDataResult.data as CompleteUserData;
+
+                return {
+                    user: result.data.user as User,
+                    profile: completeData.profile,
+                    organization: completeData.organization,
+                    roles: completeData.roles || [],
+                    completeUserData: completeData,
+                    isAuthenticated: true
+                };
+            }
+
+            // Fallback to just auth user data
             return {
-                user: result.data.user as AuthUser,
+                user: result.data.user as User,
+                profile: null,
+                organization: null,
+                roles: [],
+                completeUserData: null,
                 isAuthenticated: true
             };
         } catch (error) {
-            return rejectWithValue('Login failed')
+            return rejectWithValue('Login failed');
         }
     }
-)
+);
 
 export const logoutUser = createAsyncThunk(
     'auth/logoutUser',
@@ -93,21 +118,47 @@ export const logoutUser = createAsyncThunk(
     }
 );
 
-// Update user metadata in Supabase
-// export const updateUserMetadata = createAsyncThunk(
-//   'user/updateUserMetadata',
-//   async (metadata: UserMetadata, { rejectWithValue }) => {
-//     try {
-//       const { data, error } = await supabase.auth.updateUser({
-//         data: metadata
-//       });
-//       if (error) throw error;
-//       return data.user as AuthUser;
-//     } catch (error: any) {
-//       return rejectWithValue(error.message);
-//     }
-//   }
-// );
+// New thunk to refresh user data
+export const refreshUserData = createAsyncThunk(
+    'auth/refreshUserData',
+    async (_, { rejectWithValue }) => {
+        try {
+            const result = await getUserServerAction();
+
+            if (!result.success || !result.data) {
+                return rejectWithValue(result.error || 'Failed to refresh user data');
+            }
+
+            const completeData = result.data as CompleteUserData;
+
+            // Create a User object for backward compatibility
+            const user: User = {
+                id: completeData.id,
+                email: completeData.email,
+                email_confirmed_at: completeData.email_confirmed_at ?? undefined,
+                created_at: completeData.created_at,
+                updated_at: completeData.updated_at,
+                aud: 'authenticated',
+                role: 'authenticated',
+                app_metadata: {},
+                user_metadata: {},
+                identities: [],
+                factors: [],
+            };
+
+            return {
+                user,
+                profile: completeData.profile,
+                organization: completeData.organization,
+                roles: completeData.roles || [],
+                completeUserData: completeData,
+                isAuthenticated: true
+            };
+        } catch (error) {
+            return rejectWithValue('Failed to refresh user data');
+        }
+    }
+);
 
 // Slice
 const userSlice = createSlice({
@@ -121,8 +172,24 @@ const userSlice = createSlice({
             state.error = null;
         },
 
+        setCompleteUserData: (state, action) => {
+            const { user, profile, organization, roles, completeUserData } = action.payload;
+            state.user = user;
+            state.profile = profile;
+            state.organization = organization;
+            state.roles = roles || [];
+            state.completeUserData = completeUserData;
+            state.isAuthenticated = !!user;
+            state.loading = false;
+            state.error = null;
+        },
+
         clearUser: (state) => {
             state.user = null;
+            state.profile = null;
+            state.organization = null;
+            state.roles = [];
+            state.completeUserData = null;
             state.isAuthenticated = false;
             state.loading = false;
             state.error = null;
@@ -130,6 +197,15 @@ const userSlice = createSlice({
 
         clearError: (state) => {
             state.error = null;
+        },
+
+        updateProfile: (state, action) => {
+            if (state.profile) {
+                state.profile = { ...state.profile, ...action.payload };
+            }
+            if (state.completeUserData?.profile) {
+                state.completeUserData.profile = { ...state.completeUserData.profile, ...action.payload };
+            }
         },
     },
 
@@ -143,13 +219,21 @@ const userSlice = createSlice({
             .addCase(initializeAuth.fulfilled, (state, action) => {
                 state.loading = false;
                 state.user = action.payload.user;
-                state.isAuthenticated = action.payload.isAuthenticated ?? false;
+                state.profile = action.payload.profile;
+                state.organization = action.payload.organization;
+                state.roles = action.payload.roles;
+                state.completeUserData = action.payload.completeUserData;
+                state.isAuthenticated = action.payload.isAuthenticated;
                 state.error = null;
             })
             .addCase(initializeAuth.rejected, (state, action) => {
                 state.loading = false;
                 state.isAuthenticated = false;
                 state.user = null;
+                state.profile = null;
+                state.organization = null;
+                state.roles = [];
+                state.completeUserData = null;
                 state.error = typeof action.payload === 'string' ? action.payload : String(action.payload);
             })
 
@@ -161,6 +245,10 @@ const userSlice = createSlice({
             .addCase(loginUser.fulfilled, (state, action) => {
                 state.loading = false;
                 state.user = action.payload.user;
+                state.profile = action.payload.profile;
+                state.organization = action.payload.organization;
+                state.roles = action.payload.roles;
+                state.completeUserData = action.payload.completeUserData;
                 state.isAuthenticated = true;
                 state.error = null;
             })
@@ -177,6 +265,10 @@ const userSlice = createSlice({
             .addCase(logoutUser.fulfilled, (state) => {
                 state.loading = false;
                 state.user = null;
+                state.profile = null;
+                state.organization = null;
+                state.roles = [];
+                state.completeUserData = null;
                 state.isAuthenticated = false;
                 state.error = null;
             })
@@ -185,54 +277,100 @@ const userSlice = createSlice({
                 state.error = typeof action.payload === 'string' ? action.payload : String(action.payload);
             })
 
-        // Update User Metadata
-        // .addCase(updateUserMetadata.pending, (state) => {
-        //   state.loading = true;
-        //   state.error = null;
-        // })
-        // .addCase(updateUserMetadata.fulfilled, (state, action) => {
-        //   state.loading = false;
-        //   state.user = action.payload;
-        //   state.error = null;
-        // })
-        // .addCase(updateUserMetadata.rejected, (state, action) => {
-        //   state.loading = false;
-        //   state.error = typeof action.payload === 'string' ? action.payload : String(action.payload);
-        // });
+            // Refresh User Data
+            .addCase(refreshUserData.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(refreshUserData.fulfilled, (state, action) => {
+                state.loading = false;
+                state.user = action.payload.user;
+                state.profile = action.payload.profile;
+                state.organization = action.payload.organization;
+                state.roles = action.payload.roles;
+                state.completeUserData = action.payload.completeUserData;
+                state.isAuthenticated = action.payload.isAuthenticated;
+                state.error = null;
+            })
+            .addCase(refreshUserData.rejected, (state, action) => {
+                state.loading = false;
+                state.error = typeof action.payload === 'string' ? action.payload : String(action.payload);
+            });
     },
 });
 
 export const {
     setUser,
+    setCompleteUserData,
     clearUser,
     clearError,
+    updateProfile,
 } = userSlice.actions;
 
 export default userSlice.reducer;
 
-// Selectors
+// Enhanced Selectors
 export const selectUser = (state: { user: UserState }) => state.user.user;
+export const selectProfile = (state: { user: UserState }) => state.user.profile;
+export const selectOrganization = (state: { user: UserState }) => state.user.organization;
+export const selectRoles = (state: { user: UserState }) => state.user.roles;
+export const selectCompleteUserData = (state: { user: UserState }) => state.user.completeUserData;
 export const selectIsAuthenticated = (state: { user: UserState }) => state.user.isAuthenticated;
 export const selectUserLoading = (state: { user: UserState }) => state.user.loading;
 export const selectUserError = (state: { user: UserState }) => state.user.error;
 
-// Derived selectors
-export const selectUserEmail = (state: { user: UserState }) => state.user.user?.email;
-export const selectUserRole = (state: { user: UserState }) => state.user.user?.user_metadata?.role;
-export const selectUserAdminId = (state: { user: UserState }) => state.user.user?.user_metadata?.admin_id;
-export const selectUserName = (state: { user: UserState }) => state.user.user?.user_metadata?.name;
-export const selectUserPhone = (state: { user: UserState }) => state.user.user?.user_metadata?.phone;
-export const selectUserMetadata = (state: { user: UserState }) => state.user.user?.user_metadata;
-
 // Combined selector
 export const selectFullUserData = (state: { user: UserState }) => ({
     user: state.user.user,
-    email: state.user.user?.email,
-    role: state.user.user?.user_metadata?.role,
-    admin_id: state.user.user?.user_metadata?.admin_id,
-    phone: state.user.user?.user_metadata?.phone,
-    name: state.user.user?.user_metadata?.name,
+    profile: state.user.profile,
+    organization: state.user.organization,
+    roles: state.user.roles,
+    completeUserData: state.user.completeUserData,
     isAuthenticated: state.user.isAuthenticated,
     loading: state.user.loading,
     error: state.user.error,
 });
+
+// Permission helper selectors
+export const selectUserPermissions = (state: { user: UserState }) => {
+    const roles = state.user.roles;
+    if (!roles || roles.length === 0) return {};
+
+    // Merge all permissions from all roles
+    return roles.reduce((allPermissions, userRole) => {
+        if (userRole.is_active && userRole.role.permissions) {
+            return { ...allPermissions, ...userRole.role.permissions };
+        }
+        return allPermissions;
+    }, {});
+};
+
+export const selectHasPermission = (permission: string) => (state: { user: UserState }) => {
+    const roles = state.user.roles;
+    if (!roles || roles.length === 0) return false;
+
+    // Check if user has admin role (all permissions)
+    const hasAdminRole = roles.some(userRole =>
+        userRole.is_active &&
+        userRole.role.permissions?.all === true
+    );
+
+    if (hasAdminRole) return true;
+
+    // Check specific permission
+    const permissionPath = permission.split('.');
+    return roles.some(userRole => {
+        if (!userRole.is_active) return false;
+
+        let perms: any = userRole.role.permissions;
+        for (const path of permissionPath) {
+            if (!perms || typeof perms !== 'object') return false;
+            perms = perms[path];
+        }
+        return perms === true;
+    });
+};
+
+export const selectUserRoleNames = (state: { user: UserState }) => {
+    return state.user.roles?.filter(role => role.is_active).map(role => role.role.name) || [];
+};
