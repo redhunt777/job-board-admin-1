@@ -1,10 +1,18 @@
 "use client";
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import { Job } from '@/app/jobs/JobsClientComponent';
 import { MdCurrencyRupee } from 'react-icons/md';
 import { IoLocationOutline } from 'react-icons/io5';
 import { FaChevronRight } from 'react-icons/fa';
+
+type Job = {
+  job_id: string;
+  job_title: string;
+  company_name: string;
+  min_salary: number | null;
+  max_salary: number | null;
+  job_location: string;
+};
 
 const JobListComponent = ({jobsFromStore}: { jobsFromStore: Job[]}) => {
   const router = useRouter();
@@ -70,9 +78,10 @@ type JobCardProps = {
   max_salary: number;
   company_logo_url?: string;
 }
+
 const JobCard = ({ job }: { job: JobCardProps }) => {
   const router = useRouter();
-  
+  console.log("JobCard job:", job);
   const formatSalary = (min: number, max: number) => {
     if (min === 0 && max === 0) return "Salary not specified";
     if (min === max) return `${min.toLocaleString()}`;
@@ -80,7 +89,7 @@ const JobCard = ({ job }: { job: JobCardProps }) => {
   };
   
   return (
-        <div className="bg-white rounded-2xl shadow-sm p-6 mb-4 hover:shadow-md transition-shadow duration-200">
+        <div className="bg-white rounded-2xl shadow-sm p-3 md:p-6  hover:shadow-md transition-shadow duration-200">
           <div className="flex items-center justify-between mb-4">
             <div>
               <img
@@ -98,9 +107,10 @@ const JobCard = ({ job }: { job: JobCardProps }) => {
             <div className="flex-1 ml-4">
               <h2 className="text-xl font-semibold text-[#151515] line-clamp-2">{job.title}</h2>
               <p className="text-sm text-[#83858C] mt-1">{job.company_name}</p>
+              <p className="text-sm text-[#83858C] mt-1 block md:hidden">{job.location}</p>
             </div>
           </div>
-          <div className="space-y-2">
+          <div className="space-y-2 hidden md:block">
             <div className="block">
               <div className="inline-flex items-center justify-start gap-2 bg-[#F0F1F1] px-4 py-2 rounded-lg">
                 <MdCurrencyRupee className="w-5 h-5 text-[#1E5CDC]" />

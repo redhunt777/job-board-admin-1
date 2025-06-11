@@ -1,15 +1,22 @@
 import { createSlice, createAsyncThunk, createSelector } from '@reduxjs/toolkit';
 import { createClient } from '@/utils/supabase/client';
-import { Tables } from '@/types/supabase'; // Adjust import path as needed
+import { Tables } from '@/types/supabase';
 
 const supabase = createClient();
 
-// Use Supabase generated types
+// Types from your existing code
 export type JobApplication = Tables<'job_applications'>;
-export type CandidateProfile = Tables<'candidate_profiles'>;
+export type CandidateProfile = Tables<'candidates_profiles'>;
 export type Job = Tables<'jobs'>;
 export type Education = Tables<'education'>;
 export type Experience = Tables<'experience'>;
+
+// Enhanced user context type
+export interface UserContext {
+    userId: string;
+    organizationId: string;
+    roles: string[]; // ['admin', 'hr', 'ta']
+}
 
 // Enhanced type for joined data with proper nullable handling
 export type CandidateWithApplication = {
@@ -20,9 +27,9 @@ export type CandidateWithApplication = {
     created_at: string;
     updated_at: string;
 
-    // Candidate profile fields (matching actual database schema)
-    profile_id: string;
-    candidate_id: string | null;
+    // Candidate profile fields
+    id: string;
+    auth_id: string | null;
     name: string;
     candidate_email: string;
     mobile_number: string | null;
@@ -52,23 +59,23 @@ export type CandidateWithApplication = {
     max_salary: number | null;
     company_logo_url: string | null;
     job_description: string | null;
-    requirements: string[] | null;
-    benefits: string[] | null;
     application_deadline: string | null;
     job_status: string | null;
 
     // Related data
-    education?: Education[] | null; // Nullable array
-    experience?: Experience[] | null; // Nullable array
+    education?: Education[] | null;
+    experience?: Experience[] | null;
+
+    // Access control flag
+    hasAccess?: boolean;
 };
 
-// Improved filter types with proper constraints
 export interface CandidateFilters {
     status: 'All' | 'pending' | 'accepted' | 'rejected';
     location: string;
     jobTitle: string;
     company: string;
-    experienceRange: string; // e.g., "0-2", "3-5", "5+"
+    experienceRange: string;
     salaryMin: number | null;
     salaryMax: number | null;
     skills: string;
@@ -79,10 +86,8 @@ export interface CandidateFilters {
     noticePreriod: string;
 }
 
-// Sort options type
 export type SortOption = 'name_asc' | 'name_desc' | 'date_asc' | 'date_desc' | 'salary_asc' | 'salary_desc';
 
-// Stats interface
 export interface ApplicationStats {
     totalApplications: number;
     pendingApplications: number;
@@ -93,27 +98,38 @@ export interface ApplicationStats {
     thisMonthApplications: number;
 }
 
-// Async thunk to fetch job applications with enhanced error handling
-export const fetchJobApplications = createAsyncThunk(
-    'candidates/fetchJobApplications',
+// Enhanced async thunk with role-based access control
+export const fetchJobApplicationsWithAccess = createAsyncThunk(
+    'candidates/fetchJobApplicationsWithAccess',
     async (
-        filters: Partial<CandidateFilters> = {},
+        {
+            filters = {},
+            userContext
+        }: {
+            filters?: Partial<CandidateFilters>;
+            userContext: UserContext;
+        },
         { rejectWithValue }
     ) => {
         try {
+            const { userId, organizationId, roles } = userContext;
+
+            // Check if user has admin or hr role (full access)
+            const hasFullAccess = roles.includes('admin') || roles.includes('hr');
+
             let query = supabase
                 .from('job_applications')
                 .select(`
-          application_id,
+          id,
           applied_date,
           application_status,
           created_at,
           updated_at,
           job_id,
-          profile_id,
-          candidate_profiles!job_applications_profile_id_fkey (
-            profile_id,
-            candidate_id,
+          candidate_id,
+          candidates_profiles!job_applications_candidate_id_fkey (
+            id,
+            auth_id,
             name,
             candidate_email,
             mobile_number,
@@ -131,7 +147,7 @@ export const fetchJobApplications = createAsyncThunk(
             updated_at,
             dob,
             education (
-              education_id,
+              id,
               profile_id,
               degree,
               college_university,
@@ -153,28 +169,54 @@ export const fetchJobApplications = createAsyncThunk(
             )
           ),
           jobs!job_applications_job_id_fkey (
-            job_id,
-            job_title,
+            id,
+            title,
             company_name,
-            job_location,
+            location,
             job_location_type,
             job_type,
             working_type,
             min_experience_needed,
             max_experience_needed,
-            min_salary,
-            max_salary,
+            salary_min,
+            salary_max,
             company_logo_url,
-            job_description,
-            requirements,
-            benefits,
+            description,
             application_deadline,
             status,
-            created_at
+            created_at,
+            organization_id
           )
-        `).order('applied_date', { ascending: false });
+        `);
 
-            // Apply filters with proper type checking
+            // For TA role, only show jobs they have access to
+            if (!hasFullAccess && roles.includes('ta')) {
+                // First, get accessible job IDs for this TA
+                const { data: accessibleJobs, error: accessError } = await supabase
+                    .from('job_access_control')
+                    .select('job_id')
+                    .eq('user_id', userId)
+                    .eq('access_type', 'granted');
+
+                if (accessError) {
+                    throw new Error(`Failed to fetch job access: ${accessError.message}`);
+                }
+
+                const jobIds = accessibleJobs?.map(job => job.job_id).filter((id): id is string => id !== null) || [];
+
+                if (jobIds.length === 0) {
+                    // No accessible jobs, return empty array
+                    return [];
+                }
+
+                // Filter applications by accessible job IDs
+                query = query.in('job_id', jobIds);
+            }
+
+            // Apply organization filter for all roles
+            // Note: We'll filter by organization through the jobs table
+
+            // Apply other filters
             if (filters.status && filters.status !== 'All') {
                 query = query.eq('application_status', filters.status);
             }
@@ -189,7 +231,7 @@ export const fetchJobApplications = createAsyncThunk(
 
             // Add pagination support
             const limit = 50;
-            query = query.limit(limit);
+            query = query.limit(limit).order('applied_date', { ascending: false });
 
             const { data, error } = await query;
 
@@ -202,69 +244,75 @@ export const fetchJobApplications = createAsyncThunk(
                 return [];
             }
 
-            // Transform data with proper null checking and type safety
-            const transformedData: CandidateWithApplication[] = data.map((item) => {
-                const profile = item.candidate_profiles;
-                const job = item.jobs;
+            // Transform and filter data based on organization
+            const transformedData: CandidateWithApplication[] = data
+                .filter((item) => {
+                    // Filter by organization
+                    return item.jobs?.organization_id === organizationId;
+                })
+                .map((item) => {
+                    const profile = item.candidates_profiles;
+                    const job = item.jobs;
 
-                if (!profile || !job) {
-                    throw new Error(`Missing related data for application ${item.application_id}`);
-                }
+                    if (!profile || !job) {
+                        throw new Error(`Missing related data for application ${item.id}`);
+                    }
 
-                return {
-                    // Application fields
-                    application_id: item.application_id,
-                    applied_date: item.applied_date,
-                    application_status: item.application_status,
-                    created_at: item.created_at,
-                    updated_at: item.updated_at,
+                    return {
+                        // Application fields
+                        application_id: item.id,
+                        applied_date: item.applied_date,
+                        application_status: item.application_status,
+                        created_at: item.created_at,
+                        updated_at: item.updated_at,
 
-                    // Profile fields
-                    profile_id: profile.profile_id,
-                    candidate_id: profile.candidate_id,
-                    name: profile.name,
-                    candidate_email: profile.candidate_email,
-                    mobile_number: profile.mobile_number,
-                    address: profile.address,
-                    gender: profile.gender,
-                    disability: profile.disability,
-                    resume_link: profile.resume_link,
-                    portfolio_url: profile.portfolio_url,
-                    linkedin_url: profile.linkedin_url,
-                    additional_doc_link: profile.additional_doc_link,
-                    current_ctc: profile.current_ctc,
-                    expected_ctc: profile.expected_ctc,
-                    notice_period: profile.notice_period,
-                    dob: profile.dob,
+                        // Profile fields
+                        id: profile.id,
+                        auth_id: profile.auth_id,
+                        name: profile.name,
+                        candidate_email: profile.candidate_email,
+                        mobile_number: profile.mobile_number,
+                        address: profile.address,
+                        gender: profile.gender,
+                        disability: profile.disability,
+                        resume_link: profile.resume_link,
+                        portfolio_url: profile.portfolio_url,
+                        linkedin_url: profile.linkedin_url,
+                        additional_doc_link: profile.additional_doc_link,
+                        current_ctc: profile.current_ctc,
+                        expected_ctc: profile.expected_ctc,
+                        notice_period: profile.notice_period,
+                        dob: profile.dob,
 
-                    // Job fields
-                    job_id: job.job_id,
-                    job_title: job.job_title,
-                    company_name: job.company_name,
-                    job_location: job.job_location,
-                    job_location_type: job.job_location_type,
-                    job_type: job.job_type,
-                    working_type: job.working_type,
-                    min_experience_needed: job.min_experience_needed,
-                    max_experience_needed: job.max_experience_needed,
-                    min_salary: job.min_salary,
-                    max_salary: job.max_salary,
-                    company_logo_url: job.company_logo_url,
-                    job_description: job.job_description,
-                    requirements: job.requirements,
-                    benefits: job.benefits,
-                    application_deadline: job.application_deadline,
-                    job_status: job.status,
+                        // Job fields
+                        job_id: job.id,
+                        job_title: job.title,
+                        company_name: job.company_name,
+                        job_location: job.location,
+                        job_location_type: job.job_location_type,
+                        job_type: job.job_type,
+                        working_type: job.working_type,
+                        min_experience_needed: job.min_experience_needed,
+                        max_experience_needed: job.max_experience_needed,
+                        min_salary: job.salary_min,
+                        max_salary: job.salary_max,
+                        company_logo_url: job.company_logo_url,
+                        job_description: job.description,
+                        application_deadline: job.application_deadline,
+                        job_status: job.status,
 
-                    // Related data
-                    education: profile.education || [],
-                    experience: profile.experience || [],
-                };
-            });
+                        // Related data
+                        education: profile.education || [],
+                        experience: profile.experience || [],
+
+                        // Access control
+                        hasAccess: true, // If we reach here, user has access
+                    };
+                });
 
             return transformedData;
         } catch (error) {
-            console.log('fetchJobApplications error:', error);
+            console.log('fetchJobApplicationsWithAccess error:', error);
             return rejectWithValue(
                 error instanceof Error ? error.message : 'Unknown error occurred'
             );
@@ -272,14 +320,102 @@ export const fetchJobApplications = createAsyncThunk(
     }
 );
 
-// Enhanced async thunk to update application status
-export const updateApplicationStatus = createAsyncThunk(
-    'candidates/updateApplicationStatus',
+// Helper function to check if user can access a specific job
+export const checkJobAccess = createAsyncThunk(
+    'candidates/checkJobAccess',
     async (
-        { applicationId, status }: { applicationId: string; status: string },
+        { jobId, userContext }: { jobId: string; userContext: UserContext },
         { rejectWithValue }
     ) => {
         try {
+            const { userId, roles } = userContext;
+
+            // Admin and HR have access to all jobs
+            if (roles.includes('admin') || roles.includes('hr')) {
+                return { jobId, hasAccess: true };
+            }
+
+            // For TA, check job_access_control table
+            if (roles.includes('ta')) {
+                const { data, error } = await supabase
+                    .from('job_access_control')
+                    .select('access_type')
+                    .eq('job_id', jobId)
+                    .eq('user_id', userId)
+                    .single();
+
+                if (error && error.code !== 'PGRST116') { // PGRST116 is "not found"
+                    throw new Error(`Failed to check job access: ${error.message}`);
+                }
+
+                return {
+                    jobId,
+                    hasAccess: data?.access_type === 'granted' || false
+                };
+            }
+
+            return { jobId, hasAccess: false };
+        } catch (error) {
+            return rejectWithValue(
+                error instanceof Error ? error.message : 'Failed to check job access'
+            );
+        }
+    }
+);
+
+// Enhanced async thunk to update application status with access control
+export const updateApplicationStatusWithAccess = createAsyncThunk(
+    'candidates/updateApplicationStatusWithAccess',
+    async (
+        {
+            applicationId,
+            status,
+            userContext
+        }: {
+            applicationId: string;
+            status: string;
+            userContext: UserContext;
+        },
+        { rejectWithValue }
+    ) => {
+        try {
+            const { userId, roles } = userContext;
+
+            // Check if user has permission to update application status
+            if (!roles.includes('admin') && !roles.includes('hr') && !roles.includes('ta')) {
+                throw new Error('Insufficient permissions to update application status');
+            }
+
+            // For TA, check if they have access to the specific job
+            if (roles.includes('ta') && !roles.includes('admin') && !roles.includes('hr')) {
+                // First get the job_id for this application
+                const { data: appData, error: appError } = await supabase
+                    .from('job_applications')
+                    .select('job_id')
+                    .eq('id', applicationId)
+                    .single();
+
+                if (appError) {
+                    throw new Error(`Failed to fetch application: ${appError.message}`);
+                }
+
+                // Check if TA has access to this job
+                const { data: accessData, error: accessError } = await supabase
+                    .from('job_access_control')
+                    .select('access_type')
+                    .eq('job_id', appData.job_id)
+                    .eq('user_id', userId)
+                    .single();
+
+                if (accessError && accessError.code !== 'PGRST116') {
+                    throw new Error(`Failed to check job access: ${accessError.message}`);
+                }
+
+                if (!accessData || accessData.access_type !== 'granted') {
+                    throw new Error('You do not have access to update this application');
+                }
+            }
+
             // Validate status
             const validStatuses = ['pending', 'accepted', 'rejected'];
             const normalizedStatus = status.toLowerCase();
@@ -294,8 +430,8 @@ export const updateApplicationStatus = createAsyncThunk(
                     application_status: normalizedStatus,
                     updated_at: new Date().toISOString()
                 })
-                .eq('application_id', applicationId)
-                .select('application_id, application_status, updated_at')
+                .eq('id', applicationId)
+                .select('id, application_status, updated_at')
                 .single();
 
             if (error) {
@@ -307,51 +443,14 @@ export const updateApplicationStatus = createAsyncThunk(
             }
 
             return {
-                applicationId: data.application_id,
+                applicationId: data.id,
                 status: data.application_status,
                 updatedAt: data.updated_at
             };
         } catch (error) {
-            console.log('updateApplicationStatus error:', error);
+            console.log('updateApplicationStatusWithAccess error:', error);
             return rejectWithValue(
                 error instanceof Error ? error.message : 'Failed to update application status'
-            );
-        }
-    }
-);
-
-// Enhanced async thunk to fetch single candidate with related data
-export const fetchCandidateByApplicationId = createAsyncThunk(
-    'candidates/fetchCandidateByApplicationId',
-    async (applicationId: string, { rejectWithValue }) => {
-        try {
-            const { data, error } = await supabase
-                .from('job_applications')
-                .select(`
-          *,
-          candidate_profiles!job_applications_profile_id_fkey (
-            *,
-            education (*),
-            experience (*)
-          ),
-          jobs!job_applications_job_id_fkey (*)
-        `)
-                .eq('application_id', applicationId)
-                .single();
-
-            if (error) {
-                throw new Error(`Failed to fetch candidate: ${error.message}`);
-            }
-
-            if (!data) {
-                throw new Error('Candidate not found');
-            }
-
-            return data;
-        } catch (error) {
-            console.error('fetchCandidateByApplicationId error:', error);
-            return rejectWithValue(
-                error instanceof Error ? error.message : 'Failed to fetch candidate details'
             );
         }
     }
@@ -375,6 +474,8 @@ interface CandidatesState {
     };
     stats: ApplicationStats;
     lastFetched: string | null;
+    userContext: UserContext | null;
+    accessibleJobs: string[]; // For TA users
 }
 
 const initialState: CandidatesState = {
@@ -416,6 +517,8 @@ const initialState: CandidatesState = {
         thisMonthApplications: 0,
     },
     lastFetched: null,
+    userContext: null,
+    accessibleJobs: [],
 };
 
 // Utility function to calculate stats
@@ -446,6 +549,10 @@ const candidatesSlice = createSlice({
     name: 'candidates',
     initialState,
     reducers: {
+        setUserContext: (state, action) => {
+            state.userContext = action.payload;
+        },
+
         setCurrentCandidate: (state, action) => {
             const applicationId = action.payload;
             const candidate = state.candidates.find(c => c.application_id === applicationId);
@@ -458,7 +565,6 @@ const candidatesSlice = createSlice({
 
         setFilters: (state, action) => {
             state.filters = { ...state.filters, ...action.payload };
-            // Reset pagination when filters change
             state.pagination.currentPage = 1;
         },
 
@@ -506,112 +612,55 @@ const candidatesSlice = createSlice({
         refreshStats: (state) => {
             state.stats = calculateStats(state.candidates);
         },
+
+        setAccessibleJobs: (state, action) => {
+            state.accessibleJobs = action.payload;
+        },
     },
     extraReducers: (builder) => {
         builder
-            // Fetch job applications
-            .addCase(fetchJobApplications.pending, (state) => {
+            // Fetch job applications with access control
+            .addCase(fetchJobApplicationsWithAccess.pending, (state) => {
                 state.loading = true;
                 state.error = null;
             })
-            .addCase(fetchJobApplications.fulfilled, (state, action) => {
+            .addCase(fetchJobApplicationsWithAccess.fulfilled, (state, action) => {
                 state.loading = false;
                 state.candidates = action.payload;
                 state.stats = calculateStats(action.payload);
                 state.lastFetched = new Date().toISOString();
                 state.error = null;
             })
-            .addCase(fetchJobApplications.rejected, (state, action) => {
+            .addCase(fetchJobApplicationsWithAccess.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload as string;
                 state.candidates = [];
             })
 
-            // Update application status
-            .addCase(updateApplicationStatus.pending, (state) => {
+            // Update application status with access control
+            .addCase(updateApplicationStatusWithAccess.pending, (state) => {
                 state.error = null;
             })
-            .addCase(updateApplicationStatus.fulfilled, (state, action) => {
+            .addCase(updateApplicationStatusWithAccess.fulfilled, (state, action) => {
                 candidatesSlice.caseReducers.updateApplicationStatusInList(state, action);
                 candidatesSlice.caseReducers.refreshStats(state);
             })
-            .addCase(updateApplicationStatus.rejected, (state, action) => {
+            .addCase(updateApplicationStatusWithAccess.rejected, (state, action) => {
                 state.error = action.payload as string;
             })
 
-            // Fetch candidate by application ID
-            .addCase(fetchCandidateByApplicationId.pending, (state) => {
-                state.loading = true;
-                state.error = null;
-            })
-            .addCase(fetchCandidateByApplicationId.fulfilled, (state, action) => {
-                state.loading = false;
-                const item = action.payload;
-                const profile = item.candidate_profiles;
-                const job = item.jobs;
-
-                if (profile && job) {
-                    state.currentCandidate = {
-                        // Application fields
-                        application_id: item.application_id,
-                        applied_date: item.applied_date,
-                        application_status: item.application_status,
-                        created_at: item.created_at,
-                        updated_at: item.updated_at,
-
-                        // Profile fields
-                        profile_id: profile.profile_id,
-                        candidate_id: profile.candidate_id,
-                        name: profile.name,
-                        candidate_email: profile.candidate_email,
-                        mobile_number: profile.mobile_number,
-                        address: profile.address,
-                        gender: profile.gender,
-                        disability: profile.disability,
-                        resume_link: profile.resume_link,
-                        portfolio_url: profile.portfolio_url,
-                        linkedin_url: profile.linkedin_url,
-                        additional_doc_link: profile.additional_doc_link,
-                        current_ctc: profile.current_ctc,
-                        expected_ctc: profile.expected_ctc,
-                        notice_period: profile.notice_period,
-                        dob: profile.dob,
-
-                        // Job fields
-                        job_id: job.job_id,
-                        job_title: job.job_title,
-                        company_name: job.company_name,
-                        job_location: job.job_location,
-                        job_location_type: job.job_location_type,
-                        job_type: job.job_type,
-                        working_type: job.working_type,
-                        min_experience_needed: job.min_experience_needed,
-                        max_experience_needed: job.max_experience_needed,
-                        min_salary: job.min_salary,
-                        max_salary: job.max_salary,
-                        company_logo_url: job.company_logo_url,
-                        job_description: job.job_description,
-                        requirements: job.requirements,
-                        benefits: job.benefits,
-                        application_deadline: job.application_deadline,
-                        job_status: job.status,
-
-                        // Related data
-                        education: profile.education || [],
-                        experience: profile.experience || [],
-                    };
+            // Check job access
+            .addCase(checkJobAccess.fulfilled, (state, action) => {
+                const { jobId, hasAccess } = action.payload;
+                if (hasAccess && !state.accessibleJobs.includes(jobId)) {
+                    state.accessibleJobs.push(jobId);
                 }
-                state.error = null;
-            })
-            .addCase(fetchCandidateByApplicationId.rejected, (state, action) => {
-                state.loading = false;
-                state.error = action.payload as string;
-                state.currentCandidate = null;
             });
     },
 });
 
 export const {
+    setUserContext,
     setCurrentCandidate,
     clearCurrentCandidate,
     setFilters,
@@ -622,6 +671,7 @@ export const {
     setPagination,
     updateApplicationStatusInList,
     refreshStats,
+    setAccessibleJobs,
 } = candidatesSlice.actions;
 
 // Enhanced selectors with proper typing
@@ -637,44 +687,60 @@ export const selectSortBy = (state: RootState) => state.candidates.sortBy;
 export const selectPagination = (state: RootState) => state.candidates.pagination;
 export const selectStats = (state: RootState) => state.candidates.stats;
 export const selectLastFetched = (state: RootState) => state.candidates.lastFetched;
+export const selectUserContext = (state: RootState) => state.candidates.userContext;
+export const selectAccessibleJobs = (state: RootState) => state.candidates.accessibleJobs;
 
-// MEMOIZED SELECTORS - These are the fixed versions that prevent unnecessary re-renders
+// Role-based access selectors
+export const selectUserRoles = (state: RootState) => state.candidates.userContext?.roles || [];
+export const selectHasFullAccess = (state: RootState) => {
+    const roles = selectUserRoles(state);
+    return roles.includes('admin') || roles.includes('hr');
+};
+export const selectIsTAOnly = (state: RootState) => {
+    const roles = selectUserRoles(state);
+    return roles.includes('ta') && !roles.includes('admin') && !roles.includes('hr');
+};
 
-// Memoized selector for filtered candidates
-export const selectFilteredCandidates = createSelector(
-    [selectCandidates, selectFilters, selectSortBy],
-    (candidates, filters, sortBy) => {
-        // Ensure we always have an array
-        if (!Array.isArray(candidates)) {
+// Memoized selector for filtered candidates with access control
+export const selectFilteredCandidatesWithAccess = createSelector(
+    [selectCandidates, selectFilters, selectSortBy, selectUserContext],
+    (candidates, filters, sortBy, userContext) => {
+        if (!Array.isArray(candidates) || !userContext) {
             return [];
         }
 
+        const { roles } = userContext;
+        const hasFullAccess = roles.includes('admin') || roles.includes('hr');
+
         let filteredCandidates = candidates.filter(candidate => {
-            // Status filter
+            // Access control: If user is TA only, check if they have access to this job
+            if (!hasFullAccess && roles.includes('ta')) {
+                if (!candidate.hasAccess) {
+                    return false;
+                }
+            }
+
+            // Apply other filters
             if (filters.status !== 'All' && candidate.application_status !== filters.status) {
                 return false;
             }
 
-            // Location filter
             if (filters.location &&
                 !candidate.address?.toLowerCase().includes(filters.location.toLowerCase()) &&
                 !candidate.job_location?.toLowerCase().includes(filters.location.toLowerCase())) {
                 return false;
             }
 
-            // Job title filter
             if (filters.jobTitle &&
                 !candidate.job_title.toLowerCase().includes(filters.jobTitle.toLowerCase())) {
                 return false;
             }
 
-            // Company filter
             if (filters.company &&
                 !candidate.company_name?.toLowerCase().includes(filters.company.toLowerCase())) {
                 return false;
             }
 
-            // Salary filters
             if (filters.salaryMin && candidate.expected_ctc &&
                 candidate.expected_ctc < filters.salaryMin) {
                 return false;
@@ -685,7 +751,6 @@ export const selectFilteredCandidates = createSelector(
                 return false;
             }
 
-            // Date filters
             if (filters.dateFrom && new Date(candidate.applied_date) < new Date(filters.dateFrom)) {
                 return false;
             }
@@ -694,12 +759,10 @@ export const selectFilteredCandidates = createSelector(
                 return false;
             }
 
-            // Gender filter
             if (filters.gender && candidate.gender !== filters.gender) {
                 return false;
             }
 
-            // Disability filter
             if (filters.disability !== null && candidate.disability !== filters.disability) {
                 return false;
             }
@@ -732,8 +795,8 @@ export const selectFilteredCandidates = createSelector(
 );
 
 // Memoized selector for paginated candidates
-export const selectPaginatedCandidates = createSelector(
-    [selectFilteredCandidates, selectPagination],
+export const selectPaginatedCandidatesWithAccess = createSelector(
+    [selectFilteredCandidatesWithAccess, selectPagination],
     (filteredCandidates, pagination) => {
         const { currentPage, candidatesPerPage } = pagination;
         const startIndex = (currentPage - 1) * candidatesPerPage;
@@ -741,13 +804,6 @@ export const selectPaginatedCandidates = createSelector(
 
         return filteredCandidates.slice(startIndex, endIndex);
     }
-);
-
-// Memoized selector to get candidate by application ID
-export const selectCandidateByApplicationId = createSelector(
-    [selectCandidates, (state: RootState, applicationId: string) => applicationId],
-    (candidates, applicationId) =>
-        candidates.find(candidate => candidate.application_id === applicationId)
 );
 
 export default candidatesSlice.reducer;

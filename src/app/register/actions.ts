@@ -9,17 +9,17 @@ export async function admin_email_signup(formData: FormData) {
 
   // type-casting here for convenience
   // in practice, you should validate your inputs
-    if (!formData.has('email') || !formData.has('password') || !formData.has('phone') || !formData.has('name')) {
-        redirect('/register?error=missing_fields')
-    }
+  if (!formData.has('email') || !formData.has('password') || !formData.has('phone') || !formData.has('name')) {
+    redirect('/register?error=missing_fields')
+  }
   const data = {
     email: formData.get('email') as string,
     password: formData.get('password') as string,
     options: {
       data: {
-        role: 'admin',
+        role: 'user',
         phone: formData.get('phone') as string,
-        name: formData.get('name') as string,
+        full_name: formData.get('name') as string,
       },
     },
   }

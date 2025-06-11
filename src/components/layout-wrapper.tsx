@@ -17,7 +17,12 @@ export default function LayoutWrapper({ children, hideBottomNav = false }: Layou
   const isAuthPage = ['/login', '/register', '/reset-password', `/forgot-password`].includes(pathname);
 
   if (isAuthPage) {
-    return <LogoHeader />;
+    return (
+      <>
+        <LogoHeader />
+        {children}
+      </>
+    );
   }
 
   return (

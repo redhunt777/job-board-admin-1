@@ -1,17 +1,52 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { HiOutlineArrowCircleLeft } from "react-icons/hi";
 import Image from "next/image";
-import { useAppSelector } from "@/store/hooks";
-import { FiUpload } from "react-icons/fi";
+import { useAppSelector, useAppDispatch } from "@/store/hooks";
+import type { RootState } from "@/store/store";
+import { FiUpload, FiAlertCircle } from "react-icons/fi";
 import { FaArrowRight } from "react-icons/fa6";
 import Link from "next/link";
 import LexicalEditor from "@/components/LexicalEditor";
-import { createClient } from "@/utils/supabase/client";
-import { getSignedURL } from "@/app/jobs/actions"; 
+import { getSignedURL } from "@/app/jobs/actions";
+import { createJob } from "@/store/features//jobSlice";
+import { refreshUserData } from "@/store/features/userSlice";
+import type { RawJob } from "@/store/features/jobSlice";
 
 const steps = ["Company", "Job Details", "Job Description"];
+
+// Form validation schema
+interface FormErrors {
+  companyLogo?: string;
+  companyName?: string;
+  jobTitle?: string;
+  jobType?: string;
+  jobLocationType?: string;
+  jobLocation?: string;
+  workingType?: string;
+  experience?: string;
+  salary?: string;
+  jobDescription?: string;
+  general?: string;
+}
+
+interface JobFormData {
+  companyLogo: File | null;
+  companyName: string;
+  jobTitle: string;
+  jobType: string;
+  jobLocationType: string;
+  jobLocation: string;
+  workingType: string;
+  minExperience: string;
+  maxExperience: string;
+  minSalary: string;
+  maxSalary: string;
+  jobDescription: string;
+  applicationDeadline: string;
+  status: string;
+}
 
 const computeChecksum = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
@@ -32,131 +67,274 @@ const computeChecksum = (file: File): Promise<string> => {
     reader.onerror = () => reject(reader.error);
     reader.readAsArrayBuffer(file);
   });
-}
+};
 
 export default function AddJob() {
-  const supabase = createClient();
+  const dispatch = useAppDispatch();
+  const router = useRouter();
+  const collapsed = useAppSelector((state: RootState) => state.ui.sidebar.collapsed);
+  const { loading } = useAppSelector((state) => state.jobs);
+  const [organizationId, setOrganizationId] = useState<string | undefined>();
+  const [user_id, setUser_id] = useState<string | undefined>();
+  const [role_name, setRole] = useState<string | undefined>();
+
+  // Get user info from user slice
+  const { organization, roles, profile } = useAppSelector((state) => state.user);
+
+
+  useEffect(() => {
+    if (organization && roles && profile) {
+      setOrganizationId(organization.id)
+      setRole(roles[0]?.role.name);
+      setUser_id(profile.id)
+    }
+  }, [organization, roles, profile]);
+ 
+   // Load user data on component mount if not already loaded
+   useEffect(() => {
+     dispatch(refreshUserData());
+   }, [dispatch]);
+
+
   const [step, setStep] = useState(0);
-  const [companyLogo, setCompanyLogo] = useState<File | null>(null);
-  const [companyName, setCompanyName] = useState("");
-  const [jobMetadata, setJobMetadata] = useState({
+  const [formData, setFormData] = useState<JobFormData>({
+    companyLogo: null,
+    companyName: "",
     jobTitle: "",
     jobType: "",
     jobLocationType: "",
     jobLocation: "",
     workingType: "",
-    experience: { min: "", max: "" },
-    salary: { min: "", max: "" },
+    minExperience: "",
+    maxExperience: "",
+    minSalary: "",
+    maxSalary: "",
+    jobDescription: "",
+    applicationDeadline: "",
+    status: "active",
   });
-  const [jobDescription, setJobDescription] = useState("");
 
-  const router = useRouter();
-  const collapsed = useAppSelector((state) => state.ui.sidebar.collapsed);
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Clear errors when form data changes
+  useEffect(() => {
+    if (Object.keys(errors).length > 0) {
+      setErrors({});
+    }
+  }, [formData]);
+
+  const validateStep = (currentStep: number): boolean => {
+    const newErrors: FormErrors = {};
+
+    switch (currentStep) {
+      case 0: // Company step
+        if (!formData.companyLogo) {
+          newErrors.companyLogo = "Company logo is required";
+        }
+        if (!formData.companyName.trim()) {
+          newErrors.companyName = "Company name is required";
+        }
+        break;
+
+      case 1: // Job Details step
+        if (!formData.jobTitle.trim()) {
+          newErrors.jobTitle = "Job title is required";
+        }
+        if (!formData.jobType) {
+          newErrors.jobType = "Job type is required";
+        }
+        if (!formData.jobLocationType) {
+          newErrors.jobLocationType = "Job location type is required";
+        }
+        if (!formData.jobLocation) {
+          newErrors.jobLocation = "Job location is required";
+        }
+        if (!formData.workingType) {
+          newErrors.workingType = "Working type is required";
+        }
+        if (!formData.minExperience || !formData.maxExperience) {
+          newErrors.experience = "Both minimum and maximum experience are required";
+        } else if (Number(formData.minExperience) > Number(formData.maxExperience)) {
+          newErrors.experience = "Minimum experience cannot be greater than maximum";
+        }
+        if (!formData.minSalary || !formData.maxSalary) {
+          newErrors.salary = "Both minimum and maximum salary are required";
+        } else if (Number(formData.minSalary) > Number(formData.maxSalary)) {
+          newErrors.salary = "Minimum salary cannot be greater than maximum";
+        }
+        break;
+
+      case 2: // Job Description step
+        if (!formData.jobDescription.trim()) {
+          newErrors.jobDescription = "Job description is required";
+        }
+        break;
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleInputChange = (field: keyof JobFormData, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
 
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setCompanyLogo(e.target.files[0]);
+      const file = e.target.files[0];
+      
+      // Validate file type
+      if (!file.type.match(/^image\/(jpeg|jpg|png)$/)) {
+        setErrors(prev => ({
+          ...prev,
+          companyLogo: "Please select a valid image file (JPG, JPEG, or PNG)"
+        }));
+        return;
+      }
+
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        setErrors(prev => ({
+          ...prev,
+          companyLogo: "File size must be less than 5MB"
+        }));
+        return;
+      }
+
+      setFormData(prev => ({
+        ...prev,
+        companyLogo: file
+      }));
     }
   };
 
-  const handleUploadLogo = async (file: File) => {
+  const handleUploadLogo = async (file: File): Promise<{ key: string; userId: string }> => {
+    try {
       const checksum = await computeChecksum(file);
-      const signedURL = await getSignedURL(file.type, file.size, checksum, companyName);
+      const signedURL = await getSignedURL(file.type, file.size, checksum, formData.companyName);
+      
       if (signedURL.error) {
-        alert(signedURL.error);
-        return;
+        throw new Error(signedURL.error);
       }
+
       const url = signedURL.success?.url;
       const key = signedURL.success?.key;
       const userId = signedURL.success?.userId;
-      if (!url) {
-        alert("Failed to get signed URL.");
-        return;
+
+      if (!url || !key || !userId) {
+        throw new Error("Failed to get signed URL");
       }
-      const res = await fetch(url, {
+
+      const response = await fetch(url, {
         method: "PUT",
         headers: {
           "Content-Type": file.type,
         },
         body: file,
       });
-      if (!res.ok) {
-        throw new Error("Failed to upload company logo");
+
+      if (!response.ok) {
+        throw new Error(`Upload failed with status: ${response.status}`);
       }
-      return { key, userId };  // Return the key and userId for further processing if needed
+
+      return { key, userId };
+    } catch (error) {
+      throw new Error(`Failed to upload company logo: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
+  };
 
   const handleNext = async () => {
-    if (step < steps.length - 1) setStep(step + 1);
-    else {
-      // Handle form submission logic here
-      //validate inputs
-      if (!companyLogo || !companyName || !jobDescription || !jobMetadata.jobTitle || !jobMetadata.jobType || !jobMetadata.jobLocationType || !jobMetadata.jobLocation || !jobMetadata.workingType || !jobMetadata.experience.min || !jobMetadata.experience.max || !jobMetadata.salary.min || !jobMetadata.salary.max) {
-        alert("Please fill all required fields.");
-        return;
-      }
+    // Validate current step
+    if (!validateStep(step)) {
+      return;
+    }
 
-      //upload company logo to s3
-      let key: string | undefined;
-      let userId: string | undefined;
-      try {
-        const uploadResult = await handleUploadLogo(companyLogo);
-        if (!uploadResult || !uploadResult.key || !uploadResult.userId) {
-          alert("Failed to upload company logo. Please try again.");
-          return;
-        }
-        key = uploadResult.key;
-        userId = uploadResult.userId;
-      }
-      catch (error) {
-        console.log("Error uploading company logo:", error);
-        alert("Failed to upload company logo. Please try again.");
-        return;
-      }
-      const url = `https://${process.env.NEXT_PUBLIC_AWS_BUCKET_NAME}.s3.${process.env.NEXT_PUBLIC_AWS_BUCKET_REGION}.amazonaws.com/${key}`;
+    if (step < steps.length - 1) {
+      setStep(step + 1);
+    } else {
+      await handleSubmit();
+    }
+  };
 
-      // sending to supabase
-      try{
-      const { error } = await supabase
-        .from("jobs")
-        .insert([
-          {
-            company_logo_url: url,
-            company_name: companyName,
-            job_title: jobMetadata.jobTitle,
-            job_type: jobMetadata.jobType,
-            job_location_type: jobMetadata.jobLocationType,
-            job_location: jobMetadata.jobLocation,
-            working_type: jobMetadata.workingType,
-            min_experience_needed: Number(jobMetadata.experience.min),
-            max_experience_needed: Number(jobMetadata.experience.max),
-            min_salary: Number(jobMetadata.salary.min), 
-            max_salary: Number(jobMetadata.salary.max),
-            job_description: jobDescription,
-            admin_id: userId, 
-          },
-        ]);
-      if (error) {
-        console.log("Error inserting job:", error);
-        alert("Failed to create job. Please try again.");
-        return;
+  const handleSubmit = async () => {
+    if (!user_id || !organizationId) {
+      setErrors({ general: "User authentication required. Please log in again." });
+      return;
+    }
+
+    //check role
+    if (role_name !== "admin" && role_name !== "hr") {
+      setErrors({ general: "You do not have permission to create a job." });
+      return;
+    }
+
+    setIsSubmitting(true);
+    setErrors({});
+
+    try {
+      // Upload company logo
+      const uploadResult = await handleUploadLogo(formData.companyLogo!);
+      const logoUrl = `https://${process.env.NEXT_PUBLIC_AWS_BUCKET_NAME}.s3.${process.env.NEXT_PUBLIC_AWS_BUCKET_REGION}.amazonaws.com/${uploadResult.key}`;
+
+      // Prepare job data matching the database schema
+      const jobData: Omit<RawJob, 'id' | 'created_at' | 'updated_at'> = {
+        organization_id: organizationId,
+        title: formData.jobTitle.trim(),
+        description: formData.jobDescription.trim(),
+        company_name: formData.companyName.trim(),
+        company_logo_url: logoUrl,
+        location: formData.jobLocation,
+        job_location_type: formData.jobLocationType,
+        job_type: formData.jobType,
+        working_type: formData.workingType,
+        salary_min: Number(formData.minSalary),
+        salary_max: Number(formData.maxSalary),
+        min_experience_needed: Number(formData.minExperience),
+        max_experience_needed: Number(formData.maxExperience),
+        status: formData.status,
+        application_deadline: formData.applicationDeadline || null,
+        created_by: user_id,
+      };
+
+      // Create job using Redux action
+      const resultAction = await dispatch(createJob(jobData));
+      
+      if (createJob.fulfilled.match(resultAction)) {
+        // Success - redirect to jobs page
+        router.push("/jobs");
+      } else {
+        // Handle error from Redux action
+        const errorMessage = resultAction.payload as string || "Failed to create job";
+        setErrors({ general: errorMessage });
       }
-      }
-      catch(error) {
-        console.log("Error inserting job:", error);
-        alert("Failed to create job. Please try again.");
-        return;
-      }
-      // Redirect or show success message
-      alert("Company logo uploaded successfully!");
-      router.push("/jobs");
+    } catch (error) {
+      console.error("Error creating job:", error);
+      setErrors({ 
+        general: error instanceof Error ? error.message : "An unexpected error occurred" 
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handleBack = () => {
-    if (step > 0) setStep(step - 1);
-    else router.push("/jobs");
+    if (step > 0) {
+      setStep(step - 1);
+    } else {
+      router.push("/jobs");
+    }
   };
+
+  const renderError = (error: string) => (
+    <div className="flex items-center gap-2 text-red-600 text-sm mt-1">
+      <FiAlertCircle className="w-4 h-4" />
+      <span>{error}</span>
+    </div>
+  );
 
   return (
     <div
@@ -165,6 +343,7 @@ export default function AddJob() {
       } md:pt-0 pt-4`}
     >
       <div className="max-w-7xl w-full mx-auto mt-4 px-2 md:px-4 py-4">
+        {/* Breadcrumb */}
         <div className="flex items-center gap-2 mb-4">
           <Link
             href="/dashboard"
@@ -185,10 +364,21 @@ export default function AddJob() {
             Add a New Job
           </span>
         </div>
+
+        {/* Header */}
         <h1 className="text-2xl font-semibold mb-1">Add a New Job</h1>
         <p className="text-neutral-500 text-sm mb-6">
           Create and publish a new job listing to attract the right candidates.
         </p>
+
+        {/* Global Error */}
+        {errors.general && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+            {renderError(errors.general)}
+          </div>
+        )}
+
+        {/* Step Navigation */}
         <div className="flex gap-4 mb-6">
           <div className="flex gap-4 border-b border-neutral-300 w-fit">
             {steps.map((s, i) => (
@@ -197,29 +387,39 @@ export default function AddJob() {
                 className={`px-4 py-2 text-center font-medium transition-colors whitespace-nowrap cursor-pointer ${
                   i === step
                     ? "border-b-4 border-blue-600 text-blue-600"
+                    : i < step
+                    ? "text-green-600"
                     : "text-neutral-500"
                 }`}
                 onClick={() => setStep(i)}
                 type="button"
+                disabled={i > step}
               >
                 {s}
               </button>
             ))}
           </div>
         </div>
+
+        {/* Form Content */}
         <div className="flex justify-center items-center w-full">
           <div className="max-w-5xl w-full pb-20">
             <form
               className="bg-white rounded-2xl shadow-xs p-6"
               onSubmit={(e) => e.preventDefault()}
             >
+              {/* Step 0: Company */}
               {step === 0 && (
                 <div>
                   <label className="block text-lg font-medium mb-2">
                     Company Logo
                   </label>
                   <label
-                    className="flex flex-col items-center justify-center rounded-lg p-6 my-8 bg-neutral-100 cursor-pointer transition hover:bg-neutral-200/80 max-w-sm mx-auto"
+                    className={`flex flex-col items-center justify-center rounded-lg p-6 my-8 cursor-pointer transition max-w-sm mx-auto ${
+                      errors.companyLogo 
+                        ? "bg-red-50 border-2 border-red-200 hover:bg-red-100" 
+                        : "bg-neutral-100 hover:bg-neutral-200/80"
+                    }`}
                     htmlFor="company-logo-upload"
                     tabIndex={0}
                     onKeyDown={(e) => {
@@ -228,9 +428,9 @@ export default function AddJob() {
                       }
                     }}
                   >
-                    {companyLogo ? (
+                    {formData.companyLogo ? (
                       <Image
-                        src={URL.createObjectURL(companyLogo)}
+                        src={URL.createObjectURL(formData.companyLogo)}
                         alt="Company Logo Preview"
                         width={80}
                         height={80}
@@ -243,8 +443,7 @@ export default function AddJob() {
                           Upload Media
                         </span>
                         <span className="text-xs text-neutral-400 mt-1">
-                          Accepted file types: jpg, jpeg, png | Ratio must be
-                          1:1
+                          Accepted file types: jpg, jpeg, png | Max size: 5MB
                         </span>
                       </>
                     )}
@@ -257,20 +456,26 @@ export default function AddJob() {
                       tabIndex={-1}
                     />
                   </label>
+                  {errors.companyLogo && renderError(errors.companyLogo)}
+
                   <label className="block font-semibold mb-2">
-                    Name of the hiring company (client)
+                    Name of the hiring company
                     <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
-                    className="w-full border border-neutral-300 rounded-lg px-3 py-2 mb-4"
+                    className={`w-full border rounded-lg px-3 py-2 mb-2 ${
+                      errors.companyName ? "border-red-300" : "border-neutral-300"
+                    }`}
                     placeholder="e.g. Google"
-                    value={companyName}
-                    onChange={(e) => setCompanyName(e.target.value)}
-                    required
+                    value={formData.companyName}
+                    onChange={(e) => handleInputChange('companyName', e.target.value)}
                   />
+                  {errors.companyName && renderError(errors.companyName)}
                 </div>
               )}
+
+              {/* Step 1: Job Details */}
               {step === 1 && (
                 <div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -280,127 +485,124 @@ export default function AddJob() {
                       </label>
                       <input
                         type="text"
-                        className="w-full border border-neutral-300 rounded-lg px-3 py-2 mb-4"
+                        className={`w-full border rounded-lg px-3 py-2 mb-2 ${
+                          errors.jobTitle ? "border-red-300" : "border-neutral-300"
+                        }`}
                         placeholder="e.g. UI/UX Designer"
-                        value={jobMetadata.jobTitle}
-                        onChange={(e) =>
-                          setJobMetadata({
-                            ...jobMetadata,
-                            jobTitle: e.target.value,
-                          })
-                        }
-                        required
+                        value={formData.jobTitle}
+                        onChange={(e) => handleInputChange('jobTitle', e.target.value)}
                       />
+                      {errors.jobTitle && renderError(errors.jobTitle)}
                     </div>
+
                     <div>
                       <label className="block font-medium mb-2">
                         Job Type<span className="text-red-500">*</span>
                       </label>
                       <select
-                        className="w-full border border-neutral-300 rounded-lg px-3 py-2 mb-4"
-                        value={jobMetadata.jobType}
-                        onChange={(e) =>
-                          setJobMetadata({
-                            ...jobMetadata,
-                            jobType: e.target.value,
-                          })
-                        }
-                        required
+                        className={`w-full border rounded-lg px-3 py-2 mb-2 ${
+                          errors.jobType ? "border-red-300" : "border-neutral-300"
+                        }`}
+                        value={formData.jobType}
+                        onChange={(e) => handleInputChange('jobType', e.target.value)}
                       >
                         <option value="">Select</option>
-                        <option>Full-Time</option>
-                        <option>Part-Time</option>
-                        <option>Internship</option>
-                        <option>Contract</option>
+                        <option value="full-time">Full-Time</option>
+                        <option value="part-time">Part-Time</option>
+                        <option value="internship">Internship</option>
+                        <option value="contract">Contract</option>
                       </select>
+                      {errors.jobType && renderError(errors.jobType)}
                     </div>
+
                     <div>
                       <label className="block font-medium mb-2">
                         Job Location Type<span className="text-red-500">*</span>
                       </label>
                       <select
-                        className="w-full border border-neutral-300 rounded-lg px-3 py-2 mb-4"
-                        value={jobMetadata.jobLocationType}
-                        onChange={(e) =>
-                          setJobMetadata({
-                            ...jobMetadata,
-                            jobLocationType: e.target.value,
-                          })
-                        }
-                        required
+                        className={`w-full border rounded-lg px-3 py-2 mb-2 ${
+                          errors.jobLocationType ? "border-red-300" : "border-neutral-300"
+                        }`}
+                        value={formData.jobLocationType}
+                        onChange={(e) => handleInputChange('jobLocationType', e.target.value)}
                       >
                         <option value="">Select</option>
-                        <option>On-site</option>
-                        <option>Remote</option>
-                        <option>Hybrid</option>
+                        <option value="on-site">On-site</option>
+                        <option value="remote">Remote</option>
+                        <option value="hybrid">Hybrid</option>
                       </select>
+                      {errors.jobLocationType && renderError(errors.jobLocationType)}
                     </div>
+
                     <div>
                       <label className="block font-medium mb-2">
                         Job Location<span className="text-red-500">*</span>
                       </label>
                       <select
-                        className="w-full border border-neutral-300 rounded-lg px-3 py-2 mb-4"
-                        value={jobMetadata.jobLocation}
-                        onChange={(e) =>
-                          setJobMetadata({
-                            ...jobMetadata,
-                            jobLocation: e.target.value,
-                          })
-                        }
-                        required
+                        className={`w-full border rounded-lg px-3 py-2 mb-2 ${
+                          errors.jobLocation ? "border-red-300" : "border-neutral-300"
+                        }`}
+                        value={formData.jobLocation}
+                        onChange={(e) => handleInputChange('jobLocation', e.target.value)}
                       >
                         <option value="">Select</option>
-                        <option>Remote</option>
-                        <option>New York</option>
-                        <option>San Francisco</option>
-                        <option>Bangalore</option>
-                        <option>London</option>
-                        <option>Other</option>
+                        <option value="Remote">Remote</option>
+                        <option value="New York">New York</option>
+                        <option value="San Francisco">San Francisco</option>
+                        <option value="Bangalore">Bangalore</option>
+                        <option value="London">London</option>
+                        <option value="Other">Other</option>
                       </select>
+                      {errors.jobLocation && renderError(errors.jobLocation)}
                     </div>
+
                     <div>
                       <label className="block font-medium mb-2">
                         Working Type<span className="text-red-500">*</span>
                       </label>
                       <select
-                        className="w-full border border-neutral-300 rounded-lg px-3 py-2 mb-4"
-                        value={jobMetadata.workingType}
-                        onChange={(e) =>
-                          setJobMetadata({
-                            ...jobMetadata,
-                            workingType: e.target.value,
-                          })
-                        }
-                        required
+                        className={`w-full border rounded-lg px-3 py-2 mb-2 ${
+                          errors.workingType ? "border-red-300" : "border-neutral-300"
+                        }`}
+                        value={formData.workingType}
+                        onChange={(e) => handleInputChange('workingType', e.target.value)}
                       >
                         <option value="">Select</option>
-                        <option>Day</option>
-                        <option>Night</option>
-                        <option>Flexible</option>
+                        <option value="Day">Day</option>
+                        <option value="Night">Night</option>
+                        <option value="Flexible">Flexible</option>
+                      </select>
+                      {errors.workingType && renderError(errors.workingType)}
+                    </div>
+
+                    <div>
+                      <label className="block font-medium mb-2">
+                        Status<span className="text-red-500">*</span>
+                      </label>
+                      <select
+                        className="w-full border border-neutral-300 rounded-lg px-3 py-2 mb-2"
+                        value={formData.status}
+                        onChange={(e) => handleInputChange('status', e.target.value)}
+                      >
+                        <option value="active">Active</option>
+                        <option value="paused">Paused</option>
+                        <option value="closed">Closed</option>
                       </select>
                     </div>
                   </div>
+
                   <div className="mt-4">
                     <label className="block font-medium mb-2">
                       Experience<span className="text-red-500">*</span>{" "}
-                      <span className="text-neutral-400">(e.g. 1-2 Years)</span>
+                      <span className="text-neutral-400">(Years)</span>
                     </label>
                     <div className="flex gap-2">
                       <select
-                        className="w-full border border-neutral-300 rounded-lg px-3 py-2"
-
-                        value={jobMetadata.experience.min}
-                        onChange={(e) =>
-                          setJobMetadata({
-                            ...jobMetadata,
-                            experience: {
-                              ...jobMetadata.experience,
-                              min: e.target.value,
-                            },
-                          })
-                        }
-                        required
+                        className={`w-full border rounded-lg px-3 py-2 ${
+                          errors.experience ? "border-red-300" : "border-neutral-300"
+                        }`}
+                        value={formData.minExperience}
+                        onChange={(e) => handleInputChange('minExperience', e.target.value)}
                       >
                         <option value="">Min.</option>
                         {[...Array(11).keys()].map((y) => (
@@ -410,18 +612,11 @@ export default function AddJob() {
                         ))}
                       </select>
                       <select
-                        className="w-full border border-neutral-300 rounded-lg px-3 py-2"
-                        value={jobMetadata.experience.max}
-                        onChange={(e) =>
-                          setJobMetadata({
-                            ...jobMetadata,
-                            experience: {
-                              ...jobMetadata.experience,
-                              max: e.target.value,
-                            },
-                          })
-                        }
-                        required
+                        className={`w-full border rounded-lg px-3 py-2 ${
+                          errors.experience ? "border-red-300" : "border-neutral-300"
+                        }`}
+                        value={formData.maxExperience}
+                        onChange={(e) => handleInputChange('maxExperience', e.target.value)}
                       >
                         <option value="">Max</option>
                         {[...Array(11).keys()].map((y) => (
@@ -431,28 +626,21 @@ export default function AddJob() {
                         ))}
                       </select>
                     </div>
+                    {errors.experience && renderError(errors.experience)}
                   </div>
+
                   <div className="mt-4">
                     <label className="block font-medium mb-2">
                       Salary<span className="text-red-500">*</span>{" "}
-                      <span className="text-neutral-400">
-                        (e.g. 4 -4.8 Lakhs)
-                      </span>
+                      <span className="text-neutral-400">(Lakhs per annum)</span>
                     </label>
                     <div className="flex gap-2">
                       <select
-                        className="w-full border border-neutral-300 rounded-lg px-3 py-2"
-                        value={jobMetadata.salary.min}
-                        onChange={(e) =>
-                          setJobMetadata({
-                            ...jobMetadata,
-                            salary: {
-                              ...jobMetadata.salary,
-                              min: e.target.value,
-                            },
-                          })
-                        }
-                        required
+                        className={`w-full border rounded-lg px-3 py-2 ${
+                          errors.salary ? "border-red-300" : "border-neutral-300"
+                        }`}
+                        value={formData.minSalary}
+                        onChange={(e) => handleInputChange('minSalary', e.target.value)}
                       >
                         <option value="">Min.</option>
                         {[...Array(51).keys()].map((s) => (
@@ -462,18 +650,11 @@ export default function AddJob() {
                         ))}
                       </select>
                       <select
-                        className="w-full border border-neutral-300 rounded-lg px-3 py-2"
-                        value={jobMetadata.salary.max}
-                        onChange={(e) =>
-                          setJobMetadata({
-                            ...jobMetadata,
-                            salary: {
-                              ...jobMetadata.salary,
-                              max: e.target.value,
-                            },
-                          })
-                        }
-                        required
+                        className={`w-full border rounded-lg px-3 py-2 ${
+                          errors.salary ? "border-red-300" : "border-neutral-300"
+                        }`}
+                        value={formData.maxSalary}
+                        onChange={(e) => handleInputChange('maxSalary', e.target.value)}
                       >
                         <option value="">Max</option>
                         {[...Array(51).keys()].map((s) => (
@@ -483,38 +664,70 @@ export default function AddJob() {
                         ))}
                       </select>
                     </div>
+                    {errors.salary && renderError(errors.salary)}
+                  </div>
+
+                  <div className="mt-4">
+                    <label className="block font-medium mb-2">
+                      Application Deadline (Optional)
+                    </label>
+                    <input
+                      type="date"
+                      className="w-full border border-neutral-300 rounded-lg px-3 py-2"
+                      value={formData.applicationDeadline}
+                      onChange={(e) => handleInputChange('applicationDeadline', e.target.value)}
+                      min={new Date().toISOString().split('T')[0]}
+                    />
                   </div>
                 </div>
               )}
+
+              {/* Step 2: Job Description */}
               {step === 2 && (
                 <div>
                   <label className="block font-medium mb-2">
                     Job Description<span className="text-red-500">*</span>
                   </label>
-                  <LexicalEditor
-                    value={jobDescription}
-                    onChange={(setValue) => setJobDescription(setValue)}
-                  />
+                  <div className={errors.jobDescription ? "border border-red-300 rounded-lg" : ""}>
+                    <LexicalEditor
+                      value={formData.jobDescription}
+                      onChange={(value) => handleInputChange('jobDescription', value)}
+                    />
+                  </div>
+                  {errors.jobDescription && renderError(errors.jobDescription)}
                 </div>
               )}
             </form>
+
+            {/* Action Buttons */}
             <div className="flex justify-end mt-6 gap-2">
               <button
                 type="button"
-                className="border border-neutral-400 text-neutral-700 rounded-lg px-6 py-2 font-medium hover:bg-neutral-100 cursor-pointer"
+                className="border border-neutral-400 text-neutral-700 rounded-lg px-6 py-2 font-medium hover:bg-neutral-100 cursor-pointer disabled:opacity-50"
                 onClick={handleBack}
+                disabled={isSubmitting || loading}
               >
-                Cancel
+                {step === 0 ? "Cancel" : "Back"}
               </button>
               <button
                 type="button"
-                className="bg-blue-600 text-white rounded-lg px-6 py-2 font-medium hover:bg-blue-700 flex items-center cursor-pointer"
+                className="bg-blue-600 text-white rounded-lg px-6 py-2 font-medium hover:bg-blue-700 flex items-center cursor-pointer disabled:opacity-50"
                 onClick={handleNext}
+                disabled={isSubmitting || loading}
               >
-                {step === steps.length - 1 ? "Submit" : "Next"}
-                <span className="ml-2">
-                  <FaArrowRight />
-                </span>
+                {isSubmitting || loading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    {step === steps.length - 1 ? "Creating..." : "Processing..."}
+                  </>
+                ) : (
+                  <>
+                    {step === steps.length - 1 ? "Create Job" : "Next"}
+                    <span className="ml-2">
+                      <FaArrowRight />
+                    </span>
+                  </>
+                )}
               </button>
             </div>
           </div>

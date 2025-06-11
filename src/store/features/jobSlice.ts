@@ -1,299 +1,617 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { createClient } from '@/utils/supabase/client';
+import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
+import { createClient } from "@/utils/supabase/client";
+import { createSelector } from "@reduxjs/toolkit";
 
-const supabase = createClient();
-// Async thunk to fetch all jobs (for server-side or client-side)
-export const fetchJobs = createAsyncThunk(
-    'jobs/fetchJobs',
-    async (filters: Record<string, any> = {}, { rejectWithValue }) => {
-        try {
-            let query = supabase
-                .from('jobs')
-                .select('*')
-                .order('created_at', { ascending: false })
-                .limit(18);
+// Enhanced type definitions based on your database schema
+export interface Job {
+    id: string;
+    title: string;
+    description: string | null;
+    company_name: string | null;
+    company_logo_url: string | null;
+    location: string | null;
+    job_location_type: string | null;
+    job_type: string | null;
+    working_type: string | null;
+    salary_min: number | null;
+    salary_max: number | null;
+    min_experience_needed: number | null;
+    max_experience_needed: number | null;
+    application_deadline: string | null;
+    status: string | null;
+    created_by: string | null;
+    organization_id: string | null;
+    created_at: string | null;
+    updated_at: string | null;
+    // Access control fields
+    has_access?: boolean;
+    access_type?: string;
+    granted_by?: string;
+}
 
-            // Apply filters if provided
-            if (filters.location) {
-                query = query.ilike('job_location', `%${filters.location}%`);
-            }
-            if (filters.jobType) {
-                query = query.eq('job_type', filters.jobType);
-            }
-            if (filters.company) {
-                query = query.ilike('company_name', `%${filters.company}%`);
-            }
-            if (filters.salaryMin) {
-                query = query.gte('min_salary', filters.salaryMin);
-            }
+// Raw job type from database (matching your current structure)
+export interface RawJob {
+    id: string;
+    organization_id: string | null;
+    title: string;
+    description: string | null;
+    company_name: string | null;
+    company_logo_url: string | null;
+    location: string | null;
+    job_location_type: string | null;
+    job_type: string | null;
+    working_type: string | null;
+    salary_min: number | null;
+    salary_max: number | null;
+    min_experience_needed: number | null;
+    max_experience_needed: number | null;
+    application_deadline: string | null;
+    status: string | null;
+    created_by: string | null;
+    created_at: string | null;
+    updated_at: string | null;
+}
 
-            const { data, error } = await query;
+// Job access control interface
+export interface JobAccessControl {
+    id: string;
+    job_id: string;
+    user_id: string;
+    access_type: 'granted' | 'revoked';
+    granted_by: string | null;
+    created_at: string;
+    user_profiles?: {
+        id: string;
+        full_name: string;
+        email: string;
+    } | null;
+    granted_by_profile?: {
+        id: string;
+        full_name: string;
+        email: string;
+    } | null;
+}
 
-            if (error) throw error;
-            return data;
-        } catch (error) {
-            return rejectWithValue(error instanceof Error ? error.message : String(error));
-        }
-    }
-);
+// Job filters
+export interface JobFilters {
+    status?: string;
+    location?: string;
+    company?: string;
+    jobType?: string;
+    experienceLevel?: string;
+    salaryRange?: {
+        min: number;
+        max: number;
+    };
+    accessibleOnly?: boolean;
+}
 
-// Async thunk to fetch single job by ID (fallback when not in store)
-export const fetchJobById = createAsyncThunk(
-    'jobs/fetchJobById',
-    async (jobId: string | number, { getState, rejectWithValue }) => {
-        try {
-            // First check if job exists in store
-            const state = getState() as { jobs: typeof initialState };
-            const existingJob = state.jobs.jobs.find((job: Job) => job.job_id === jobId);
-
-            if (existingJob) {
-                return existingJob;
-            }
-
-            // If not in store, fetch from database
-            const { data, error } = await supabase
-                .from('jobs')
-                .select('*')
-                .eq('job_id', String(jobId))
-                .single();
-
-            if (error) throw error;
-            return data;
-        } catch (error) {
-            return rejectWithValue(error instanceof Error ? error.message : String(error));
-        }
-    }
-);
-
-// Async thunk to create a new job
-export const createJob = createAsyncThunk(
-    'jobs/createJob',
-    async (jobData: Job, { rejectWithValue }) => {
-        try {
-            const { data, error } = await supabase
-                .from('jobs')
-                .insert(jobData)
-                .select()
-                .single();
-
-            if (error) throw error;
-            return data;
-        } catch (error: any) {
-            return rejectWithValue(error instanceof Error ? error.message : String(error));
-        }
-    }
-);
-
-// Async thunk to update job
-export const updateJob = createAsyncThunk(
-    'jobs/updateJob',
-    async ({ job_id, updates }: { job_id: string; updates: Partial<Job> }, { rejectWithValue }) => {
-        try {
-            const { data, error } = await supabase
-                .from('jobs')
-                .update(updates)
-                .eq('job_id', job_id)
-                .select()
-                .single();
-
-            if (error) throw error;
-            return data;
-        } catch (error) {
-            return rejectWithValue(error instanceof Error ? error.message : String(error));
-        }
-    }
-);
-
-// Async thunk to delete job
-export const deleteJob = createAsyncThunk(
-    'jobs/deleteJob',
-    async (job_Id: string, { rejectWithValue }) => {
-        try {
-            const { error } = await supabase
-                .from('jobs')
-                .delete()
-                .eq('job_id', job_Id);
-
-            if (error) throw error;
-            return job_Id;
-        } catch (error) {
-            return rejectWithValue(error instanceof Error ? error.message : String(error));
-        }
-    }
-);
-
-type Job = {
-    admin_id: string
-    application_deadline: string | null
-    benefits: string[] | null
-    company_logo_url: string | null
-    company_name: string | null
-    created_at: string | null
-    job_description: string | null
-    job_id: string
-    job_location: string | null
-    job_location_type: string | null
-    job_title: string
-    job_type: string | null
-    max_experience_needed: number | null
-    max_salary: number | null
-    min_experience_needed: number | null
-    min_salary: number | null
-    requirements: string[] | null
-    status: string | null
-    updated_at: string | null
-    working_type: string | null
-};
-
+// Job state interface
 interface JobState {
     jobs: Job[];
-    currentJob: Job | null;
+    filteredJobs: Job[];
+    selectedJob: Job | null;
+    filters: JobFilters;
     loading: boolean;
     error: string | null;
-    filters: {
-        location: string;
-        jobType: string;
-        company: string;
-        salaryMin: number | null;
-    };
     pagination: {
         currentPage: number;
         totalPages: number;
-        totalJobs: number;
-        jobsPerPage: number;
+        totalCount: number;
+        pageSize: number;
     };
+    viewMode: 'board' | 'list';
+    userAccess: JobAccessControl[];
 }
 
+// Initial state
 const initialState: JobState = {
     jobs: [],
-    currentJob: null,
+    filteredJobs: [],
+    selectedJob: null,
+    filters: {},
     loading: false,
     error: null,
-    filters: {
-        location: '',
-        jobType: '',
-        company: '',
-        salaryMin: null,
-    },
     pagination: {
         currentPage: 1,
         totalPages: 1,
-        totalJobs: 0,
-        jobsPerPage: 10,
+        totalCount: 0,
+        pageSize: 18,
     },
+    viewMode: 'board',
+    userAccess: [],
 };
 
+// Utility function to transform raw job to normalized job
+const transformRawJob = (rawJob: RawJob): Job => ({
+    id: rawJob.id,
+    title: rawJob.title,
+    description: rawJob.description,
+    company_name: rawJob.company_name,
+    company_logo_url: rawJob.company_logo_url,
+    location: rawJob.location,
+    job_location_type: rawJob.job_location_type,
+    job_type: rawJob.job_type,
+    working_type: rawJob.working_type,
+    salary_min: rawJob.salary_min,
+    salary_max: rawJob.salary_max,
+    min_experience_needed: rawJob.min_experience_needed,
+    max_experience_needed: rawJob.max_experience_needed,
+    application_deadline: rawJob.application_deadline,
+    status: rawJob.status,
+    created_by: rawJob.created_by,
+    organization_id: rawJob.organization_id,
+    created_at: rawJob.created_at,
+    updated_at: rawJob.updated_at,
+});
+
+// Enhanced fetch jobs with role-based access control
+export const fetchJobs = createAsyncThunk(
+    'jobs/fetchJobs',
+    async (
+        params: {
+            page?: number;
+            limit?: number;
+            filters?: JobFilters;
+            userRole?: string;
+            userId?: string;
+            organizationId?: string;
+        } = {},
+        { rejectWithValue }
+    ) => {
+        try {
+            const supabase = createClient();
+            const {
+                page = 1,
+                limit = 18,
+                filters = {},
+                userRole,
+                userId,
+                organizationId
+            } = params;
+
+            let jobsQuery;
+            let accessibleJobIds: string[] = [];
+
+            // Role-based query logic
+            if (userRole === 'admin' && organizationId) {
+                // Admin can see all jobs in their organization
+                jobsQuery = supabase
+                    .from("jobs")
+                    .select("*", { count: 'exact' })
+                    .eq('organization_id', organizationId);
+            } else if (userRole === 'hr' && organizationId) {
+                // HR can see all jobs in their organization
+                jobsQuery = supabase
+                    .from("jobs")
+                    .select("*", { count: 'exact' })
+                    .eq('organization_id', organizationId);
+            } else if (userRole === 'ta' && userId) {
+                // TA can only see jobs they have access to
+                // First, get job IDs they have access to
+                const { data: accessData, error: accessError } = await supabase
+                    .from("job_access_control")
+                    .select("job_id")
+                    .eq('user_id', userId)
+                    .eq('access_type', 'granted');
+
+                if (accessError) {
+                    return rejectWithValue(accessError.message);
+                }
+
+                accessibleJobIds = accessData?.map(item => item.job_id).filter((id): id is string => id !== null) || [];
+
+                if (accessibleJobIds.length === 0) {
+                    // No accessible jobs for TA
+                    return {
+                        jobs: [],
+                        totalCount: 0,
+                        currentPage: page,
+                        totalPages: 0,
+                    };
+                }
+
+                jobsQuery = supabase
+                    .from("jobs")
+                    .select("*", { count: 'exact' })
+                    .in('id', accessibleJobIds);
+            } else {
+                // Default: no access
+                return {
+                    jobs: [],
+                    totalCount: 0,
+                    currentPage: page,
+                    totalPages: 0,
+                };
+            }
+
+            // Apply filters
+            if (filters.status) {
+                jobsQuery = jobsQuery.eq('status', filters.status);
+            }
+            if (filters.location) {
+                jobsQuery = jobsQuery.ilike('location', `%${filters.location}%`);
+            }
+            if (filters.company) {
+                jobsQuery = jobsQuery.ilike('company_name', `%${filters.company}%`);
+            }
+            if (filters.jobType) {
+                jobsQuery = jobsQuery.eq('job_type', filters.jobType);
+            }
+            if (filters.salaryRange) {
+                jobsQuery = jobsQuery
+                    .gte('salary_min', filters.salaryRange.min)
+                    .lte('salary_max', filters.salaryRange.max);
+            }
+
+            // Apply pagination and ordering
+            const from = (page - 1) * limit;
+            const to = from + limit - 1;
+
+            jobsQuery = jobsQuery
+                .order('created_at', { ascending: false })
+                .range(from, to);
+
+            const { data, error, count } = await jobsQuery;
+
+            if (error) {
+                return rejectWithValue(error.message);
+            }
+
+            const transformedJobs = data?.map(transformRawJob) || [];
+
+            // For TA users, mark which jobs they have access to
+            if (userRole === 'ta' && userId) {
+                transformedJobs.forEach(job => {
+                    job.has_access = accessibleJobIds.includes(job.id);
+                    job.access_type = 'granted';
+                });
+            }
+
+            return {
+                jobs: transformedJobs,
+                totalCount: count || 0,
+                currentPage: page,
+                totalPages: Math.ceil((count || 0) / limit),
+            };
+        } catch (error) {
+            return rejectWithValue('Failed to fetch jobs');
+        }
+    }
+);
+
+// Grant job access to a user (admin/hr only)
+export const grantJobAccess = createAsyncThunk(
+    'jobs/grantJobAccess',
+    async (
+        { jobId, userId, grantedBy }: { jobId: string; userId: string; grantedBy: string },
+        { rejectWithValue }
+    ) => {
+        try {
+            const supabase = createClient();
+
+            const { data, error } = await supabase
+                .from("job_access_control")
+                .upsert([{
+                    job_id: jobId,
+                    user_id: userId,
+                    access_type: 'granted',
+                    granted_by: grantedBy
+                }], {
+                    onConflict: 'job_id,user_id',
+                    ignoreDuplicates: false
+                })
+                .select()
+                .single();
+
+            if (error) {
+                return rejectWithValue(error.message);
+            }
+
+            return data as JobAccessControl;
+        } catch (error) {
+            return rejectWithValue('Failed to grant job access');
+        }
+    }
+);
+
+// Revoke job access from a user (admin/hr only)
+export const revokeJobAccess = createAsyncThunk(
+    'jobs/revokeJobAccess',
+    async (
+        { jobId, userId, revokedBy }: { jobId: string; userId: string; revokedBy: string },
+        { rejectWithValue }
+    ) => {
+        try {
+            const supabase = createClient();
+
+            const { data, error } = await supabase
+                .from("job_access_control")
+                .upsert([{
+                    job_id: jobId,
+                    user_id: userId,
+                    access_type: 'revoked',
+                    granted_by: revokedBy
+                }], {
+                    onConflict: 'job_id,user_id',
+                    ignoreDuplicates: false
+                })
+                .select()
+                .single();
+
+            if (error) {
+                return rejectWithValue(error.message);
+            }
+
+            return data as JobAccessControl;
+        } catch (error) {
+            return rejectWithValue('Failed to revoke job access');
+        }
+    }
+);
+
+// Get job access control list for a specific job
+export const fetchJobAccessControl = createAsyncThunk(
+    'jobs/fetchJobAccessControl',
+    async (jobId: string, { rejectWithValue }) => {
+        try {
+            const supabase = createClient();
+
+            const { data, error } = await supabase
+                .from("job_access_control")
+                .select(`
+                    *,
+                    user_profiles!job_access_control_user_id_fkey (
+                        id,
+                        full_name,
+                        email
+                    ),
+                    granted_by_profile:user_profiles!job_access_control_granted_by_fkey (
+                        id,
+                        full_name,
+                        email
+                    )
+                `)
+                .eq('job_id', jobId)
+                .eq('access_type', 'granted');
+
+            if (error) {
+                return rejectWithValue(error.message);
+            }
+
+            return data || [];
+        } catch (error) {
+            return rejectWithValue('Failed to fetch job access control');
+        }
+    }
+);
+
+export const fetchJobById = createAsyncThunk(
+    'jobs/fetchJobById',
+    async (
+        { jobId, userId, userRole }: { jobId: string; userId?: string; userRole?: string },
+        { rejectWithValue }
+    ) => {
+        try {
+            const supabase = createClient();
+
+            const { data, error } = await supabase
+                .from("jobs")
+                .select("*")
+                .eq('id', jobId)
+                .single();
+
+            if (error) {
+                return rejectWithValue(error.message);
+            }
+
+            const job = transformRawJob(data);
+
+            // Check access for TA users
+            if (userRole === 'ta' && userId) {
+                const { data: accessData, error: accessError } = await supabase
+                    .from("job_access_control")
+                    .select("access_type")
+                    .eq('job_id', jobId)
+                    .eq('user_id', userId)
+                    .eq('access_type', 'granted')
+                    .single();
+
+                if (accessError && accessError.code !== 'PGRST116') {
+                    return rejectWithValue('Failed to check job access');
+                }
+
+                if (!accessData) {
+                    return rejectWithValue('Access denied: You do not have permission to view this job');
+                }
+
+                job.has_access = true;
+                job.access_type = accessData.access_type || undefined;
+            }
+
+            return job;
+        } catch (error) {
+            return rejectWithValue('Failed to fetch job');
+        }
+    }
+);
+
+export const createJob = createAsyncThunk(
+    'jobs/createJob',
+    async (jobData: Omit<RawJob, 'id' | 'created_at' | 'updated_at'>, { rejectWithValue }) => {
+        try {
+            const supabase = createClient();
+
+            const { data, error } = await supabase
+                .from("jobs")
+                .insert([jobData])
+                .select()
+                .single();
+
+            if (error) {
+                return rejectWithValue(error.message);
+            }
+
+            return transformRawJob(data);
+        } catch (error) {
+            return rejectWithValue('Failed to create job');
+        }
+    }
+);
+
+export const updateJob = createAsyncThunk(
+    'jobs/updateJob',
+    async (
+        { jobId, updates }: { jobId: string; updates: Partial<RawJob> },
+        { rejectWithValue }
+    ) => {
+        try {
+            const supabase = createClient();
+
+            const { data, error } = await supabase
+                .from("jobs")
+                .update(updates)
+                .eq('id', jobId)
+                .select()
+                .single();
+
+            if (error) {
+                return rejectWithValue(error.message);
+            }
+
+            return transformRawJob(data);
+        } catch (error) {
+            return rejectWithValue('Failed to update job');
+        }
+    }
+);
+
+export const deleteJob = createAsyncThunk(
+    'jobs/deleteJob',
+    async (jobId: string, { rejectWithValue }) => {
+        try {
+            const supabase = createClient();
+
+            const { error } = await supabase
+                .from("jobs")
+                .delete()
+                .eq('id', jobId);
+
+            if (error) {
+                return rejectWithValue(error.message);
+            }
+
+            return jobId;
+        } catch (error) {
+            return rejectWithValue('Failed to delete job');
+        }
+    }
+);
+
+// Job slice
 const jobSlice = createSlice({
-    name: 'jobs',
+    name: "jobs",
     initialState,
     reducers: {
-        // Set jobs from server-side data
-        setJobs: (state, action) => {
-            state.jobs = action.payload;
+        setJobs: (state, action: PayloadAction<RawJob[]>) => {
+            state.jobs = action.payload.map(transformRawJob);
+            state.filteredJobs = state.jobs;
             state.loading = false;
             state.error = null;
         },
 
-        // Set current job for detailed view
-        setCurrentJob: (state, action) => {
-            const jobId = action.payload;
-            const job = state.jobs.find(job => job.job_id === jobId);
-            if (job) {
-                state.currentJob = job;
-            }
+        setSelectedJob: (state, action: PayloadAction<Job | null>) => {
+            state.selectedJob = action.payload;
         },
 
-        // Clear current job
-        clearCurrentJob: (state) => {
-            state.currentJob = null;
+        setViewMode: (state, action: PayloadAction<'board' | 'list'>) => {
+            state.viewMode = action.payload;
         },
 
-        // Update filters
-        setFilters: (state, action) => {
-            state.filters = { ...state.filters, ...action.payload };
+        setFilters: (state, action: PayloadAction<JobFilters>) => {
+            state.filters = action.payload;
+            // Apply filters to jobs
+            state.filteredJobs = state.jobs.filter(job => {
+                const { status, location, company, jobType, accessibleOnly } = action.payload;
+
+                if (status && job.status !== status) return false;
+                if (location && !job.location?.toLowerCase().includes(location.toLowerCase())) return false;
+                if (company && !job.company_name?.toLowerCase().includes(company.toLowerCase())) return false;
+                if (jobType && job.job_type !== jobType) return false;
+                if (accessibleOnly && !job.has_access) return false;
+
+                return true;
+            });
         },
 
-        // Clear filters
         clearFilters: (state) => {
-            state.filters = initialState.filters;
+            state.filters = {};
+            state.filteredJobs = state.jobs;
         },
 
-        // Set loading state
-        setLoading: (state, action) => {
-            state.loading = action.payload;
-        },
-
-        // Clear error
         clearError: (state) => {
             state.error = null;
         },
 
-        // Update pagination
-        setPagination: (state, action) => {
-            state.pagination = { ...state.pagination, ...action.payload };
+        clearSelectedJob: (state) => {
+            state.selectedJob = null;
         },
 
-        // Add single job to jobs array (useful for real-time updates)
-        addJob: (state, action) => {
-            state.jobs.unshift(action.payload);
-        },
-
-        // Remove job from jobs array
-        removeJob: (state, action) => {
-            state.jobs = state.jobs.filter(job => job.job_id !== action.payload);
-        },
-
-        // Update job in jobs array
-        updateJobInList: (state, action) => {
-            const index = state.jobs.findIndex(job => job.job_id === action.payload.job_id);
-            if (index !== -1) {
-                state.jobs[index] = action.payload;
+        updateJobAccess: (state, action: PayloadAction<{ jobId: string; hasAccess: boolean; accessType: string }>) => {
+            const { jobId, hasAccess, accessType } = action.payload;
+            const jobIndex = state.jobs.findIndex(job => job.id === jobId);
+            if (jobIndex !== -1) {
+                state.jobs[jobIndex].has_access = hasAccess;
+                state.jobs[jobIndex].access_type = accessType;
             }
-            // Also update current job if it's the same
-            if (state.currentJob && state.currentJob.job_id === action.payload.job_id) {
-                state.currentJob = action.payload;
+            const filteredJobIndex = state.filteredJobs.findIndex(job => job.id === jobId);
+            if (filteredJobIndex !== -1) {
+                state.filteredJobs[filteredJobIndex].has_access = hasAccess;
+                state.filteredJobs[filteredJobIndex].access_type = accessType;
             }
         },
     },
+
     extraReducers: (builder) => {
         builder
-            // Fetch jobs cases
+            // Fetch Jobs
             .addCase(fetchJobs.pending, (state) => {
                 state.loading = true;
                 state.error = null;
             })
             .addCase(fetchJobs.fulfilled, (state, action) => {
                 state.loading = false;
-                state.jobs = action.payload;
+                state.jobs = action.payload.jobs;
+                state.filteredJobs = action.payload.jobs;
+                state.pagination = {
+                    currentPage: action.payload.currentPage,
+                    totalPages: action.payload.totalPages,
+                    totalCount: action.payload.totalCount,
+                    pageSize: state.pagination.pageSize,
+                };
                 state.error = null;
             })
             .addCase(fetchJobs.rejected, (state, action) => {
                 state.loading = false;
-                state.error = action.payload as string;
+                state.error = typeof action.payload === 'string' ? action.payload : 'Failed to fetch jobs';
             })
 
-            // Fetch job by ID cases
+            // Fetch Job by ID
             .addCase(fetchJobById.pending, (state) => {
                 state.loading = true;
                 state.error = null;
             })
             .addCase(fetchJobById.fulfilled, (state, action) => {
                 state.loading = false;
-                state.currentJob = action.payload;
-
-                // Add to jobs array if not already present
-                const existsInList = state.jobs.find(job => job.job_id === action.payload.job_id);
-                if (!existsInList) {
-                    state.jobs.push(action.payload);
-                }
+                state.selectedJob = action.payload;
                 state.error = null;
             })
             .addCase(fetchJobById.rejected, (state, action) => {
                 state.loading = false;
-                state.error = action.payload as string;
+                state.error = typeof action.payload === 'string' ? action.payload : 'Failed to fetch job';
             })
 
-            // Create job cases
+            // Create Job
             .addCase(createJob.pending, (state) => {
                 state.loading = true;
                 state.error = null;
@@ -301,97 +619,179 @@ const jobSlice = createSlice({
             .addCase(createJob.fulfilled, (state, action) => {
                 state.loading = false;
                 state.jobs.unshift(action.payload);
+                state.filteredJobs.unshift(action.payload);
                 state.error = null;
             })
             .addCase(createJob.rejected, (state, action) => {
                 state.loading = false;
-                state.error = action.payload as string;
+                state.error = typeof action.payload === 'string' ? action.payload : 'Failed to create job';
             })
 
-            // Update job cases
+            // Update Job
             .addCase(updateJob.pending, (state) => {
                 state.loading = true;
                 state.error = null;
             })
             .addCase(updateJob.fulfilled, (state, action) => {
                 state.loading = false;
-                const index = state.jobs.findIndex(job => job.job_id === action.payload.job_id);
+                const index = state.jobs.findIndex(job => job.id === action.payload.id);
                 if (index !== -1) {
                     state.jobs[index] = action.payload;
+                    state.filteredJobs[index] = action.payload;
                 }
-                if (state.currentJob && state.currentJob.job_id === action.payload.job_id) {
-                    state.currentJob = action.payload;
+                if (state.selectedJob?.id === action.payload.id) {
+                    state.selectedJob = action.payload;
                 }
                 state.error = null;
             })
             .addCase(updateJob.rejected, (state, action) => {
                 state.loading = false;
-                state.error = action.payload as string;
+                state.error = typeof action.payload === 'string' ? action.payload : 'Failed to update job';
             })
 
-            // Delete job cases
+            // Delete Job
             .addCase(deleteJob.pending, (state) => {
                 state.loading = true;
                 state.error = null;
             })
             .addCase(deleteJob.fulfilled, (state, action) => {
                 state.loading = false;
-                state.jobs = state.jobs.filter(job => job.job_id !== action.payload);
-                if (state.currentJob && state.currentJob.job_id === action.payload) {
-                    state.currentJob = null;
+                state.jobs = state.jobs.filter(job => job.id !== action.payload);
+                state.filteredJobs = state.filteredJobs.filter(job => job.id !== action.payload);
+                if (state.selectedJob?.id === action.payload) {
+                    state.selectedJob = null;
                 }
                 state.error = null;
             })
             .addCase(deleteJob.rejected, (state, action) => {
                 state.loading = false;
-                state.error = action.payload as string;
+                state.error = typeof action.payload === 'string' ? action.payload : 'Failed to delete job';
+            })
+
+            // Grant Job Access
+            .addCase(grantJobAccess.fulfilled, (state, action) => {
+                const accessControl = action.payload;
+                state.userAccess.push(accessControl);
+                // Update job access status in state
+                const jobIndex = state.jobs.findIndex(job => job.id === accessControl.job_id);
+                if (jobIndex !== -1) {
+                    state.jobs[jobIndex].has_access = true;
+                    state.jobs[jobIndex].access_type = 'granted';
+                }
+            })
+
+            // Revoke Job Access
+            .addCase(revokeJobAccess.fulfilled, (state, action) => {
+                const accessControl = action.payload;
+                const accessIndex = state.userAccess.findIndex(
+                    access => access.job_id === accessControl.job_id && access.user_id === accessControl.user_id
+                );
+                if (accessIndex !== -1) {
+                    state.userAccess[accessIndex] = accessControl;
+                }
+                // Update job access status in state
+                const jobIndex = state.jobs.findIndex(job => job.id === accessControl.job_id);
+                if (jobIndex !== -1) {
+                    state.jobs[jobIndex].has_access = false;
+                    state.jobs[jobIndex].access_type = 'revoked';
+                }
+            })
+
+            // Fetch Job Access Control
+            .addCase(fetchJobAccessControl.fulfilled, (state, action) => {
+                // Store access control data for the specific job, filtering out entries with null job_id or user_id
+                state.userAccess = action.payload
+                    .filter(access => access.job_id !== null && access.user_id !== null && access.created_at !== null)
+                    .map(access => ({
+                        ...access,
+                        job_id: access.job_id!,
+                        user_id: access.user_id!,
+                        created_at: access.created_at!,
+                        access_type: access.access_type as 'granted' | 'revoked'
+                    }));
             });
     },
 });
 
 export const {
     setJobs,
-    setCurrentJob,
-    clearCurrentJob,
+    setSelectedJob,
+    setViewMode,
     setFilters,
     clearFilters,
-    setLoading,
     clearError,
-    setPagination,
-    addJob,
-    removeJob,
-    updateJobInList,
+    clearSelectedJob,
+    updateJobAccess,
 } = jobSlice.actions;
 
-// Define RootState type for selectors
-type RootState = { jobs: JobState };
-
-// Selectors
-export const selectJobs = (state: RootState) => state.jobs.jobs;
-export const selectCurrentJob = (state: RootState) => state.jobs.currentJob;
-export const selectJobsLoading = (state: RootState) => state.jobs.loading;
-export const selectJobsError = (state: RootState) => state.jobs.error;
-export const selectFilters = (state: RootState) => state.jobs.filters;
-export const selectPagination = (state: RootState) => state.jobs.pagination;
-
-// Get job by ID selector
-export const selectJobById = (state: RootState, jobId: string) =>
-    state.jobs.jobs.find(job => job.job_id === jobId);
-
-// Get filtered jobs selector
-export const selectFilteredJobs = (state: RootState) => {
-    const { jobs, filters } = state.jobs;
-
-    return jobs.filter(job => {
-        const matchesLocation = !filters.location ||
-            job.job_location?.toLowerCase().includes(filters.location.toLowerCase());
-        const matchesJobType = !filters.jobType || job.job_type === filters.jobType;
-        const matchesCompany = !filters.company ||
-            job.company_name?.toLowerCase().includes(filters.company.toLowerCase());
-        const matchesSalary = !filters.salaryMin || (job.min_salary !== null && job.min_salary >= filters.salaryMin);
-
-        return matchesLocation && matchesJobType && matchesCompany && matchesSalary;
-    });
-};
-
 export default jobSlice.reducer;
+
+// Enhanced Selectors
+export const selectJobs = (state: { jobs: JobState }) => state.jobs.filteredJobs;
+export const selectAllJobs = (state: { jobs: JobState }) => state.jobs.jobs;
+
+// Memoized selectors
+
+// Memoized job stats selector to prevent unnecessary rerenders
+export const selectJobStats = createSelector(
+    [selectAllJobs],
+    (jobs) => ({
+        total: jobs.length,
+        active: jobs.filter(job => job.status === 'active').length,
+        draft: jobs.filter(job => job.status === 'draft').length,
+        closed: jobs.filter(job => job.status === 'closed').length,
+        accessible: jobs.filter(job => job.has_access === true).length,
+        restricted: jobs.filter(job => job.has_access === false).length,
+    })
+);
+
+// Memoized accessible jobs selector
+export const selectAccessibleJobsMemoized = createSelector(
+    [selectAllJobs],
+    (jobs) => jobs.filter(job => job.has_access !== false)
+);
+
+// Memoized jobs with access selector
+export const selectJobsWithAccessMemoized = createSelector(
+    [selectAllJobs],
+    (jobs) => jobs.filter(job => job.has_access === true)
+);
+
+// Memoized jobs without access selector
+export const selectJobsWithoutAccessMemoized = createSelector(
+    [selectAllJobs],
+    (jobs) => jobs.filter(job => job.has_access === false)
+);
+export const selectSelectedJob = (state: { jobs: JobState }) => state.jobs.selectedJob;
+export const selectJobsLoading = (state: { jobs: JobState }) => state.jobs.loading;
+export const selectJobsError = (state: { jobs: JobState }) => state.jobs.error;
+export const selectJobFilters = (state: { jobs: JobState }) => state.jobs.filters;
+export const selectJobPagination = (state: { jobs: JobState }) => state.jobs.pagination;
+export const selectJobViewMode = (state: { jobs: JobState }) => state.jobs.viewMode;
+export const selectUserAccess = (state: { jobs: JobState }) => state.jobs.userAccess;
+
+// Role-based selectors
+export const selectAccessibleJobs = (state: { jobs: JobState }) =>
+    state.jobs.jobs.filter(job => job.has_access !== false);
+
+export const selectJobsWithAccess = (state: { jobs: JobState }) =>
+    state.jobs.jobs.filter(job => job.has_access === true);
+
+export const selectJobsWithoutAccess = (state: { jobs: JobState }) =>
+    state.jobs.jobs.filter(job => job.has_access === false);
+
+// Derived selectors
+export const selectJobsByStatus = (status: string) => (state: { jobs: JobState }) =>
+    state.jobs.jobs.filter(job => job.status === status);
+
+export const selectJobsCount = (state: { jobs: JobState }) => state.jobs.jobs.length;
+
+export const selectJobById = (jobId: string) => (state: { jobs: JobState }) =>
+    state.jobs.jobs.find(job => job.id === jobId);
+
+// Access control selectors
+export const selectJobAccessByJobId = (jobId: string) => (state: { jobs: JobState }) =>
+    state.jobs.userAccess.filter(access => access.job_id === jobId);
+
+export const selectUserJobAccess = (userId: string) => (state: { jobs: JobState }) =>
+    state.jobs.userAccess.filter(access => access.user_id === userId && access.access_type === 'granted');
