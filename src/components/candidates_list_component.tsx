@@ -495,9 +495,8 @@ export default function CandidatesList({
     return paginatedCandidates;
   }, [paginatedCandidates, maxItems]);
 
-  // Move useEffect before any conditional returns
+  // Fetch candidates effect - moved before any conditional returns
   useEffect(() => {
-    console.log("Fetching candidates with access");
     if (userContext && !loading && candidatesToDisplay.length === 0 && !error) {
       dispatch(
         fetchJobApplicationsWithAccess({
