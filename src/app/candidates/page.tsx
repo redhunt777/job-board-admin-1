@@ -21,9 +21,10 @@ import {
   UserContext,
 } from "@/store/features/candidatesSlice";
 
-import {
-  initializeAuth,
-} from "@/store/features/userSlice";
+import { initializeAuth } from "@/store/features/userSlice";
+
+import { User } from "@supabase/supabase-js";
+import { Organization, UserRole } from "@/types/custom";
 
 // Loading component for better UX
 const LoadingSpinner = ({ message = "Loading..." }: { message?: string }) => (
@@ -34,37 +35,55 @@ const LoadingSpinner = ({ message = "Loading..." }: { message?: string }) => (
 );
 
 // Error/Info message component
-const InfoMessage = ({ message, type = "info" }: { message: string; type?: "info" | "error" }) => (
-  <div className={`p-4 rounded-lg text-center ${
-    type === "error" 
-      ? "bg-red-50 text-red-700 border border-red-200" 
-      : "bg-blue-50 text-blue-700 border border-blue-200"
-  }`}>
+const InfoMessage = ({
+  message,
+  type = "info",
+}: {
+  message: string;
+  type?: "info" | "error";
+}) => (
+  <div
+    className={`p-4 rounded-lg text-center ${
+      type === "error"
+        ? "bg-red-50 text-red-700 border border-red-200"
+        : "bg-blue-50 text-blue-700 border border-blue-200"
+    }`}
+  >
     {message}
   </div>
 );
 
 // Main Candidates Content Component
-const CandidatesContent = ({ 
-  user, 
-  organization, 
-  roles, 
-  collapsed 
+const CandidatesContent = ({
+  user,
+  organization,
+  roles,
+  collapsed,
 }: {
-  user: any;
-  organization: any;
-  roles: any[];
+  user: User;
+  organization: Organization;
+  roles: UserRole[];
   collapsed: boolean;
 }) => {
   const dispatch = useAppDispatch();
   const router = useRouter();
-  
+
   // Candidates selectors
-  const error = useAppSelector((state) => selectCandidatesError(state as RootState));
-  const loading = useAppSelector((state) => selectCandidatesLoading(state as RootState));
-  const userContext = useAppSelector((state) => selectUserContext(state as RootState));
-  const hasFullAccess = useAppSelector((state) => selectHasFullAccess(state as RootState));
-  const isTAOnly = useAppSelector((state) => selectIsTAOnly(state as RootState));
+  const error = useAppSelector((state) =>
+    selectCandidatesError(state as RootState)
+  );
+  const loading = useAppSelector((state) =>
+    selectCandidatesLoading(state as RootState)
+  );
+  const userContext = useAppSelector((state) =>
+    selectUserContext(state as RootState)
+  );
+  const hasFullAccess = useAppSelector((state) =>
+    selectHasFullAccess(state as RootState)
+  );
+  const isTAOnly = useAppSelector((state) =>
+    selectIsTAOnly(state as RootState)
+  );
 
   // Get the primary role (first role) with fallback
   const primaryRole = roles[0]?.role?.name || "Unknown";
@@ -76,7 +95,7 @@ const CandidatesContent = ({
       organizationId: organization?.id,
       roles: roles,
     });
-    
+
     if (!user?.id || !organization?.id || !roles || roles.length === 0) {
       return null;
     }
@@ -84,10 +103,8 @@ const CandidatesContent = ({
     return {
       userId: user.id,
       organizationId: organization.id,
-      roles: roles.map(role => 
-        typeof role === 'string' 
-          ? role 
-          : role?.role?.name || role.toString()
+      roles: roles.map((role) =>
+        typeof role === "string" ? role : role?.role?.name || role.toString()
       ),
     };
   }, [user?.id, organization?.id, roles]);
@@ -102,10 +119,12 @@ const CandidatesContent = ({
   // Load candidates when user context is available
   useEffect(() => {
     if (memoizedUserContext) {
-      dispatch(fetchJobApplicationsWithAccess({
-        filters: {}, // You can add default filters here if needed
-        userContext: memoizedUserContext,
-      }));
+      dispatch(
+        fetchJobApplicationsWithAccess({
+          filters: {}, // You can add default filters here if needed
+          userContext: memoizedUserContext,
+        })
+      );
     }
   }, [dispatch, memoizedUserContext]);
 
@@ -122,14 +141,12 @@ const CandidatesContent = ({
     router.push("/jobs/add-job");
   };
 
-  // Handle candidate click (optional - for future use)
-  const handleCandidateClick = (candidate: CandidateWithApplication) => {
-    // Navigate to candidate detail page
-    router.push(`/candidates/${candidate.application_id}`);
-  };
-
   return (
-    <div className={`transition-all duration-300 h-full px-3 md:px-0 ${collapsed ? "md:ml-20" : "md:ml-64"} pt-4`}>
+    <div
+      className={`transition-all duration-300 h-full px-3 md:px-0 ${
+        collapsed ? "md:ml-20" : "md:ml-64"
+      } pt-4`}
+    >
       <div className="max-w-8xl mx-auto px-2 md:px-4 py-4">
         {/* Back Navigation and Title */}
         <div className="flex items-center gap-2 mb-6">
@@ -148,10 +165,10 @@ const CandidatesContent = ({
         <div className="flex items-center flex-wrap justify-between my-6">
           <div>
             <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-semibold text-[#151515]">
+              <h1 className="text-2xl font-semibold text-neutral-900">
                 All Candidates
               </h1>
-              
+
               {/* Role indicator badge */}
               {isTAOnly && (
                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
@@ -164,27 +181,30 @@ const CandidatesContent = ({
                 </span>
               )}
             </div>
-            
+
             <div className="mt-2">
-              <p className="text-sm text-[#606167]">
-                {isTAOnly 
+              <p className="text-sm text-neutral-500">
+                {isTAOnly
                   ? "Manage candidates for jobs you have access to."
-                  : "Manage all candidates and their applications with ease."
-                }
+                  : "Manage all candidates and their applications with ease."}
               </p>
-              
+
               {/* Organization and role info */}
-              <div className="flex flex-wrap gap-4 text-xs text-[#8B8B8B] mt-1">
-                <span>Organization: {organization.name || 'Current Organization'}</span>
+              <div className="flex flex-wrap gap-4 text-xs text-neutral-500 mt-1">
+                <span>
+                  Organization: {organization.name || "Current Organization"}
+                </span>
                 <span>Role: {primaryRole}</span>
               </div>
             </div>
           </div>
 
           {/* Add Job Button - Show based on permissions */}
-          {(hasFullAccess || roles?.some(role => 
-            (typeof role === 'string' ? role : role?.role?.name) === 'admin'
-          )) && (
+          {(hasFullAccess ||
+            roles?.some(
+              (role) =>
+                (typeof role === "string" ? role : role?.role?.name) === "admin"
+            )) && (
             <div className="w-full md:w-auto mt-4 md:mt-0">
               <button
                 type="button"
@@ -204,8 +224,16 @@ const CandidatesContent = ({
           <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                <svg
+                  className="h-5 w-5 text-red-400"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                    clipRule="evenodd"
+                  />
                 </svg>
               </div>
               <div className="ml-3">
@@ -241,8 +269,16 @@ const CandidatesContent = ({
           <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
             <div className="flex items-start">
               <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-amber-400 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                <svg
+                  className="h-5 w-5 text-amber-400 mt-0.5"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                    clipRule="evenodd"
+                  />
                 </svg>
               </div>
               <div className="ml-3">
@@ -250,7 +286,8 @@ const CandidatesContent = ({
                   Limited Access
                 </h3>
                 <p className="text-sm text-amber-700 mt-1">
-                  You can only view and manage candidates for jobs you have been granted access to.
+                  You can only view and manage candidates for jobs you have been
+                  granted access to.
                 </p>
               </div>
             </div>
@@ -272,13 +309,15 @@ const CandidatesContent = ({
 
 export default function Candidates() {
   const dispatch = useAppDispatch();
-  
+
   // UI selectors
   const collapsed = useAppSelector((state) => state.ui.sidebar.collapsed);
-  
+
   // User authentication data
   const user = useAppSelector((state: RootState) => state.user.user);
-  const organization = useAppSelector((state: RootState) => state.user.organization);
+  const organization = useAppSelector(
+    (state: RootState) => state.user.organization
+  );
   const roles = useAppSelector((state: RootState) => state.user.roles);
   const isLoading = useAppSelector((state: RootState) => state.user.loading);
   const error = useAppSelector((state: RootState) => state.user.error);
@@ -296,11 +335,15 @@ export default function Candidates() {
   // Handle error state
   if (error) {
     return (
-      <div className={`transition-all duration-300 h-full px-3 md:px-0 ${collapsed ? "md:ml-20" : "md:ml-64"} pt-4`}>
+      <div
+        className={`transition-all duration-300 h-full px-3 md:px-0 ${
+          collapsed ? "md:ml-20" : "md:ml-64"
+        } pt-4`}
+      >
         <div className="max-w-8xl mx-auto px-2 md:px-4 py-4">
-          <InfoMessage 
-            message={`Authentication error: ${error}`} 
-            type="error" 
+          <InfoMessage
+            message={`Authentication error: ${error}`}
+            type="error"
           />
         </div>
       </div>
@@ -310,7 +353,11 @@ export default function Candidates() {
   // Handle loading state
   if (isLoading || !user) {
     return (
-      <div className={`transition-all duration-300 h-full px-3 md:px-0 ${collapsed ? "md:ml-20" : "md:ml-64"} pt-4`}>
+      <div
+        className={`transition-all duration-300 h-full px-3 md:px-0 ${
+          collapsed ? "md:ml-20" : "md:ml-64"
+        } pt-4`}
+      >
         <div className="max-w-8xl mx-auto px-2 md:px-4 py-4">
           <LoadingSpinner message="Loading user authentication..." />
         </div>
@@ -321,10 +368,14 @@ export default function Candidates() {
   // Handle missing organization
   if (!organization) {
     return (
-      <div className={`transition-all duration-300 h-full px-3 md:px-0 ${collapsed ? "md:ml-20" : "md:ml-64"} pt-4`}>
+      <div
+        className={`transition-all duration-300 h-full px-3 md:px-0 ${
+          collapsed ? "md:ml-20" : "md:ml-64"
+        } pt-4`}
+      >
         <div className="max-w-8xl mx-auto px-2 md:px-4 py-4">
-          <InfoMessage 
-            message="You are not part of any organization. Please contact your administrator." 
+          <InfoMessage
+            message="You are not part of any organization. Please contact your administrator."
             type="info"
           />
         </div>
@@ -335,10 +386,14 @@ export default function Candidates() {
   // Handle missing roles with more helpful message
   if (!roles || roles.length === 0) {
     return (
-      <div className={`transition-all duration-300 h-full px-3 md:px-0 ${collapsed ? "md:ml-20" : "md:ml-64"} pt-4`}>
+      <div
+        className={`transition-all duration-300 h-full px-3 md:px-0 ${
+          collapsed ? "md:ml-20" : "md:ml-64"
+        } pt-4`}
+      >
         <div className="max-w-8xl mx-auto px-2 md:px-4 py-4">
-          <InfoMessage 
-            message="No role is assigned to you. Please contact your administrator to assign a role." 
+          <InfoMessage
+            message="No role is assigned to you. Please contact your administrator to assign a role."
             type="info"
           />
         </div>
@@ -349,11 +404,15 @@ export default function Candidates() {
   // Additional validation for required data
   if (!user.id || !organization.id) {
     return (
-      <div className={`transition-all duration-300 h-full px-3 md:px-0 ${collapsed ? "md:ml-20" : "md:ml-64"} pt-4`}>
+      <div
+        className={`transition-all duration-300 h-full px-3 md:px-0 ${
+          collapsed ? "md:ml-20" : "md:ml-64"
+        } pt-4`}
+      >
         <div className="max-w-8xl mx-auto px-2 md:px-4 py-4">
-          <InfoMessage 
-            message="Invalid user or organization data. Please try refreshing the page." 
-            type="error" 
+          <InfoMessage
+            message="Invalid user or organization data. Please try refreshing the page."
+            type="error"
           />
         </div>
       </div>
@@ -361,7 +420,7 @@ export default function Candidates() {
   }
 
   return (
-    <CandidatesContent 
+    <CandidatesContent
       user={user}
       organization={organization}
       roles={roles}

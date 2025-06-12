@@ -35,7 +35,7 @@ const AdminRegister = () => {
     if (formState) {
       setFormState(null);
     }
-  }, [name, email, phoneNumber, password]);
+  }, [name, email, phoneNumber, password, formState]);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();

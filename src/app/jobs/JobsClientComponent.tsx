@@ -204,10 +204,10 @@ export default function JobsClientComponent({
     }
   }, [dispatch, userRole, userId, organizationId, isValidProps]);
 
-  const toggleFilterDropdown = useCallback((filterType: keyof FilterState) => {
+  const toggleFilterDropdown = useCallback((filterType: 'status' | 'location' | 'company') => {
     setFilterDropdowns((prev) => ({
       ...prev,
-      isOpen: prev.isOpen === filterType ? false : (filterType as any),
+      isOpen: prev.isOpen === filterType ? false : filterType,
     }));
   }, []);
 

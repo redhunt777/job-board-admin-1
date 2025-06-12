@@ -25,7 +25,7 @@ export interface Role {
     name: string;
     display_name: string;
     description: string | null;
-    permissions: Record<string, any>;
+    permissions: Record<string, boolean | string | number>;
     created_at: string;
 }
 
@@ -66,7 +66,7 @@ export interface FilterState {
     status: string;
     location: string;
     company: string;
-    isOpen: string | false;
+    isOpen: 'status' | 'location' | 'company' | false;
 }
 
 export interface JobsClientComponentProps {

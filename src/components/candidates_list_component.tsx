@@ -27,11 +27,10 @@ import {
   CandidateWithApplication,
   CandidateFilters,
   SortOption,
-  fetchJobApplicationsWithAccess
+  fetchJobApplicationsWithAccess,
 } from "@/store/features/candidatesSlice";
 import { MdErrorOutline } from "react-icons/md";
 import { TiArrowSortedDown } from "react-icons/ti";
-
 
 // Types for component props
 interface CandidatesListProps {
@@ -110,15 +109,14 @@ function CandidateCard({
   onView,
   onStatusUpdate,
   onClick,
-  canUpdateStatus
-}: { 
-  candidate: CandidateWithApplication; 
+  canUpdateStatus,
+}: {
+  candidate: CandidateWithApplication;
   onView: (candidate: CandidateWithApplication) => void;
   onStatusUpdate: (applicationId: string, status: string) => void;
   onClick?: (candidate: CandidateWithApplication) => void;
   canUpdateStatus: boolean;
 }) {
-
   const handleCardClick = () => {
     if (onClick) {
       onClick(candidate);
@@ -144,14 +142,17 @@ function CandidateCard({
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
         setIsOpen(false);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
 
@@ -162,7 +163,7 @@ function CandidateCard({
 
   const handleStatusChange = async (newStatus: string) => {
     if (!canUpdateStatus) return;
-    
+
     setIsUpdating(true);
     try {
       await onStatusUpdate(candidate.application_id, newStatus);
@@ -176,22 +177,24 @@ function CandidateCard({
   const handleDelete = () => {
     // Add your delete logic here
     console.log("Deleting candidate", candidate?.application_id);
-    
+
     // You can add confirmation dialog here if needed
-    const confirmDelete = window.confirm("Are you sure you want to delete this candidate?");
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this candidate?"
+    );
     if (confirmDelete) {
       // Perform actual delete operation
       console.log("Candidate deleted!");
     }
-    
+
     // Close dropdown after action
     setIsOpen(false);
   };
 
   return (
-    <div 
+    <div
       className={`bg-white rounded-2xl shadow-sm p-4 mb-4 hover:shadow-md transition-shadow ${
-        onClick ? 'cursor-pointer' : ''
+        onClick ? "cursor-pointer" : ""
       }`}
       onClick={handleCardClick}
     >
@@ -224,22 +227,29 @@ function CandidateCard({
                   </span>
                 )}
               </div>
-              <p className="text-xs text-neutral-500 hidden sm:block mt-1">{formatSalary()}</p>
+              <p className="text-xs text-neutral-500 hidden sm:block mt-1">
+                {formatSalary()}
+              </p>
               {candidate.notice_period && (
-                <p className="text-xs text-neutral-500 hidden sm:block">Notice: {candidate.notice_period}</p>
+                <p className="text-xs text-neutral-500 hidden sm:block">
+                  Notice: {candidate.notice_period}
+                </p>
               )}
             </div>
 
             <div className="flex flex-col items-end gap-2 ml-2">
-              <div className="relative inline-block text-left" ref={dropdownRef}>
-                <button 
+              <div
+                className="relative inline-block text-left"
+                ref={dropdownRef}
+              >
+                <button
                   onClick={handleToggleDropdown}
                   className="text-neutral-600 hover:text-neutral-800 p-1 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                   aria-label="More options"
                 >
                   <HiDotsVertical className="w-5 h-5" />
                 </button>
-                
+
                 {isOpen && (
                   <div className="absolute right-0 mt-2 w-28 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10">
                     <ul className="py-1 text-sm text-neutral-700">
@@ -256,7 +266,7 @@ function CandidateCard({
                   </div>
                 )}
               </div>
-              
+
               {/* Status update dropdown - only show if user has permission */}
               {canUpdateStatus && (
                 <select
@@ -283,7 +293,7 @@ function CandidateCard({
           Applied {new Date(candidate.applied_date).toLocaleDateString()}
         </span>
       </div>
-      
+
       {/* view details button */}
       <div className="flex justify-end mt-4">
         <button
@@ -415,12 +425,18 @@ const tableHeaders = [
     className: "p-3 text-left font-semibold text-neutral-700",
   },
   { label: "Email", className: "p-3 text-left font-semibold text-neutral-700" },
-  { label: "Location", className: "p-3 text-left font-semibold text-neutral-700" },
+  {
+    label: "Location",
+    className: "p-3 text-left font-semibold text-neutral-700",
+  },
   {
     label: "Experience Req.",
     className: "p-3 text-left font-semibold text-neutral-700",
   },
-  { label: "Status", className: "p-3 text-left font-semibold text-neutral-700" },
+  {
+    label: "Status",
+    className: "p-3 text-left font-semibold text-neutral-700",
+  },
   { label: "", className: "p-3 text-left font-semibold text-neutral-700" },
 ];
 
@@ -434,9 +450,11 @@ export default function CandidatesList({
   onCandidateClick,
 }: CandidatesListProps) {
   const dispatch = useAppDispatch();
-  
+
   // Redux selectors - using the new access-controlled selectors
-  const paginatedCandidates = useAppSelector(selectPaginatedCandidatesWithAccess);
+  const paginatedCandidates = useAppSelector(
+    selectPaginatedCandidatesWithAccess
+  );
   const filteredCandidates = useAppSelector(selectFilteredCandidatesWithAccess);
   const loading = useAppSelector(selectCandidatesLoading);
   const error = useAppSelector(selectCandidatesError);
@@ -445,7 +463,7 @@ export default function CandidatesList({
   const userContext = useAppSelector(selectUserContext);
   const hasFullAccess = useAppSelector(selectHasFullAccess);
   const isTAOnly = useAppSelector(selectIsTAOnly);
-  
+
   // Local state
   const [showFiltersModal, setShowFiltersModal] = useState(false);
   const [candidatesDetailsOverlay, setCandidatesDetailsOverlay] = useState<{
@@ -459,7 +477,6 @@ export default function CandidatesList({
   // Temporary filter states for modal
   const [tempFilters, setTempFilters] = useState<CandidateFilters>(filters);
   const [tempSortBy, setTempSortBy] = useState<SortOption>(sortBy);
-
 
   // Update temp filters when actual filters change
   useEffect(() => {
@@ -478,15 +495,25 @@ export default function CandidatesList({
     return paginatedCandidates;
   }, [paginatedCandidates, maxItems]);
 
+  // Move useEffect before any conditional returns
   useEffect(() => {
     console.log("Fetching candidates with access");
     if (userContext && !loading && candidatesToDisplay.length === 0 && !error) {
-      dispatch(fetchJobApplicationsWithAccess({
-        filters: tempFilters,
-        userContext: userContext
-      }));
+      dispatch(
+        fetchJobApplicationsWithAccess({
+          filters: tempFilters,
+          userContext: userContext,
+        })
+      );
     }
-}, []);
+  }, [
+    userContext,
+    loading,
+    candidatesToDisplay.length,
+    error,
+    dispatch,
+    tempFilters,
+  ]);
 
   // Get unique filter options from candidates
   const filterOptions = useMemo(() => {
@@ -577,11 +604,13 @@ export default function CandidatesList({
     }
 
     try {
-      await dispatch(updateApplicationStatusWithAccess({ 
-        applicationId, 
-        status, 
-        userContext 
-      })).unwrap();
+      await dispatch(
+        updateApplicationStatusWithAccess({
+          applicationId,
+          status,
+          userContext,
+        })
+      ).unwrap();
     } catch (error) {
       console.error("Failed to update status:", error);
     }
@@ -624,7 +653,9 @@ export default function CandidatesList({
   };
 
   // Determine if user can update status (admin, hr, or ta with access)
-  const canUpdateStatus = Boolean(hasFullAccess || (isTAOnly && userContext?.roles.includes('ta')));
+  const canUpdateStatus = Boolean(
+    hasFullAccess || (isTAOnly && userContext?.roles.includes("ta"))
+  );
 
   // Handle error state
   if (error) {
@@ -649,10 +680,10 @@ export default function CandidatesList({
       {/* Header */}
       {showHeader && (
         <div className="mb-6">
-          <h1 className="text-2xl font-semibold text-[#151515]">
+          <h1 className="text-2xl font-semibold text-neutral-900">
             All Candidates
           </h1>
-          <p className="text-sm text-[#606167] mt-2">
+          <p className="text-sm text-neutral-500 mt-2">
             Manage all candidates and their applications with ease.
           </p>
         </div>
@@ -667,26 +698,58 @@ export default function CandidatesList({
                 <div className="relative">
                   <select
                     value={sortBy}
-                    onChange={(e) => dispatch(setSortBy(e.target.value as SortOption))}
+                    onChange={(e) =>
+                      dispatch(setSortBy(e.target.value as SortOption))
+                    }
                     className="
-                      w-full min-w-[150px] 
-                      bg-[#1E5CDC] text-white text-sm
+                      w-full min-w-36 
+                      bg-blue-600 text-white text-sm
                       border border-neutral-300 rounded-full
                       px-4 py-2 pr-10
                       focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-transparent
-                      hover:bg-[#1a52c7] transition-colors duration-200
+                      hover:bg-blue-700 transition-colors duration-200
                       cursor-pointer appearance-none
                     "
                     aria-label="Sort options"
                   >
-                    <option value="date_desc" className="bg-white text-neutral-900">Newest First</option>
-                    <option value="date_asc" className="bg-white text-neutral-900">Oldest First</option>
-                    <option value="name_asc" className="bg-white text-neutral-900">Name A-Z</option>
-                    <option value="name_desc" className="bg-white text-neutral-900">Name Z-A</option>
-                    <option value="salary_desc" className="bg-white text-neutral-900">Highest Salary</option>
-                    <option value="salary_asc" className="bg-white text-neutral-900">Lowest Salary</option>
+                    <option
+                      value="date_desc"
+                      className="bg-white text-neutral-900"
+                    >
+                      Newest First
+                    </option>
+                    <option
+                      value="date_asc"
+                      className="bg-white text-neutral-900"
+                    >
+                      Oldest First
+                    </option>
+                    <option
+                      value="name_asc"
+                      className="bg-white text-neutral-900"
+                    >
+                      Name A-Z
+                    </option>
+                    <option
+                      value="name_desc"
+                      className="bg-white text-neutral-900"
+                    >
+                      Name Z-A
+                    </option>
+                    <option
+                      value="salary_desc"
+                      className="bg-white text-neutral-900"
+                    >
+                      Highest Salary
+                    </option>
+                    <option
+                      value="salary_asc"
+                      className="bg-white text-neutral-900"
+                    >
+                      Lowest Salary
+                    </option>
                   </select>
-                  
+
                   {/* Custom dropdown arrow */}
                   <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
                     <TiArrowSortedDown className="text-white text-lg" />
@@ -708,11 +771,26 @@ export default function CandidatesList({
                     aria-label="Sort options"
                   >
                     <option value="">App. Status</option>
-                    <option value="accepted" className="bg-white text-neutral-900">Accepted</option>
-                    <option value="pending" className="bg-white text-neutral-900">Pending</option>
-                    <option value="rejected" className="bg-white text-neutral-900">Rejected</option>
+                    <option
+                      value="accepted"
+                      className="bg-white text-neutral-900"
+                    >
+                      Accepted
+                    </option>
+                    <option
+                      value="pending"
+                      className="bg-white text-neutral-900"
+                    >
+                      Pending
+                    </option>
+                    <option
+                      value="rejected"
+                      className="bg-white text-neutral-900"
+                    >
+                      Rejected
+                    </option>
                   </select>
-                  
+
                   {/* Custom dropdown arrow */}
                   <div className="absolute right-2 top-1/2 transform -translate-y-1/2 pointer-events-none">
                     <TiArrowSortedDown className="text-neutral-500 text-lg" />
@@ -720,8 +798,8 @@ export default function CandidatesList({
                 </div>
               </>
             )}
-            </div>
-            <div className="flex items-center justify-center gap-2">
+          </div>
+          <div className="flex items-center justify-center gap-2">
             <div className="border-r border-neutral-400 pr-2 flex gap-2">
               <div className="relative">
                 <select
@@ -739,11 +817,23 @@ export default function CandidatesList({
                   aria-label="Sort options"
                 >
                   <option value="">Years of Exp.</option>
-                  <option value="accepted" className="bg-white text-neutral-900">0-2</option>
-                  <option value="pending" className="bg-white text-neutral-900">3-5</option>
-                  <option value="rejected" className="bg-white text-neutral-900">5+</option>
+                  <option
+                    value="accepted"
+                    className="bg-white text-neutral-900"
+                  >
+                    0-2
+                  </option>
+                  <option value="pending" className="bg-white text-neutral-900">
+                    3-5
+                  </option>
+                  <option
+                    value="rejected"
+                    className="bg-white text-neutral-900"
+                  >
+                    5+
+                  </option>
                 </select>
-                
+
                 {/* Custom dropdown arrow */}
                 <div className="absolute right-2 top-1/2 transform -translate-y-1/2 pointer-events-none">
                   <TiArrowSortedDown className="text-neutral-500 text-lg" />
@@ -763,13 +853,25 @@ export default function CandidatesList({
                     cursor-pointer appearance-none
                   "
                   aria-label="Sort options"
-                > 
+                >
                   <option value="">Company</option>
-                  <option value="accepted" className="bg-white text-neutral-900">Facebook</option>
-                  <option value="pending" className="bg-white text-neutral-900">Microsoft</option>
-                  <option value="rejected" className="bg-white text-neutral-900">Others</option>
+                  <option
+                    value="accepted"
+                    className="bg-white text-neutral-900"
+                  >
+                    Facebook
+                  </option>
+                  <option value="pending" className="bg-white text-neutral-900">
+                    Microsoft
+                  </option>
+                  <option
+                    value="rejected"
+                    className="bg-white text-neutral-900"
+                  >
+                    Others
+                  </option>
                 </select>
-                
+
                 {/* Custom dropdown arrow */}
                 <div className="absolute right-2 top-1/2 transform -translate-y-1/2 pointer-events-none">
                   <TiArrowSortedDown className="text-neutral-500 text-lg" />
@@ -785,7 +887,7 @@ export default function CandidatesList({
                 <span>All Filters</span>
               </button>
             )}
-            </div>
+          </div>
         </div>
       )}
 
@@ -837,7 +939,7 @@ export default function CandidatesList({
           {/* Desktop Table */}
           <div className="hidden md:block overflow-x-auto bg-white rounded-2xl shadow-sm">
             <table className="min-w-full divide-y divide-neutral-200">
-              <thead className="bg-[#F0F1F1]">
+              <thead className="bg-neutral-200">
                 <tr>
                   {tableHeaders.map((header, idx) => (
                     <th key={idx} className={header.className}>
@@ -863,10 +965,14 @@ export default function CandidatesList({
                   </tr>
                 ) : (
                   candidatesToDisplay.map((candidate) => (
-                    <tr 
-                      key={candidate.application_id} 
-                      className={`hover:bg-neutral-50 ${onCandidateClick ? 'cursor-pointer' : ''}`}
-                      onClick={() => onCandidateClick && onCandidateClick(candidate)}
+                    <tr
+                      key={candidate.application_id}
+                      className={`hover:bg-neutral-50 ${
+                        onCandidateClick ? "cursor-pointer" : ""
+                      }`}
+                      onClick={() =>
+                        onCandidateClick && onCandidateClick(candidate)
+                      }
                     >
                       <td className="px-4 py-4">
                         <input
@@ -933,4 +1039,3 @@ export default function CandidatesList({
     </div>
   );
 }
-

@@ -1,8 +1,8 @@
-import { configureStore } from '@reduxjs/toolkit';
-import uiReducer from './features/uiSlice';
-import UserReducer from './features/userSlice';
-import jobReducer from './features/jobSlice';
-import candidateReducer from './features/candidatesSlice';
+import { configureStore } from "@reduxjs/toolkit";
+import uiReducer from "./features/uiSlice";
+import UserReducer from "./features/userSlice";
+import jobReducer from "./features/jobSlice";
+import candidateReducer from "./features/candidatesSlice";
 
 const store = configureStore({
   reducer: {
@@ -16,11 +16,14 @@ const store = configureStore({
     getDefaultMiddleware({
       serializableCheck: {
         // Ignore these action types
-        ignoredActions: ['user/initializeAuth/fulfilled', 'user/loginUser/fulfilled'],
+        ignoredActions: [
+          "user/initializeAuth/fulfilled",
+          "user/loginUser/fulfilled",
+        ],
         // Ignore these field paths in all actions
-        ignoredActionPaths: ['meta.arg', 'payload.timestamp', 'payload.user'],
+        ignoredActionPaths: ["meta.arg", "payload.timestamp", "payload.user"],
         // Ignore these paths in the state
-        ignoredPaths: ['items.dates', 'user.user'],
+        ignoredPaths: ["items.dates", "user.user"],
       },
     }),
 });
@@ -29,4 +32,4 @@ const store = configureStore({
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
 
-export default store; 
+export default store;

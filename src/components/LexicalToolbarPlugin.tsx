@@ -5,6 +5,8 @@ import {
   FORMAT_TEXT_COMMAND,
   FORMAT_ELEMENT_COMMAND,
   createCommand,
+  COMMAND_PRIORITY_EDITOR,
+  LexicalCommand,
 } from "lexical";
 import {
   INSERT_UNORDERED_LIST_COMMAND,
@@ -28,7 +30,8 @@ import {
 } from "react-icons/fa";
 
 const FONT_SIZE_COMMAND = createCommand("FONT_SIZE_COMMAND");
-const TEXT_COLOR_COMMAND = createCommand<string>("TEXT_COLOR_COMMAND");
+const TEXT_COLOR_COMMAND: LexicalCommand<string> =
+  createCommand("TEXT_COLOR_COMMAND");
 
 const FONT_SIZE_OPTIONS = [
   { value: "small", label: "14" },
@@ -39,18 +42,53 @@ const FONT_SIZE_OPTIONS = [
 
 type ListFormat = "ordered" | "unordered" | null;
 
+interface ActiveFormats {
+  bold: boolean;
+  italic: boolean;
+  underline: boolean;
+  strikethrough: boolean;
+  align: "left" | "center" | "right";
+  listType: ListFormat;
+  color: string;
+}
+
 export default function ToolbarPlugin() {
   const [editor] = useLexicalComposerContext();
-  const [activeFormats, setActiveFormats] = useState({
+  const [activeFormats, setActiveFormats] = useState<ActiveFormats>({
     bold: false,
     italic: false,
     underline: false,
     strikethrough: false,
     align: "left",
-    listType: null as ListFormat,
+    listType: null,
     color: "#000000",
   });
   const colorPickerRef = useRef<HTMLInputElement>(null);
+
+  // Register the text color command
+  useEffect(() => {
+    return editor.registerCommand(
+      TEXT_COLOR_COMMAND,
+      (color: string) => {
+        editor.update(() => {
+          const selection = $getSelection();
+          if (!$isRangeSelection(selection)) return false;
+
+          const nodes = selection.getNodes();
+          nodes.forEach((node) => {
+            if (node.getType() === "text") {
+              const element = editor.getElementByKey(node.getKey());
+              if (element) {
+                element.style.color = color;
+              }
+            }
+          });
+        });
+        return true;
+      },
+      COMMAND_PRIORITY_EDITOR
+    );
+  }, [editor]);
 
   const updateActiveFormats = useCallback(() => {
     editor.getEditorState().read(() => {
@@ -68,14 +106,18 @@ export default function ToolbarPlugin() {
       // Get the current text color from the selection
       const textNode = selection.anchor.getNode();
       const textElement = editor.getElementByKey(textNode.getKey());
-      const currentColor = textElement?.style.color || "#000000";
+      const computedStyle = textElement
+        ? window.getComputedStyle(textElement)
+        : null;
+      const currentColor = computedStyle?.color || "#000000";
 
       setActiveFormats({
         bold: (format & 1) === 1,
         italic: (format & 2) === 2,
         underline: (format & 4) === 4,
         strikethrough: (format & 8) === 8,
-        align: element?.getFormatType() || "left",
+        align:
+          (element?.getFormatType() as "left" | "center" | "right") || "left",
         listType,
         color: currentColor,
       });
@@ -107,10 +149,7 @@ export default function ToolbarPlugin() {
     [editor]
   );
 
-  const getButtonClassName = (
-    format: keyof typeof activeFormats,
-    value?: string
-  ) => {
+  const getButtonClassName = (format: keyof ActiveFormats, value?: string) => {
     const baseClass = "p-2 text-neutral-500 hover:bg-neutral-200 rounded-full";
     const isActive =
       activeFormats[format] === true ||

@@ -35,7 +35,7 @@ export default function AddJob() {
     if (!user && !loading) {
         dispatch(initializeAuth());
     }
-  }, [user, dispatch, roles, organization]);
+  }, [user, dispatch, roles, organization, loading]);
 
   const [step, setStep] = useState(0);
   const [formData, setFormData] = useState<JobFormData>({
@@ -63,7 +63,7 @@ export default function AddJob() {
     if (Object.keys(errors).length > 0) {
       setErrors({});
     }
-  }, [formData]);
+  }, [formData, errors]);
 
   const validateStep = (currentStep: number): boolean => {
     const newErrors: FormErrors = {};

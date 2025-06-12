@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { LexicalComposer } from "@lexical/react/LexicalComposer";
 import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
 import { ContentEditable } from "@lexical/react/LexicalContentEditable";
@@ -16,12 +16,16 @@ import {
   EditorState,
   createCommand,
   COMMAND_PRIORITY_EDITOR,
+  $createParagraphNode,
+  $createTextNode,
 } from "lexical";
 import { ListNode, ListItemNode } from "@lexical/list";
 import { LinkNode } from "@lexical/link";
 import { HeadingNode, QuoteNode } from "@lexical/rich-text";
 import { CodeNode, CodeHighlightNode } from "@lexical/code";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
+import { $generateHtmlFromNodes, $generateNodesFromDOM } from "@lexical/html";
+import { LexicalEditor as LexicalEditorType } from "lexical";
 
 const FONT_SIZE_COMMAND = createCommand("FONT_SIZE_COMMAND");
 
@@ -81,6 +85,10 @@ interface LexicalEditorProps {
   onChange: (value: string) => void;
 }
 
+interface EditorRefPluginProps {
+  editorRef: React.MutableRefObject<LexicalEditorType | null>;
+}
+
 const theme = {
   text: {
     base: "text-neutral-800",
@@ -113,11 +121,31 @@ const theme = {
 };
 
 export default function LexicalEditor({ value, onChange }: LexicalEditorProps) {
+  const editorRef = useRef<LexicalEditorType | null>(null);
+
   const initialConfig = {
     namespace: "JobDescriptionEditor",
     theme,
     onError(error: Error) {
       throw error;
+    },
+    editorState: () => {
+      const root = $getRoot();
+      if (value && editorRef.current) {
+        try {
+          // Try to parse the value as HTML first
+          const parser = new DOMParser();
+          const dom = parser.parseFromString(value, "text/html");
+          const nodes = $generateNodesFromDOM(editorRef.current, dom);
+          root.clear();
+          root.append(...nodes);
+        } catch (e) {
+          // Fallback to plain text if HTML parsing fails
+          const paragraph = $createParagraphNode();
+          paragraph.append($createTextNode(value));
+          root.append(paragraph);
+        }
+      }
     },
     nodes: [
       ListNode,
@@ -134,8 +162,11 @@ export default function LexicalEditor({ value, onChange }: LexicalEditorProps) {
     (editorState: EditorState) => {
       editorState.read(() => {
         const root = $getRoot();
-        const text = root.getTextContent();
-        onChange(text);
+        // Convert the editor content to HTML
+        if (editorRef.current) {
+          const html = $generateHtmlFromNodes(editorRef.current);
+          onChange(html);
+        }
       });
     },
     [onChange]
@@ -143,6 +174,7 @@ export default function LexicalEditor({ value, onChange }: LexicalEditorProps) {
 
   return (
     <LexicalComposer initialConfig={initialConfig}>
+      <EditorRefPlugin editorRef={editorRef} />
       <div className="bg-neutral-50 rounded-lg border border-neutral-200">
         <ToolbarPlugin />
         <RichTextPlugin
@@ -162,4 +194,14 @@ export default function LexicalEditor({ value, onChange }: LexicalEditorProps) {
       </div>
     </LexicalComposer>
   );
+}
+
+function EditorRefPlugin({ editorRef }: EditorRefPluginProps) {
+  const [editor] = useLexicalComposerContext();
+
+  useEffect(() => {
+    editorRef.current = editor;
+  }, [editor, editorRef]);
+
+  return null;
 }
