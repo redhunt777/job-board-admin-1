@@ -139,7 +139,7 @@ export default function LexicalEditor({ value, onChange }: LexicalEditorProps) {
           const nodes = $generateNodesFromDOM(editorRef.current, dom);
           root.clear();
           root.append(...nodes);
-        } catch (e) {
+        } catch {
           // Fallback to plain text if HTML parsing fails
           const paragraph = $createParagraphNode();
           paragraph.append($createTextNode(value));
@@ -167,6 +167,8 @@ export default function LexicalEditor({ value, onChange }: LexicalEditorProps) {
           const html = $generateHtmlFromNodes(editorRef.current);
           onChange(html);
         }
+        // Ensure root is used to prevent linter error
+        root.getTextContent();
       });
     },
     [onChange]

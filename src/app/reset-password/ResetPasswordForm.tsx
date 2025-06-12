@@ -162,7 +162,7 @@ const ResetPasswordForm = () => {
               Set a New Password
             </h1>
             <p className="text-center text-neutral-500 mb-8">
-              Set a new password for your account. Make sure it's strong and
+              Set a new password for your account. Make sure it&apos;s strong and
               easy to remember.
             </p>
 

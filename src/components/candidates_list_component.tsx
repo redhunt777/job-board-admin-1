@@ -657,6 +657,11 @@ export default function CandidatesList({
     hasFullAccess || (isTAOnly && userContext?.roles.includes("ta"))
   );
 
+  // Fix unused event parameters
+  const handleSortChange = () => {
+    console.log("Sort changed");
+  };
+
   // Handle error state
   if (error) {
     return (
@@ -758,7 +763,7 @@ export default function CandidatesList({
                 <div className="relative">
                   <select
                     value={sortBy}
-                    onChange={(e) => console.log("changed")}
+                    onChange={handleSortChange}
                     className="
                       w-full min-w-[130px] 
                       bg-transparent text-neutral-500 text-sm
@@ -804,7 +809,7 @@ export default function CandidatesList({
               <div className="relative">
                 <select
                   value={sortBy}
-                  onChange={(e) => console.log("changed")}
+                  onChange={handleSortChange}
                   className="
                     w-full min-w-[130px] 
                     bg-transparent text-neutral-500 text-sm
@@ -842,7 +847,7 @@ export default function CandidatesList({
               <div className="relative">
                 <select
                   value={sortBy}
-                  onChange={(e) => console.log("changed")}
+                  onChange={handleSortChange}
                   className="
                     w-full min-w-[130px] 
                     bg-transparent text-neutral-500 text-sm

@@ -17,7 +17,6 @@ import {
   selectUserContext,
   selectHasFullAccess,
   selectIsTAOnly,
-  CandidateWithApplication,
   UserContext,
 } from "@/store/features/candidatesSlice";
 

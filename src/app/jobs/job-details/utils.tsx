@@ -127,7 +127,7 @@ export const JobNotFound: React.FC<{ onGoBack: () => void }> = ({
       Job not found
     </h3>
     <p className="text-neutral-600 mb-6">
-      The job you're looking for doesn't exist or has been removed.
+      The job you&apos;re looking for doesn&apos;t exist or has been removed.
     </p>
     <button
       type="button"
