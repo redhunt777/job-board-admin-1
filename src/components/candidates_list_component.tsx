@@ -66,7 +66,7 @@ function ErrorMessage({
       <div className="text-red-600 mb-4">
         <MdErrorOutline className="w-12 h-12 mx-auto mb-2" />
         <p className="text-lg font-semibold">Something went wrong</p>
-        <p className="text-sm text-gray-600 mt-1">{message}</p>
+        <p className="text-sm text-neutral-600 mt-1">{message}</p>
       </div>
       {onRetry && (
         <button
@@ -90,7 +90,7 @@ function StatusBadge({ status }: { status: string }) {
       case "pending":
         return "bg-yellow-100 text-yellow-700 border-yellow-200";
       default:
-        return "bg-gray-100 text-gray-700 border-gray-200";
+        return "bg-neutral-100 text-neutral-700 border-neutral-200";
     }
   };
 
@@ -203,30 +203,30 @@ function CandidateCard({
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between">
             <div className="flex-1 min-w-0">
-              <h3 className="text-lg font-semibold text-gray-900 truncate">
+              <h3 className="text-lg font-semibold text-neutral-900 truncate">
                 {candidate.name}
               </h3>
-              <p className="text-gray-600 text-sm truncate">
+              <p className="text-neutral-600 text-sm truncate">
                 {candidate.candidate_email}
               </p>
-              <p className="text-gray-500 text-sm truncate">
+              <p className="text-neutral-500 text-sm truncate">
                 {candidate.address || "Location not specified"}
               </p>
               <div className="mt-1 hidden sm:block">
-                <span className="text-sm text-gray-600">Applied for: </span>
-                <span className="text-sm font-medium text-gray-900">
+                <span className="text-sm text-neutral-600">Applied for: </span>
+                <span className="text-sm font-medium text-neutral-900">
                   {candidate.job_title}
                 </span>
                 {candidate.company_name && (
-                  <span className="text-sm text-gray-500">
+                  <span className="text-sm text-neutral-500">
                     {" "}
                     at {candidate.company_name}
                   </span>
                 )}
               </div>
-              <p className="text-xs text-gray-500 hidden sm:block mt-1">{formatSalary()}</p>
+              <p className="text-xs text-neutral-500 hidden sm:block mt-1">{formatSalary()}</p>
               {candidate.notice_period && (
-                <p className="text-xs text-gray-500 hidden sm:block">Notice: {candidate.notice_period}</p>
+                <p className="text-xs text-neutral-500 hidden sm:block">Notice: {candidate.notice_period}</p>
               )}
             </div>
 
@@ -234,7 +234,7 @@ function CandidateCard({
               <div className="relative inline-block text-left" ref={dropdownRef}>
                 <button 
                   onClick={handleToggleDropdown}
-                  className="text-gray-600 hover:text-gray-800 p-1 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="text-neutral-600 hover:text-neutral-800 p-1 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                   aria-label="More options"
                 >
                   <HiDotsVertical className="w-5 h-5" />
@@ -242,11 +242,11 @@ function CandidateCard({
                 
                 {isOpen && (
                   <div className="absolute right-0 mt-2 w-28 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10">
-                    <ul className="py-1 text-sm text-gray-700">
+                    <ul className="py-1 text-sm text-neutral-700">
                       <li>
                         <button
                           onClick={handleDelete}
-                          className="block px-4 py-2 w-full text-left hover:bg-gray-100 hover:text-red-600 transition-colors duration-150"
+                          className="block px-4 py-2 w-full text-left hover:bg-neutral-100 hover:text-red-600 transition-colors duration-150"
                         >
                           <FiTrash className="inline mr-2" />
                           Delete
@@ -278,8 +278,8 @@ function CandidateCard({
 
       <div className="flex flex-wrap items-center gap-2 mt-3">
         <StatusBadge status={candidate.application_status} />
-        <span className="text-gray-400">•</span>
-        <span className="text-sm text-gray-500">
+        <span className="text-neutral-400">•</span>
+        <span className="text-sm text-neutral-500">
           Applied {new Date(candidate.applied_date).toLocaleDateString()}
         </span>
       </div>
@@ -357,7 +357,7 @@ function Pagination() {
 
   return (
     <div className="flex items-center justify-between px-4 py-3 bg-white border-t">
-      <div className="flex items-center text-sm text-gray-700">
+      <div className="flex items-center text-sm text-neutral-700">
         Showing {startRecord} to {endRecord} of {pagination.totalCandidates}{" "}
         results
       </div>
@@ -366,7 +366,7 @@ function Pagination() {
         <button
           onClick={() => handlePageChange(pagination.currentPage - 1)}
           disabled={pagination.currentPage <= 1}
-          className="px-3 py-1 border rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+          className="px-3 py-1 border rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-neutral-50"
         >
           Previous
         </button>
@@ -380,7 +380,7 @@ function Pagination() {
               className={`px-3 py-1 border rounded text-sm ${
                 pagination.currentPage === pageNum
                   ? "bg-blue-600 text-white border-blue-600"
-                  : "hover:bg-gray-50"
+                  : "hover:bg-neutral-50"
               }`}
             >
               {pageNum}
@@ -391,7 +391,7 @@ function Pagination() {
         <button
           onClick={() => handlePageChange(pagination.currentPage + 1)}
           disabled={pagination.currentPage >= pagination.totalPages}
-          className="px-3 py-1 border rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+          className="px-3 py-1 border rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-neutral-50"
         >
           Next
         </button>
@@ -405,23 +405,23 @@ const tableHeaders = [
     label: <input type="checkbox" className="rounded" />,
     className: "px-4 py-3 text-left",
   },
-  { label: "ID", className: "p-3 text-left font-semibold text-gray-700" },
+  { label: "ID", className: "p-3 text-left font-semibold text-neutral-700" },
   {
     label: "Applied Date",
-    className: "p-3 text-left font-semibold text-gray-700",
+    className: "p-3 text-left font-semibold text-neutral-700",
   },
   {
     label: "Candidate Name",
-    className: "p-3 text-left font-semibold text-gray-700",
+    className: "p-3 text-left font-semibold text-neutral-700",
   },
-  { label: "Email", className: "p-3 text-left font-semibold text-gray-700" },
-  { label: "Location", className: "p-3 text-left font-semibold text-gray-700" },
+  { label: "Email", className: "p-3 text-left font-semibold text-neutral-700" },
+  { label: "Location", className: "p-3 text-left font-semibold text-neutral-700" },
   {
     label: "Experience Req.",
-    className: "p-3 text-left font-semibold text-gray-700",
+    className: "p-3 text-left font-semibold text-neutral-700",
   },
-  { label: "Status", className: "p-3 text-left font-semibold text-gray-700" },
-  { label: "", className: "p-3 text-left font-semibold text-gray-700" },
+  { label: "Status", className: "p-3 text-left font-semibold text-neutral-700" },
+  { label: "", className: "p-3 text-left font-semibold text-neutral-700" },
 ];
 
 export default function CandidatesList({
@@ -671,7 +671,7 @@ export default function CandidatesList({
                     className="
                       w-full min-w-[150px] 
                       bg-[#1E5CDC] text-white text-sm
-                      border border-gray-300 rounded-full
+                      border border-neutral-300 rounded-full
                       px-4 py-2 pr-10
                       focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-transparent
                       hover:bg-[#1a52c7] transition-colors duration-200
@@ -679,12 +679,12 @@ export default function CandidatesList({
                     "
                     aria-label="Sort options"
                   >
-                    <option value="date_desc" className="bg-white text-gray-900">Newest First</option>
-                    <option value="date_asc" className="bg-white text-gray-900">Oldest First</option>
-                    <option value="name_asc" className="bg-white text-gray-900">Name A-Z</option>
-                    <option value="name_desc" className="bg-white text-gray-900">Name Z-A</option>
-                    <option value="salary_desc" className="bg-white text-gray-900">Highest Salary</option>
-                    <option value="salary_asc" className="bg-white text-gray-900">Lowest Salary</option>
+                    <option value="date_desc" className="bg-white text-neutral-900">Newest First</option>
+                    <option value="date_asc" className="bg-white text-neutral-900">Oldest First</option>
+                    <option value="name_asc" className="bg-white text-neutral-900">Name A-Z</option>
+                    <option value="name_desc" className="bg-white text-neutral-900">Name Z-A</option>
+                    <option value="salary_desc" className="bg-white text-neutral-900">Highest Salary</option>
+                    <option value="salary_asc" className="bg-white text-neutral-900">Lowest Salary</option>
                   </select>
                   
                   {/* Custom dropdown arrow */}
@@ -708,9 +708,9 @@ export default function CandidatesList({
                     aria-label="Sort options"
                   >
                     <option value="">App. Status</option>
-                    <option value="accepted" className="bg-white text-gray-900">Accepted</option>
-                    <option value="pending" className="bg-white text-gray-900">Pending</option>
-                    <option value="rejected" className="bg-white text-gray-900">Rejected</option>
+                    <option value="accepted" className="bg-white text-neutral-900">Accepted</option>
+                    <option value="pending" className="bg-white text-neutral-900">Pending</option>
+                    <option value="rejected" className="bg-white text-neutral-900">Rejected</option>
                   </select>
                   
                   {/* Custom dropdown arrow */}
@@ -739,9 +739,9 @@ export default function CandidatesList({
                   aria-label="Sort options"
                 >
                   <option value="">Years of Exp.</option>
-                  <option value="accepted" className="bg-white text-gray-900">0-2</option>
-                  <option value="pending" className="bg-white text-gray-900">3-5</option>
-                  <option value="rejected" className="bg-white text-gray-900">5+</option>
+                  <option value="accepted" className="bg-white text-neutral-900">0-2</option>
+                  <option value="pending" className="bg-white text-neutral-900">3-5</option>
+                  <option value="rejected" className="bg-white text-neutral-900">5+</option>
                 </select>
                 
                 {/* Custom dropdown arrow */}
@@ -765,9 +765,9 @@ export default function CandidatesList({
                   aria-label="Sort options"
                 > 
                   <option value="">Company</option>
-                  <option value="accepted" className="bg-white text-gray-900">Facebook</option>
-                  <option value="pending" className="bg-white text-gray-900">Microsoft</option>
-                  <option value="rejected" className="bg-white text-gray-900">Others</option>
+                  <option value="accepted" className="bg-white text-neutral-900">Facebook</option>
+                  <option value="pending" className="bg-white text-neutral-900">Microsoft</option>
+                  <option value="rejected" className="bg-white text-neutral-900">Others</option>
                 </select>
                 
                 {/* Custom dropdown arrow */}
@@ -778,7 +778,7 @@ export default function CandidatesList({
             </div>
             {showFilters && (
               <button
-                className="flex items-center gap-2 px-4 py-2 bg-neutral-200 hover:bg-gray-50 rounded-full border border-gray-300 font-normal text-sm text-neutral-500 cursor-pointer transition-colors"
+                className="flex items-center gap-2 px-4 py-2 bg-neutral-200 hover:bg-neutral-50 rounded-full border border-neutral-300 font-normal text-sm text-neutral-500 cursor-pointer transition-colors"
                 onClick={() => setShowFiltersModal(true)}
               >
                 <CiFilter className="w-5 h-5" />
@@ -815,8 +815,8 @@ export default function CandidatesList({
           <div className="block md:hidden space-y-4">
             {candidatesToDisplay.length === 0 ? (
               <div className="text-center py-12">
-                <p className="text-gray-500 text-lg">No candidates found</p>
-                <p className="text-gray-400 text-sm mt-1">
+                <p className="text-neutral-500 text-lg">No candidates found</p>
+                <p className="text-neutral-400 text-sm mt-1">
                   Try adjusting your filters
                 </p>
               </div>
@@ -836,7 +836,7 @@ export default function CandidatesList({
 
           {/* Desktop Table */}
           <div className="hidden md:block overflow-x-auto bg-white rounded-2xl shadow-sm">
-            <table className="min-w-full divide-y divide-gray-200">
+            <table className="min-w-full divide-y divide-neutral-200">
               <thead className="bg-[#F0F1F1]">
                 <tr>
                   {tableHeaders.map((header, idx) => (
@@ -846,17 +846,17 @@ export default function CandidatesList({
                   ))}
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-100">
+              <tbody className="bg-white divide-y divide-neutral-100">
                 {candidatesToDisplay.length === 0 ? (
                   <tr>
                     <td
                       colSpan={tableHeaders.length}
                       className="px-4 py-12 text-center"
                     >
-                      <p className="text-gray-500 text-lg">
+                      <p className="text-neutral-500 text-lg">
                         No candidates found
                       </p>
-                      <p className="text-gray-400 text-sm mt-1">
+                      <p className="text-neutral-400 text-sm mt-1">
                         Try adjusting your filters
                       </p>
                     </td>
@@ -865,7 +865,7 @@ export default function CandidatesList({
                   candidatesToDisplay.map((candidate) => (
                     <tr 
                       key={candidate.application_id} 
-                      className={`hover:bg-gray-50 ${onCandidateClick ? 'cursor-pointer' : ''}`}
+                      className={`hover:bg-neutral-50 ${onCandidateClick ? 'cursor-pointer' : ''}`}
                       onClick={() => onCandidateClick && onCandidateClick(candidate)}
                     >
                       <td className="px-4 py-4">
@@ -875,22 +875,22 @@ export default function CandidatesList({
                           onClick={(e) => e.stopPropagation()}
                         />
                       </td>
-                      <td className="px-3 py-4 text-gray-900">
+                      <td className="px-3 py-4 text-neutral-900">
                         {candidate.application_id}
                       </td>
-                      <td className="px-3 py-4 text-gray-900">
+                      <td className="px-3 py-4 text-neutral-900">
                         {new Date(candidate.applied_date).toLocaleDateString()}
                       </td>
-                      <td className="px-3 py-4 text-gray-900">
+                      <td className="px-3 py-4 text-neutral-900">
                         {candidate.name}
                       </td>
-                      <td className="px-3 py-4 text-gray-900">
+                      <td className="px-3 py-4 text-neutral-900">
                         {candidate.candidate_email}
                       </td>
-                      <td className="px-3 py-4 text-gray-900">
+                      <td className="px-3 py-4 text-neutral-900">
                         {candidate.job_location || "—"}
                       </td>
-                      <td className="px-3 py-4 text-gray-900">
+                      <td className="px-3 py-4 text-neutral-900">
                         {candidate.min_experience_needed &&
                         candidate.max_experience_needed
                           ? `${candidate.min_experience_needed}-${candidate.max_experience_needed} years`

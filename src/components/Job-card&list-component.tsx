@@ -23,7 +23,7 @@ const JobListComponent = ({jobsFromStore}: { jobsFromStore: Job[]}) => {
   };
   return (
       <div>
-        <div className="overflow-x-auto rounded-lg border border-gray-200">
+        <div className="overflow-x-auto rounded-lg border border-neutral-200">
           <table className="min-w-full text-left text">
             <thead className="bg-[#F0F1F1] shadow-sm text-[#151515] font-medium text-base">
               <tr>
@@ -37,7 +37,7 @@ const JobListComponent = ({jobsFromStore}: { jobsFromStore: Job[]}) => {
                 <th className="px-4 py-4 text-right"></th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
+            <tbody className="divide-y divide-neutral-200">
               {jobsFromStore.map((job) => (
                 <tr key={`job-row-${job.job_id}-${job.job_title}`}>
                   <td className="px-4 py-4">

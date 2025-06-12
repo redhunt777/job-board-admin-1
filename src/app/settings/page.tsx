@@ -138,13 +138,13 @@ export default function Settings() {
     onChange: () => void; 
     children: React.ReactNode;
   }) => (
-    <div className="flex items-start gap-3 p-4 hover:bg-gray-50 rounded-md transition-colors">
+    <div className="flex items-start gap-3 p-4 hover:bg-neutral-50 rounded-md transition-colors">
       <button
         type="button"
         className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
           checked 
             ? 'bg-green-500 border-green-500 text-white hover:bg-green-600' 
-            : 'border-gray-300 hover:border-gray-400 bg-white'
+            : 'border-neutral-300 hover:border-neutral-400 bg-white'
         }`}
         onClick={onChange}
         aria-checked={checked}
@@ -153,7 +153,7 @@ export default function Settings() {
         {checked && <FaCheck size={12} />}
       </button>
       <label 
-        className="text-gray-700 cursor-pointer select-none leading-relaxed flex-1"
+        className="text-neutral-700 cursor-pointer select-none leading-relaxed flex-1"
         onClick={onChange}
       >
         {children}
@@ -228,7 +228,7 @@ export default function Settings() {
         <div className="flex justify-center items-center w-full">
           <div className="max-w-5xl w-full pb-20">
             {step === 0 && (
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mx-4">
+              <div className="bg-white rounded-lg shadow-sm border border-neutral-200 p-6 mx-4">
                 <div className="text-center mb-6">
                   <h2 className="font-semibold text-xl mb-4 text-neutral-900">Your Recruitment Team</h2>
                   <p className="text-neutral-500 text-base font-normal max-w-3xl mx-auto">
@@ -249,52 +249,52 @@ export default function Settings() {
                   </button>
                 </div>
                 
-                <div className="overflow-x-auto rounded-lg border border-gray-200">
+                <div className="overflow-x-auto rounded-lg border border-neutral-200">
                   <table className="min-w-full text-left">
-                    <thead className="bg-gray-50 border-b border-gray-200">
+                    <thead className="bg-neutral-50 border-b border-neutral-200">
                       <tr>
-                        <th className="px-4 py-4 text-sm font-medium text-gray-900">
+                        <th className="px-4 py-4 text-sm font-medium text-neutral-900">
                           <input 
                             type="checkbox" 
-                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                            className="rounded border-neutral-300 text-blue-600 focus:ring-blue-500"
                             aria-label="Select all team members"
                           />
                         </th>
-                        <th className="px-4 py-4 text-sm font-medium text-gray-900">Name</th>
-                        <th className="px-4 py-4 text-sm font-medium text-gray-900">Email</th>
-                        <th className="px-4 py-4 text-sm font-medium text-gray-900">Role</th>
-                        <th className="px-4 py-4 text-sm font-medium text-gray-900 text-right">Actions</th>
+                        <th className="px-4 py-4 text-sm font-medium text-neutral-900">Name</th>
+                        <th className="px-4 py-4 text-sm font-medium text-neutral-900">Email</th>
+                        <th className="px-4 py-4 text-sm font-medium text-neutral-900">Role</th>
+                        <th className="px-4 py-4 text-sm font-medium text-neutral-900 text-right">Actions</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-200 bg-white">
+                    <tbody className="divide-y divide-neutral-200 bg-white">
                       {teamMembers.map((member) => (
-                        <tr key={member.id} className="hover:bg-gray-50 transition-colors">
+                        <tr key={member.id} className="hover:bg-neutral-50 transition-colors">
                           <td className="px-4 py-4">
                             <input 
                               type="checkbox" 
-                              className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                              className="rounded border-neutral-300 text-blue-600 focus:ring-blue-500"
                               aria-label={`Select ${member.name}`}
                             />
                           </td>
-                          <td className="px-4 py-4 font-medium text-gray-900">
+                          <td className="px-4 py-4 font-medium text-neutral-900">
                             {member.name}
                           </td>
-                          <td className="px-4 py-4 text-gray-700">
+                          <td className="px-4 py-4 text-neutral-700">
                             {member.email}
                           </td>
-                          <td className="px-4 py-4 text-gray-700">
+                          <td className="px-4 py-4 text-neutral-700">
                             <div className="relative inline-block w-full max-w-xs">
                               <select
                                 value={member.role}
                                 onChange={(e) => handleRoleChange(member.id, e.target.value)}
-                                className="w-full border border-gray-300 px-3 pr-8 rounded-md py-2 text-sm text-gray-700 bg-white appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 cursor-pointer hover:border-gray-400 transition-colors"
+                                className="w-full border border-neutral-300 px-3 pr-8 rounded-md py-2 text-sm text-neutral-700 bg-white appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 cursor-pointer hover:border-neutral-400 transition-colors"
                               >
                                 <option value="admin">Admin</option>
                                 <option value="ta">TCL (Talent Acquisition) Lead</option>
                                 <option value="hr">HR Manager</option>
                               </select>
                               <FaCaretDown 
-                                className="absolute top-1/2 right-3 transform -translate-y-1/2 pointer-events-none text-gray-400" 
+                                className="absolute top-1/2 right-3 transform -translate-y-1/2 pointer-events-none text-neutral-400" 
                                 size={12}
                               />
                             </div>
@@ -303,7 +303,7 @@ export default function Settings() {
                             <button
                               type="button"
                               onClick={() => handleEditMember(member)}
-                              className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-md cursor-pointer transition-colors"
+                              className="p-2 text-neutral-600 hover:text-neutral-800 hover:bg-neutral-100 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-md cursor-pointer transition-colors"
                               aria-label={`Edit ${member.name}`}
                             >
                               <FaRegEdit className="h-4 w-4" />
@@ -329,7 +329,7 @@ export default function Settings() {
             
             {step === 1 && (
             <>
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mx-4">
+              <div className="bg-white rounded-lg shadow-sm border border-neutral-200 p-6 mx-4">
                 <div className="space-y-1 max-w-3xl mx-auto">
                   <CheckboxItem 
                     checked={preferences.applications}

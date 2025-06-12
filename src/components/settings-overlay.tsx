@@ -170,7 +170,7 @@ export const Overlay = ({ setShowOverlay, member, onSave }: OverlayProps) => {
       >
         <button
           ref={closeButtonRef}
-          className="absolute top-4 right-4 text-gray-500 hover:text-gray-800 cursor-pointer transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-full p-1 z-10"
+          className="absolute top-4 right-4 text-neutral-500 hover:text-neutral-800 cursor-pointer transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-full p-1 z-10"
           onClick={() => setShowOverlay(false)}
           aria-label="Close dialog"
         >
@@ -187,7 +187,7 @@ export const Overlay = ({ setShowOverlay, member, onSave }: OverlayProps) => {
               <div>
                 <label
                   htmlFor="member-name"
-                  className="block text-sm font-medium text-gray-800 mb-2"
+                  className="block text-sm font-medium text-neutral-800 mb-2"
                 >
                   Name
                 </label>
@@ -200,7 +200,7 @@ export const Overlay = ({ setShowOverlay, member, onSave }: OverlayProps) => {
                   className={`w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 transition-colors ${
                     errors.name
                       ? "border-red-400 focus:ring-red-500"
-                      : "border-gray-400 focus:ring-blue-500"
+                      : "border-neutral-400 focus:ring-blue-500"
                   }`}
                   placeholder="Enter member's name"
                   aria-describedby={errors.name ? "name-error" : undefined}
@@ -220,7 +220,7 @@ export const Overlay = ({ setShowOverlay, member, onSave }: OverlayProps) => {
               <div>
                 <label
                   htmlFor="member-email"
-                  className="block text-sm font-medium text-gray-700 mb-2"
+                  className="block text-sm font-medium text-neutral-700 mb-2"
                 >
                   Email
                 </label>
@@ -232,7 +232,7 @@ export const Overlay = ({ setShowOverlay, member, onSave }: OverlayProps) => {
                   className={`w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 transition-colors ${
                     errors.email
                       ? "border-red-400 focus:ring-red-500"
-                      : "border-gray-400 focus:ring-blue-500"
+                      : "border-neutral-400 focus:ring-blue-500"
                   }`}
                   placeholder="Enter member's email"
                   aria-describedby={errors.email ? "email-error" : undefined}
@@ -252,7 +252,7 @@ export const Overlay = ({ setShowOverlay, member, onSave }: OverlayProps) => {
               <div className="md:col-span-2">
                 <label
                   htmlFor="member-role"
-                  className="block text-sm font-medium text-gray-700 mb-2"
+                  className="block text-sm font-medium text-neutral-700 mb-2"
                 >
                   Role
                 </label>
@@ -263,7 +263,7 @@ export const Overlay = ({ setShowOverlay, member, onSave }: OverlayProps) => {
                   className={`w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 appearance-none transition-colors ${
                     errors.role
                       ? "border-red-400 focus:ring-red-500"
-                      : "border-gray-400 focus:ring-blue-500"
+                      : "border-neutral-400 focus:ring-blue-500"
                   }`}
                   aria-describedby={errors.role ? "role-error" : undefined}
                   disabled={isSubmitting}
@@ -290,7 +290,7 @@ export const Overlay = ({ setShowOverlay, member, onSave }: OverlayProps) => {
             <div className="flex justify-end gap-3">
               <button
                 type="button"
-                className="px-4 py-2 text-gray-500 border border-gray-300 hover:border-gray-400 hover:text-gray-700 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 disabled:opacity-50"
+                className="px-4 py-2 text-neutral-500 border border-neutral-300 hover:border-neutral-400 hover:text-neutral-700 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-neutral-500 disabled:opacity-50"
                 onClick={() => setShowOverlay(false)}
                 disabled={isSubmitting}
               >

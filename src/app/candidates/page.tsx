@@ -29,7 +29,7 @@ import {
 const LoadingSpinner = ({ message = "Loading..." }: { message?: string }) => (
   <div className="flex items-center justify-center min-h-[200px]">
     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-    <span className="ml-2 text-gray-600">{message}</span>
+    <span className="ml-2 text-neutral-600">{message}</span>
   </div>
 );
 
@@ -135,13 +135,13 @@ const CandidatesContent = ({
         <div className="flex items-center gap-2 mb-6">
           <Link
             href="/dashboard"
-            className="flex items-center text-gray-500 hover:text-gray-700 font-semibold text-lg transition-colors"
+            className="flex items-center text-neutral-500 hover:text-neutral-700 font-semibold text-lg transition-colors"
           >
             <HiOutlineArrowCircleLeft className="w-8 h-8 mr-2" />
             <span>Back to Dashboard</span>
           </Link>
-          <span className="text-lg text-gray-300 font-light">/</span>
-          <span className="text-lg font-bold text-gray-900">Candidates</span>
+          <span className="text-lg text-neutral-300 font-light">/</span>
+          <span className="text-lg font-bold text-neutral-900">Candidates</span>
         </div>
 
         {/* Header with Role-based Content */}

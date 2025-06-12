@@ -218,7 +218,7 @@ const ExperienceDetails = memo(
         Experience Details
       </div>
       {(!candidate?.experience || candidate.experience.length === 0) && (
-        <p className="text-sm text-gray-600">No experience information available.</p>
+        <p className="text-sm text-neutral-600">No experience information available.</p>
       )}
       {candidate?.experience?.map((exp: Experience, index: number) => (
         <div key={index} className="mb-4">
@@ -298,7 +298,7 @@ const EducationDetails = memo(
         Education Details
       </div>
        {(!candidate?.education || candidate.education.length === 0) && (
-        <p className="text-sm text-gray-600">No education information available.</p>
+        <p className="text-sm text-neutral-600">No education information available.</p>
       )}
       {candidate?.education?.map((edu: Education, index: number) => (
         <div key={index} className="mb-4">
@@ -432,8 +432,8 @@ const CandidatesDetailsOverlay = memo(
                 <div className="font-semibold text-lg text-blue-700 mb-3">
                   Additional Information
                 </div>
-                <div className="bg-gray-50 rounded-lg">
-                  <p className="text-sm text-gray-600">
+                <div className="bg-neutral-50 rounded-lg">
+                  <p className="text-sm text-neutral-600">
                     {"No additional information provided."}
                   </p>
                 </div>

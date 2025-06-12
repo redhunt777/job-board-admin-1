@@ -6,18 +6,18 @@ import { FaCaretDown } from "react-icons/fa";
 export const JobCardSkeleton: React.FC = () => (
   <div className="bg-white rounded-2xl shadow-sm p-6 animate-pulse">
     <div className="flex items-center mb-4">
-      <div className="w-14 h-14 bg-gray-300 rounded-xl"></div>
+      <div className="w-14 h-14 bg-neutral-300 rounded-xl"></div>
       <div className="flex-1 ml-4">
-        <div className="h-5 bg-gray-300 rounded mb-2"></div>
-        <div className="h-4 bg-gray-300 rounded w-3/4"></div>
+        <div className="h-5 bg-neutral-300 rounded mb-2"></div>
+        <div className="h-4 bg-neutral-300 rounded w-3/4"></div>
       </div>
     </div>
     <div className="space-y-2">
-      <div className="h-8 bg-gray-300 rounded-lg w-32"></div>
-      <div className="h-8 bg-gray-300 rounded-lg w-24"></div>
+      <div className="h-8 bg-neutral-300 rounded-lg w-32"></div>
+      <div className="h-8 bg-neutral-300 rounded-lg w-24"></div>
     </div>
     <div className="mt-4">
-      <div className="h-6 bg-gray-300 rounded w-24 ml-auto"></div>
+      <div className="h-6 bg-neutral-300 rounded w-24 ml-auto"></div>
     </div>
   </div>
 );
@@ -25,8 +25,8 @@ export const JobCardSkeleton: React.FC = () => (
 // Empty state component
 export const EmptyState: React.FC<{ onAddJob: () => void }> = ({ onAddJob }) => (
   <div className="flex flex-col items-center justify-center py-12 text-center">
-    <div className="w-32 h-32 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-      <IoList className="w-16 h-16 text-gray-400" />
+    <div className="w-32 h-32 bg-neutral-100 rounded-full flex items-center justify-center mb-4">
+      <IoList className="w-16 h-16 text-neutral-400" />
     </div>
     <h3 className="text-xl font-semibold text-neutral-900 mb-2">No jobs found</h3>
     <p className="text-neutral-600 mb-6">Get started by adding your first job posting.</p>
@@ -86,7 +86,7 @@ export const FilterDropdown: React.FC<{
               onChange('');
               onToggle();
             }}
-            className="w-full text-left px-4 py-2 hover:bg-gray-50 text-sm"
+            className="w-full text-left px-4 py-2 hover:bg-neutral-50 text-sm"
           >
             All {label}
           </button>
@@ -97,7 +97,7 @@ export const FilterDropdown: React.FC<{
                 onChange(option);
                 onToggle();
               }}
-              className="w-full text-left px-4 py-2 hover:bg-gray-50 text-sm"
+              className="w-full text-left px-4 py-2 hover:bg-neutral-50 text-sm"
             >
               {option}
             </button>

@@ -12,10 +12,10 @@ import { MdOutlinePeopleAlt } from "react-icons/md";
 export const JobDetailsSkeleton: React.FC = () => (
   <div className="max-w-5xl w-full pb-20" data-testid="job-details-skeleton">
     <div className="flex gap-8 mb-8 items-center animate-pulse">
-      <div className="w-24 h-24 bg-gray-300 rounded-2xl" />
+      <div className="w-24 h-24 bg-neutral-300 rounded-2xl" />
       <div className="flex-1">
-        <div className="h-8 bg-gray-300 rounded mb-2 w-3/4" />
-        <div className="h-6 bg-gray-300 rounded w-1/2" />
+        <div className="h-8 bg-neutral-300 rounded mb-2 w-3/4" />
+        <div className="h-6 bg-neutral-300 rounded w-1/2" />
       </div>
     </div>
     
@@ -23,27 +23,27 @@ export const JobDetailsSkeleton: React.FC = () => (
       <div className="flex-1">
         <div className="flex flex-wrap gap-2 mb-4">
           {Array.from({ length: 3 }, (_, i) => (
-            <div key={i} className="h-8 bg-gray-300 rounded-lg w-20" />
+            <div key={i} className="h-8 bg-neutral-300 rounded-lg w-20" />
           ))}
         </div>
         <div className="flex flex-wrap gap-2">
           {Array.from({ length: 3 }, (_, i) => (
-            <div key={i} className="h-8 bg-gray-300 rounded-lg w-32" />
+            <div key={i} className="h-8 bg-neutral-300 rounded-lg w-32" />
           ))}
         </div>
       </div>
       <div className="flex flex-wrap gap-3">
         {Array.from({ length: 4 }, (_, i) => (
-          <div key={i} className="w-24 h-10 bg-gray-300 rounded-lg" />
+          <div key={i} className="w-24 h-10 bg-neutral-300 rounded-lg" />
         ))}
       </div>
     </div>
     
     <div className="my-6 animate-pulse">
-      <div className="h-6 bg-gray-300 rounded w-32 mb-4" />
+      <div className="h-6 bg-neutral-300 rounded w-32 mb-4" />
       <div className="space-y-2">
         {Array.from({ length: 4 }, (_, i) => (
-          <div key={i} className="h-4 bg-gray-300 rounded" />
+          <div key={i} className="h-4 bg-neutral-300 rounded" />
         ))}
       </div>
     </div>
@@ -75,7 +75,7 @@ export const ErrorState: React.FC<{
       <button
         type="button"
         onClick={onGoBack}
-        className="bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium rounded-lg py-2 px-4 transition-colors"
+        className="bg-neutral-200 hover:bg-neutral-300 text-neutral-700 font-medium rounded-lg py-2 px-4 transition-colors"
         data-testid="go-back-button"
       >
         Go Back
@@ -86,8 +86,8 @@ export const ErrorState: React.FC<{
 
 export const JobNotFound: React.FC<{ onGoBack: () => void }> = ({ onGoBack }) => (
   <div className="flex flex-col items-center justify-center py-12 text-center" data-testid="job-not-found">
-    <div className="w-32 h-32 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-      <svg className="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <div className="w-32 h-32 bg-neutral-100 rounded-full flex items-center justify-center mb-4">
+      <svg className="w-16 h-16 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6-4h6m2 5.291A7.962 7.962 0 0112 15c-2.34 0-4.29-1.009-5.824-2.562M15 17H9v-2.5a6 6 0 016-6v2.5z" />
       </svg>
     </div>
@@ -240,13 +240,13 @@ export const DeleteConfirmationModal: React.FC<{
       data-testid="delete-modal"
     >
       <div className="bg-white rounded-lg p-6 max-w-md w-full">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">
+        <h3 className="text-lg font-semibold text-neutral-900 mb-4">
           Confirm Job Deletion
         </h3>
-        <p className="text-gray-600 mb-2">
+        <p className="text-neutral-600 mb-2">
           Are you sure you want to delete <span className="font-medium">"{jobTitle}"</span>?
         </p>
-        <p className="text-gray-600 mb-6">
+        <p className="text-neutral-600 mb-6">
           This action cannot be undone and will permanently remove the job posting and all associated data.
         </p>
         
@@ -260,7 +260,7 @@ export const DeleteConfirmationModal: React.FC<{
           <button
             onClick={onCancel}
             disabled={loading}
-            className="px-4 py-2 text-gray-600 bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors disabled:opacity-50"
+            className="px-4 py-2 text-neutral-600 bg-neutral-200 hover:bg-neutral-300 rounded-lg transition-colors disabled:opacity-50"
             data-testid="cancel-delete-button"
           >
             Cancel
