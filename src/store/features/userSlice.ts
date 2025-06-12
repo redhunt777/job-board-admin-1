@@ -361,12 +361,13 @@ export const selectUserPermissions = (state: { user: UserState }) => {
   if (!roles || roles.length === 0) return {};
 
   // Merge all permissions from all roles
-  return roles.reduce((allPermissions, userRole) => {
+  return roles.reduce<Record<string, boolean>>((allPermissions, userRole) => {
     if (userRole.is_active && userRole.role.permissions) {
-      return { ...allPermissions, ...userRole.role.permissions };
+      const permissions = userRole.role.permissions as Record<string, boolean>;
+      return { ...allPermissions, ...permissions };
     }
     return allPermissions;
-  }, {} as Record<string, boolean>);
+  }, {});
 };
 
 export const selectHasPermission =
@@ -389,8 +390,8 @@ export const selectHasPermission =
 
       let currentValue:
         | boolean
-        | Record<string, boolean | Record<string, boolean>> =
-        userRole.role.permissions;
+        | Record<string, boolean | Record<string, boolean>> = userRole.role
+        .permissions as Record<string, boolean | Record<string, boolean>>;
       for (const path of permissionPath) {
         if (typeof currentValue !== "object" || currentValue === null)
           return false;
