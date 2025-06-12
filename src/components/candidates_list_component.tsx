@@ -317,24 +317,23 @@ function Pagination() {
   const filteredCandidates = useAppSelector(selectFilteredCandidatesWithAccess);
 
   // Update total pages when filtered candidates change - moved before any conditional returns
-  useEffect(() => {
-    if (filteredCandidates && Array.isArray(filteredCandidates) && pagination) {
-      if (filteredCandidates.length >= 0) {
-        // Allow for 0 length
-        const totalPages = Math.max(
-          1,
-          Math.ceil(filteredCandidates.length / pagination.candidatesPerPage)
-        );
-        dispatch(
-          setPagination({
-            totalCandidates: filteredCandidates.length,
-            totalPages,
-            currentPage: Math.min(pagination.currentPage, totalPages),
-          })
-        );
-      }
+useEffect(() => {
+  if (filteredCandidates && Array.isArray(filteredCandidates) && pagination) {
+    if (filteredCandidates.length >= 0) {
+      const totalPages = Math.max(
+        1,
+        Math.ceil(filteredCandidates.length / pagination.candidatesPerPage)
+      );
+      dispatch(
+        setPagination({
+          totalCandidates: filteredCandidates.length,
+          totalPages,
+          currentPage: Math.min(pagination.currentPage, totalPages),
+        })
+      );
     }
-  }, [filteredCandidates, pagination, dispatch]);
+  }
+}, [filteredCandidates, pagination?.candidatesPerPage, dispatch]);
 
   // Early return if no data
   if (
@@ -703,15 +702,19 @@ export default function CandidatesList({
                       dispatch(setSortBy(e.target.value as SortOption))
                     }
                     className="
-                      w-full min-w-36 
-                      bg-blue-600 text-white text-sm
+                      w-full md:min-w-36 
+                      min-w-16
+                      bg-blue-600 text-white md:text-sm
+                      text-xs
                       border border-neutral-300 rounded-full
-                      px-4 py-2 pr-10
+                      px-4 py-2 md:pr-10
                       focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-transparent
                       hover:bg-blue-700 transition-colors duration-200
                       cursor-pointer appearance-none
                     "
                     aria-label="Sort options"
+                    name="sortBy"
+                    id="sortBy"
                   >
                     <option
                       value="date_desc"
@@ -761,8 +764,9 @@ export default function CandidatesList({
                     value={sortBy}
                     onChange={handleSortChange}
                     className="
-                      w-full min-w-[130px] 
-                      bg-transparent text-neutral-500 text-sm
+                      w-full min-w-[110px] 
+                      md:min-w-[130px]
+                      bg-transparent text-neutral-500 text-xs md:text-sm
                       border border-neutral-500 rounded-full
                       px-4 py-2
                       focus:outline-none focus:ring-2 focus:ring-neutral-600 focus:border-transparent
@@ -801,7 +805,7 @@ export default function CandidatesList({
             )}
           </div>
           <div className="flex items-center justify-center gap-2">
-            <div className="border-r border-neutral-400 pr-2 flex gap-2">
+            <div className="border-r border-neutral-400 pr-2 flex hidden md:flex gap-2">
               <div className="relative">
                 <select
                   value={sortBy}
