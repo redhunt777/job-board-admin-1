@@ -7,6 +7,7 @@ import { GoPlus } from "react-icons/go";
 import { HiOutlineArrowCircleLeft } from "react-icons/hi";
 import Link from "next/link";
 import CandidatesList from "@/components/candidates_list_component";
+import { RootState } from "@/store/store";
 import {
   fetchJobApplicationsWithAccess,
   setUserContext,
@@ -24,48 +25,70 @@ import {
   initializeAuth,
 } from "@/store/features/userSlice";
 
-export default function Candidates() {
+// Loading component for better UX
+const LoadingSpinner = ({ message = "Loading..." }: { message?: string }) => (
+  <div className="flex items-center justify-center min-h-[200px]">
+    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+    <span className="ml-2 text-gray-600">{message}</span>
+  </div>
+);
+
+// Error/Info message component
+const InfoMessage = ({ message, type = "info" }: { message: string; type?: "info" | "error" }) => (
+  <div className={`p-4 rounded-lg text-center ${
+    type === "error" 
+      ? "bg-red-50 text-red-700 border border-red-200" 
+      : "bg-blue-50 text-blue-700 border border-blue-200"
+  }`}>
+    {message}
+  </div>
+);
+
+// Main Candidates Content Component
+const CandidatesContent = ({ 
+  user, 
+  organization, 
+  roles, 
+  collapsed 
+}: {
+  user: any;
+  organization: any;
+  roles: any[];
+  collapsed: boolean;
+}) => {
   const dispatch = useAppDispatch();
   const router = useRouter();
-
-  // UI selectors
-  const collapsed = useAppSelector((state) => state.ui.sidebar.collapsed);
   
   // Candidates selectors
-  const error = useAppSelector(selectCandidatesError);
-  const loading = useAppSelector(selectCandidatesLoading);
-  const userContext = useAppSelector(selectUserContext);
-  const hasFullAccess = useAppSelector(selectHasFullAccess);
-  const isTAOnly = useAppSelector(selectIsTAOnly);
+  const error = useAppSelector((state) => selectCandidatesError(state as RootState));
+  const loading = useAppSelector((state) => selectCandidatesLoading(state as RootState));
+  const userContext = useAppSelector((state) => selectUserContext(state as RootState));
+  const hasFullAccess = useAppSelector((state) => selectHasFullAccess(state as RootState));
+  const isTAOnly = useAppSelector((state) => selectIsTAOnly(state as RootState));
 
-  // Get user authentication data
-  const user = useAppSelector((state) => state.user.user);
-  const organization = useAppSelector((state) => state.user.organization);
-  const roles = useAppSelector((state) => state.user.roles);
-
-  // Initialize authentication if not already done
-  useEffect(() => {
-    if (!user || !organization) {
-      dispatch(initializeAuth());
-    }
-  }, [dispatch, user, organization]);
+  // Get the primary role (first role) with fallback
+  const primaryRole = roles[0]?.role?.name || "Unknown";
 
   // Memoize user context to prevent unnecessary re-renders
   const memoizedUserContext = useMemo((): UserContext | null => {
     console.log("Memoizing user context:", {
       userId: user?.id,
       organizationId: organization?.id,
-      roles: roles[0],
-    }
-    )
-    if (!user?.id || !organization?.id || !roles[0]) {
+      roles: roles,
+    });
+    
+    if (!user?.id || !organization?.id || !roles || roles.length === 0) {
       return null;
     }
 
     return {
       userId: user.id,
       organizationId: organization.id,
-      roles: roles.map(role => typeof role === 'string' ? role : role.toString()), // e.g., ['admin'], ['hr'], ['ta'], etc.
+      roles: roles.map(role => 
+        typeof role === 'string' 
+          ? role 
+          : role?.role?.name || role.toString()
+      ),
     };
   }, [user?.id, organization?.id, roles]);
 
@@ -104,38 +127,6 @@ export default function Candidates() {
     // Navigate to candidate detail page
     router.push(`/candidates/${candidate.application_id}`);
   };
-
-  // Show loading state if user context is not available
-  if (!memoizedUserContext) {
-    return (
-      <div className={`transition-all duration-300 h-full px-3 md:px-0 ${collapsed ? "md:ml-20" : "md:ml-64"} pt-4`}>
-        <div className="max-w-8xl mx-auto px-2 md:px-4 py-4">
-          <div className="flex items-center justify-center h-64">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-              <p className="text-gray-500">Loading user context...</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Show error state if there's an authentication error
-  if (!user || !organization) {
-    return (
-      <div className={`transition-all duration-300 h-full px-3 md:px-0 ${collapsed ? "md:ml-20" : "md:ml-64"} pt-4`}>
-        <div className="max-w-8xl mx-auto px-2 md:px-4 py-4">
-          <div className="flex items-center justify-center h-64">
-            <div className="text-center">
-              <p className="text-red-500 mb-2">Authentication Error</p>
-              <p className="text-gray-500 text-sm">Unable to load user or organization data</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className={`transition-all duration-300 h-full px-3 md:px-0 ${collapsed ? "md:ml-20" : "md:ml-64"} pt-4`}>
@@ -182,15 +173,18 @@ export default function Candidates() {
                 }
               </p>
               
-              {/* Organization info */}
-              <p className="text-xs text-[#8B8B8B] mt-1">
-                Organization: {organization.name || 'Current Organization'}
-              </p>
+              {/* Organization and role info */}
+              <div className="flex flex-wrap gap-4 text-xs text-[#8B8B8B] mt-1">
+                <span>Organization: {organization.name || 'Current Organization'}</span>
+                <span>Role: {primaryRole}</span>
+              </div>
             </div>
           </div>
 
           {/* Add Job Button - Show based on permissions */}
-          {(hasFullAccess || roles?.includes('admin' as any)) && (
+          {(hasFullAccess || roles?.some(role => 
+            (typeof role === 'string' ? role : role?.role?.name) === 'admin'
+          )) && (
             <div className="w-full md:w-auto mt-4 md:mt-0">
               <button
                 type="button"
@@ -270,9 +264,108 @@ export default function Candidates() {
           showPagination={true}
           showSorting={true}
           maxItems={20}
-          onCandidateClick={handleCandidateClick}
         />
       </div>
     </div>
+  );
+};
+
+export default function Candidates() {
+  const dispatch = useAppDispatch();
+  
+  // UI selectors
+  const collapsed = useAppSelector((state) => state.ui.sidebar.collapsed);
+  
+  // User authentication data
+  const user = useAppSelector((state: RootState) => state.user.user);
+  const organization = useAppSelector((state: RootState) => state.user.organization);
+  const roles = useAppSelector((state: RootState) => state.user.roles);
+  const isLoading = useAppSelector((state: RootState) => state.user.loading);
+  const error = useAppSelector((state: RootState) => state.user.error);
+
+  // Initialize authentication if not already done
+  useEffect(() => {
+    if (!user && !isLoading) {
+      console.log("User not found, initializing auth...");
+      console.log("Current user state:", user);
+      console.log("Current loading state:", isLoading);
+      dispatch(initializeAuth());
+    }
+  }, [user, isLoading, dispatch]);
+
+  // Handle error state
+  if (error) {
+    return (
+      <div className={`transition-all duration-300 h-full px-3 md:px-0 ${collapsed ? "md:ml-20" : "md:ml-64"} pt-4`}>
+        <div className="max-w-8xl mx-auto px-2 md:px-4 py-4">
+          <InfoMessage 
+            message={`Authentication error: ${error}`} 
+            type="error" 
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // Handle loading state
+  if (isLoading || !user) {
+    return (
+      <div className={`transition-all duration-300 h-full px-3 md:px-0 ${collapsed ? "md:ml-20" : "md:ml-64"} pt-4`}>
+        <div className="max-w-8xl mx-auto px-2 md:px-4 py-4">
+          <LoadingSpinner message="Loading user authentication..." />
+        </div>
+      </div>
+    );
+  }
+
+  // Handle missing organization
+  if (!organization) {
+    return (
+      <div className={`transition-all duration-300 h-full px-3 md:px-0 ${collapsed ? "md:ml-20" : "md:ml-64"} pt-4`}>
+        <div className="max-w-8xl mx-auto px-2 md:px-4 py-4">
+          <InfoMessage 
+            message="You are not part of any organization. Please contact your administrator." 
+            type="info"
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // Handle missing roles with more helpful message
+  if (!roles || roles.length === 0) {
+    return (
+      <div className={`transition-all duration-300 h-full px-3 md:px-0 ${collapsed ? "md:ml-20" : "md:ml-64"} pt-4`}>
+        <div className="max-w-8xl mx-auto px-2 md:px-4 py-4">
+          <InfoMessage 
+            message="No role is assigned to you. Please contact your administrator to assign a role." 
+            type="info"
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // Additional validation for required data
+  if (!user.id || !organization.id) {
+    return (
+      <div className={`transition-all duration-300 h-full px-3 md:px-0 ${collapsed ? "md:ml-20" : "md:ml-64"} pt-4`}>
+        <div className="max-w-8xl mx-auto px-2 md:px-4 py-4">
+          <InfoMessage 
+            message="Invalid user or organization data. Please try refreshing the page." 
+            type="error" 
+          />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <CandidatesContent 
+      user={user}
+      organization={organization}
+      roles={roles}
+      collapsed={collapsed}
+    />
   );
 }

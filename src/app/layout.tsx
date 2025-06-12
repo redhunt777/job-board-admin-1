@@ -31,7 +31,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`antialiased bg-[#F6F7F9]`}>
+      <body className={`antialiased bg-[#F6F7F9] min-h-screen`}>
         <Providers>
           <SidebarProvider>
             <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>

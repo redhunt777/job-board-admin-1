@@ -22,6 +22,22 @@ import { JobListComponent, JobCard } from "@/components/Job-card&list-component"
 import { FilterState, JobsClientComponentProps } from "@/types/custom";
 import { JobCardSkeleton, EmptyState, ErrorState, FilterDropdown } from "./job_utils";
 
+// Constants
+const INITIAL_PAGE_SIZE = 18;
+const SKELETON_COUNT = 6;
+
+// Types for better type safety
+interface FilterOptions {
+  statuses: string[];
+  locations: string[];
+  companies: string[];
+}
+
+interface InitializationState {
+  initialized: boolean;
+  error: string | null;
+}
+
 export default function JobsClientComponent({
   userRole,
   userId,
@@ -39,7 +55,11 @@ export default function JobsClientComponent({
   const filters = useAppSelector(selectJobFilters);
 
   // Local state
-  const [initialized, setInitialized] = useState(false);
+  const [initState, setInitState] = useState<InitializationState>({
+    initialized: false,
+    error: null
+  });
+  
   const [filterDropdowns, setFilterDropdowns] = useState<FilterState>({
     status: '',
     location: '',
@@ -47,84 +67,114 @@ export default function JobsClientComponent({
     isOpen: false
   });
 
-  // Memoized values
-  const uniqueStatuses = useMemo(() => 
-    Array.from(new Set(jobs.map(job => job.status).filter((status): status is string => Boolean(status)))),
-    [jobs]
-  );
+  // Validation helper
+  const isValidProps = useMemo(() => {
+    return Boolean(userRole && userId && organizationId);
+  }, [userRole, userId, organizationId]);
 
-  const uniqueLocations = useMemo(() => 
-    Array.from(new Set(jobs.map(job => job.location).filter((location): location is string => Boolean(location)))),
-    [jobs]
-  );
+  // Memoized filter options with better performance
+  const filterOptions = useMemo<FilterOptions>(() => {
+    const statuses = new Set<string>();
+    const locations = new Set<string>();
+    const companies = new Set<string>();
 
-  const uniqueCompanies = useMemo(() => 
-    Array.from(new Set(jobs.map(job => job.company_name).filter((company): company is string => Boolean(company)))),
-    [jobs]
-  );
+    jobs.forEach(job => {
+      if (job.status) statuses.add(job.status);
+      if (job.location) locations.add(job.location);
+      if (job.company_name) companies.add(job.company_name);
+    });
 
-  // Initialize data
+    return {
+      statuses: Array.from(statuses).sort(),
+      locations: Array.from(locations).sort(),
+      companies: Array.from(companies).sort()
+    };
+  }, [jobs]);
+
+  // Initialize data with better error handling
   useEffect(() => {
     const initializeJobs = async () => {
+      if (initState.initialized) return;
+
       try {
-        if (userRole && userId && organizationId) {
-          // Fetch jobs from API if no initial data
-          await dispatch(fetchJobs({
-            page: 1,
-            limit: 18,
-            userRole,
-            userId,
-            organizationId
-          })).unwrap();
+        if (!isValidProps) {
+          throw new Error("Missing required authentication data. Please ensure you are logged in and part of an organization.");
         }
-        else{
-          alert("Either you are not login or you are not a part of any organisation")
-        }
+
+        setInitState(prev => ({ ...prev, error: null }));
+        
+        await dispatch(fetchJobs({
+          page: 1,
+          limit: INITIAL_PAGE_SIZE,
+          userRole,
+          userId,
+          organizationId
+        })).unwrap();
+
+        setInitState({ initialized: true, error: null });
       } catch (err) {
-        console.log('Failed to initialize jobs:', err);
-      } finally {
-        setInitialized(true);
+        const errorMessage = err instanceof Error ? err.message : 'Failed to load jobs';
+        console.error('Failed to initialize jobs:', err);
+        setInitState({ initialized: true, error: errorMessage });
       }
     };
 
-    if (!initialized) {
-      initializeJobs();
-    }
-  }, [dispatch, userRole, userId, organizationId, initialized]);
+    initializeJobs();
+  }, [dispatch, userRole, userId, organizationId, initState.initialized, isValidProps]);
 
-  // Handlers
+  // Optimized handlers with better error handling
   const handleAddJob = useCallback(() => {
-    router.push("/jobs/add-job");
+    try {
+      router.push("/jobs/add-job");
+    } catch (err) {
+      console.error('Navigation error:', err);
+    }
   }, [router]);
 
   const handleViewModeChange = useCallback((mode: 'board' | 'list') => {
-    dispatch(setViewMode(mode));
+    try {
+      dispatch(setViewMode(mode));
+    } catch (err) {
+      console.error('Failed to change view mode:', err);
+    }
   }, [dispatch]);
 
   const handleFilterChange = useCallback((filterType: string, value: string) => {
-    dispatch(setFilters({
-      ...filters,
-      [filterType]: value || undefined
-    }));
-    setFilterDropdowns(prev => ({
-      ...prev,
-      [filterType]: value,
-      isOpen: false
-    }));
+    try {
+      const newFilters = {
+        ...filters,
+        [filterType]: value || undefined
+      };
+      
+      dispatch(setFilters(newFilters));
+      setFilterDropdowns(prev => ({
+        ...prev,
+        [filterType]: value,
+        isOpen: false
+      }));
+    } catch (err) {
+      console.error('Failed to apply filter:', err);
+    }
   }, [dispatch, filters]);
 
-  const handleRetry = useCallback(() => {
-    if (userRole && userId) {
+  const handleRetry = useCallback(async () => {
+    if (!isValidProps) return;
+
+    try {
       dispatch(clearError());
-      dispatch(fetchJobs({
+      setInitState(prev => ({ ...prev, error: null }));
+      
+      await dispatch(fetchJobs({
         page: 1,
-        limit: 18,
+        limit: INITIAL_PAGE_SIZE,
         userRole,
         userId,
         organizationId
-      }));
+      })).unwrap();
+    } catch (err) {
+      console.error('Retry failed:', err);
     }
-  }, [dispatch, userRole, userId, organizationId]);
+  }, [dispatch, userRole, userId, organizationId, isValidProps]);
 
   const toggleFilterDropdown = useCallback((filterType: keyof FilterState) => {
     setFilterDropdowns(prev => ({
@@ -133,9 +183,23 @@ export default function JobsClientComponent({
     }));
   }, []);
 
-  // Transform jobs for components
-  const transformedJobsForCards = useMemo(() => 
-    jobs.map(job => ({
+  const handleClearAllFilters = useCallback(() => {
+    try {
+      dispatch(setFilters({}));
+      setFilterDropdowns({
+        status: '',
+        location: '',
+        company: '',
+        isOpen: false
+      });
+    } catch (err) {
+      console.error('Failed to clear filters:', err);
+    }
+  }, [dispatch]);
+
+  // Optimized job transformations
+  const transformedJobs = useMemo(() => {
+    const forCards = jobs.map(job => ({
       id: job.id,
       title: job.title,
       company_name: job.company_name ?? "",
@@ -143,12 +207,9 @@ export default function JobsClientComponent({
       min_salary: job.salary_min ?? 0,
       max_salary: job.salary_max ?? 0,
       company_logo_url: job.company_logo_url || "/demo.png"
-    })),
-    [jobs]
-  );
+    }));
 
-  const transformedJobsForList = useMemo(() => 
-    jobs.map(job => ({
+    const forList = jobs.map(job => ({
       job_id: job.id,
       job_title: job.title,
       company_name: job.company_name || '',
@@ -169,47 +230,71 @@ export default function JobsClientComponent({
       working_type: job.working_type || '',
       admin_id: job.created_by || '',
       created_at: job.created_at || ''
-    })),
-    [jobs]
+    }));
+
+    return { forCards, forList };
+  }, [jobs]);
+
+  // Enhanced loading component
+  const LoadingView = () => (
+    <div className={`transition-all duration-300 min-h-full md:pb-0 px-0 ${collapsed ? "md:ml-20" : "md:ml-64"} md:pt-0 pt-4`}>
+      <div className="mt-4 px-2 md:px-4 py-4">
+        <div className="flex items-center gap-2 mb-4">
+          <Link href="/dashboard" className="flex items-center text-neutral-500 hover:text-neutral-700 font-semibold text-lg">
+            <HiOutlineArrowCircleLeft className="w-8 h-8 mr-2" />
+            <p>Back to Dashboard</p>
+          </Link>
+          <span className="text-lg text-neutral-300">/</span>
+          <span className="text-lg font-bold text-neutral-900">Jobs</span>
+        </div>
+
+        <div className="flex items-center justify-between my-6">
+          <div>
+            <h1 className="text-2xl font-semibold text-neutral-900">Manage All Jobs</h1>
+            <p className="text-sm text-neutral-600 mt-2">Loading your job listings...</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {Array.from({ length: SKELETON_COUNT }).map((_, index) => (
+            <JobCardSkeleton key={`skeleton-${index}`} />
+          ))}
+        </div>
+      </div>
+    </div>
   );
 
-  // Loading state
-  if (!initialized || loading) {
+  // Show loading state
+  if (!initState.initialized || loading) {
+    return <LoadingView />;
+  }
+
+  // Show initialization error
+  if (initState.error) {
     return (
       <div className={`transition-all duration-300 min-h-full md:pb-0 px-0 ${collapsed ? "md:ml-20" : "md:ml-64"} md:pt-0 pt-4`}>
         <div className="mt-4 px-2 md:px-4 py-4">
-          <div className="flex items-center gap-2 mb-4">
-            <Link href="/dashboard" className="flex items-center text-neutral-500 hover:text-neutral-700 font-semibold text-lg">
-              <HiOutlineArrowCircleLeft className="w-8 h-8 mr-2" />
-              <p>Back to Dashboard</p>
-            </Link>
-            <span className="text-lg text-neutral-300">/</span>
-            <span className="text-lg font-bold text-neutral-900">Jobs</span>
-          </div>
-
-          <div className="flex items-center justify-between my-6">
-            <div>
-              <h1 className="text-2xl font-semibold text-neutral-900">Manage All Jobs</h1>
-              <p className="text-sm text-neutral-600 mt-2">Loading your job listings...</p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {Array.from({ length: 6 }).map((_, index) => (
-              <JobCardSkeleton key={index} />
-            ))}
-          </div>
+          <ErrorState 
+            error={initState.error} 
+            onRetry={handleRetry}
+          />
         </div>
       </div>
     );
   }
+
+  // Calculate active filters count
+  const activeFiltersCount = Object.values(filters).filter(Boolean).length;
 
   return (
     <div className={`transition-all duration-300 min-h-full md:pb-0 px-0 ${collapsed ? "md:ml-20" : "md:ml-64"} md:pt-0 pt-4`}>
       <div className="mt-4 px-2 md:px-4 py-4">
         {/* Header section */}
         <div className="flex items-center gap-2 mb-4">
-          <Link href="/dashboard" className="flex items-center text-neutral-500 hover:text-neutral-700 font-semibold text-lg">
+          <Link 
+            href="/dashboard" 
+            className="flex items-center text-neutral-500 hover:text-neutral-700 font-semibold text-lg transition-colors"
+          >
             <HiOutlineArrowCircleLeft className="w-8 h-8 mr-2" />
             <p>Back to Dashboard</p>
           </Link>
@@ -222,15 +307,20 @@ export default function JobsClientComponent({
           <div>
             <h1 className="text-2xl font-semibold text-neutral-900">Manage All Jobs</h1>
             <p className="text-sm text-neutral-600 my-2">
-              Manage your job listings and applications with ease.
+              Manage your job listings and applications with ease. 
+              {jobs.length > 0 && (
+                <span className="ml-1 font-medium">
+                  ({jobs.length} job{jobs.length !== 1 ? 's' : ''} found)
+                </span>
+              )}
             </p>
           </div>
           <div className="w-full md:w-auto mt-4 md:mt-0">
             <button
               type="button"
               onClick={handleAddJob}
-              aria-label="Add Job"
-              className="bg-blue-600 w-full md:w-auto hover:bg-blue-700 text-white font-medium text-xl rounded-lg py-2 transition-colors cursor-pointer px-5 flex items-center justify-center md:justify-start gap-2"
+              aria-label="Add New Job"
+              className="bg-blue-600 w-full md:w-auto hover:bg-blue-700 text-white font-medium text-xl rounded-lg py-2 transition-colors cursor-pointer px-5 flex items-center justify-center md:justify-start gap-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
             >
               <GoPlus className="h-8 w-8" />
               Add Job
@@ -241,13 +331,14 @@ export default function JobsClientComponent({
         {/* View mode toggle and filters */}
         <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
           {/* View mode toggle */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2" role="group" aria-label="View mode selection">
             <button
               onClick={() => handleViewModeChange("board")}
-              className={`flex items-center gap-2 cursor-pointer px-4 py-2 rounded-3xl text-sm transition-colors ${
+              aria-pressed={viewMode === "board"}
+              className={`flex items-center gap-2 cursor-pointer px-4 py-2 rounded-3xl text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
                 viewMode === "board"
                   ? "bg-blue-600 text-white hover:bg-blue-700"
-                  : "border border-neutral-500 text-neutral-500 hover:text-neutral-700"
+                  : "border border-neutral-500 text-neutral-500 hover:text-neutral-700 hover:border-neutral-700"
               }`}
             >
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="w-5 h-5">
@@ -260,10 +351,11 @@ export default function JobsClientComponent({
             </button>
             <button
               onClick={() => handleViewModeChange("list")}
-              className={`flex items-center gap-2 cursor-pointer px-4 py-2 rounded-3xl text-sm transition-colors ${
+              aria-pressed={viewMode === "list"}
+              className={`flex items-center gap-2 cursor-pointer px-4 py-2 rounded-3xl text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
                 viewMode === "list"
                   ? "bg-blue-600 text-white hover:bg-blue-700"
-                  : "border border-neutral-500 text-neutral-500 hover:text-neutral-700"
+                  : "border border-neutral-500 text-neutral-500 hover:text-neutral-700 hover:border-neutral-700"
               }`}
             >
               <IoList className="w-5 h-5" />
@@ -277,7 +369,7 @@ export default function JobsClientComponent({
               <FilterDropdown
                 label="Job Status"
                 value={filterDropdowns.status}
-                options={uniqueStatuses}
+                options={filterOptions.statuses}
                 onChange={(value) => handleFilterChange('status', value)}
                 isOpen={filterDropdowns.isOpen === 'status'}
                 onToggle={() => toggleFilterDropdown('status')}
@@ -285,7 +377,7 @@ export default function JobsClientComponent({
               <FilterDropdown
                 label="Job Location"
                 value={filterDropdowns.location}
-                options={uniqueLocations}
+                options={filterOptions.locations}
                 onChange={(value) => handleFilterChange('location', value)}
                 isOpen={filterDropdowns.isOpen === 'location'}
                 onToggle={() => toggleFilterDropdown('location')}
@@ -293,18 +385,38 @@ export default function JobsClientComponent({
               <FilterDropdown
                 label="Company"
                 value={filterDropdowns.company}
-                options={uniqueCompanies}
+                options={filterOptions.companies}
                 onChange={(value) => handleFilterChange('company', value)}
                 isOpen={filterDropdowns.isOpen === 'company'}
                 onToggle={() => toggleFilterDropdown('company')}
               />
             </div>
-            <button className="flex items-center gap-1 font-medium cursor-pointer bg-neutral-200 px-4 py-2 rounded-3xl hover:bg-neutral-300 transition-colors"
-              onClick={()=>{alert("not yet implemented")}}
+            
+            <div className="flex items-center gap-2">
+              <button 
+                className="flex items-center gap-1 font-medium cursor-pointer bg-neutral-200 px-4 py-2 rounded-3xl hover:bg-neutral-300 transition-colors focus:outline-none focus:ring-2 focus:ring-neutral-400 focus:ring-offset-2"
+                onClick={() => alert("Advanced filters coming soon!")}
+                aria-label="Open advanced filters"
               >
-              <CiFilter className="w-5 h-5 text-neutral-500" />
-              All Filters
-            </button>
+                <CiFilter className="w-5 h-5 text-neutral-500" />
+                All Filters
+                {activeFiltersCount > 0 && (
+                  <span className="ml-1 bg-blue-600 text-white text-xs rounded-full px-2 py-0.5 min-w-[20px] text-center">
+                    {activeFiltersCount}
+                  </span>
+                )}
+              </button>
+              
+              {activeFiltersCount > 0 && (
+                <button
+                  onClick={handleClearAllFilters}
+                  className="text-xs text-blue-600 hover:text-blue-800 font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded px-2 py-1"
+                  aria-label="Clear all filters"
+                >
+                  Clear all
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
@@ -317,12 +429,12 @@ export default function JobsClientComponent({
           <>
             {viewMode === "board" ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {transformedJobsForCards.map((job) => (
+                {transformedJobs.forCards.map((job) => (
                   <JobCard key={job.id} job={job} />
                 ))}
               </div>
             ) : (
-              <JobListComponent jobsFromStore={transformedJobsForList} />
+              <JobListComponent jobsFromStore={transformedJobs.forList} />
             )}
           </>
         )}
