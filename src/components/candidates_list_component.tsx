@@ -30,6 +30,8 @@ import {
   fetchJobApplicationsWithAccess
 } from "@/store/features/candidatesSlice";
 import { MdErrorOutline } from "react-icons/md";
+import { TiArrowSortedDown } from "react-icons/ti";
+
 
 // Types for component props
 interface CandidatesListProps {
@@ -662,38 +664,128 @@ export default function CandidatesList({
           <div className="flex items-center gap-2">
             {showSorting && (
               <>
-                <select
-                  value={sortBy}
-                  onChange={(e) =>
-                    dispatch(setSortBy(e.target.value as SortOption))
-                  }
-                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                >
-                  <option value="date_desc">Newest First</option>
-                  <option value="date_asc">Oldest First</option>
-                  <option value="name_asc">Name A-Z</option>
-                  <option value="name_desc">Name Z-A</option>
-                  <option value="salary_desc">Highest Salary</option>
-                  <option value="salary_asc">Lowest Salary</option>
-                </select>
-                <button
-                  onClick={clearAllFilters}
-                  className="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium transition-colors"
-                >
-                  Clear Filters
-                </button>
+                <div className="relative">
+                  <select
+                    value={sortBy}
+                    onChange={(e) => dispatch(setSortBy(e.target.value as SortOption))}
+                    className="
+                      w-full min-w-[150px] 
+                      bg-[#1E5CDC] text-white text-sm
+                      border border-gray-300 rounded-full
+                      px-4 py-2 pr-10
+                      focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-transparent
+                      hover:bg-[#1a52c7] transition-colors duration-200
+                      cursor-pointer appearance-none
+                    "
+                    aria-label="Sort options"
+                  >
+                    <option value="date_desc" className="bg-white text-gray-900">Newest First</option>
+                    <option value="date_asc" className="bg-white text-gray-900">Oldest First</option>
+                    <option value="name_asc" className="bg-white text-gray-900">Name A-Z</option>
+                    <option value="name_desc" className="bg-white text-gray-900">Name Z-A</option>
+                    <option value="salary_desc" className="bg-white text-gray-900">Highest Salary</option>
+                    <option value="salary_asc" className="bg-white text-gray-900">Lowest Salary</option>
+                  </select>
+                  
+                  {/* Custom dropdown arrow */}
+                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                    <TiArrowSortedDown className="text-white text-lg" />
+                  </div>
+                </div>
+                <div className="relative">
+                  <select
+                    value={sortBy}
+                    onChange={(e) => console.log("changed")}
+                    className="
+                      w-full min-w-[130px] 
+                      bg-transparent text-neutral-500 text-sm
+                      border border-neutral-500 rounded-full
+                      px-4 py-2
+                      focus:outline-none focus:ring-2 focus:ring-neutral-600 focus:border-transparent
+                      transition-colors duration-200
+                      cursor-pointer appearance-none
+                    "
+                    aria-label="Sort options"
+                  >
+                    <option value="">App. Status</option>
+                    <option value="accepted" className="bg-white text-gray-900">Accepted</option>
+                    <option value="pending" className="bg-white text-gray-900">Pending</option>
+                    <option value="rejected" className="bg-white text-gray-900">Rejected</option>
+                  </select>
+                  
+                  {/* Custom dropdown arrow */}
+                  <div className="absolute right-2 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                    <TiArrowSortedDown className="text-neutral-500 text-lg" />
+                  </div>
+                </div>
               </>
             )}
+            </div>
+            <div className="flex items-center justify-center gap-2">
+            <div className="border-r border-neutral-400 pr-2 flex gap-2">
+              <div className="relative">
+                <select
+                  value={sortBy}
+                  onChange={(e) => console.log("changed")}
+                  className="
+                    w-full min-w-[130px] 
+                    bg-transparent text-neutral-500 text-sm
+                    border border-neutral-500 rounded-full
+                    px-4 py-2
+                    focus:outline-none focus:ring-2 focus:ring-neutral-600 focus:border-transparent
+                    transition-colors duration-200
+                    cursor-pointer appearance-none
+                  "
+                  aria-label="Sort options"
+                >
+                  <option value="">Years of Exp.</option>
+                  <option value="accepted" className="bg-white text-gray-900">0-2</option>
+                  <option value="pending" className="bg-white text-gray-900">3-5</option>
+                  <option value="rejected" className="bg-white text-gray-900">5+</option>
+                </select>
+                
+                {/* Custom dropdown arrow */}
+                <div className="absolute right-2 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                  <TiArrowSortedDown className="text-neutral-500 text-lg" />
+                </div>
+              </div>
+              <div className="relative">
+                <select
+                  value={sortBy}
+                  onChange={(e) => console.log("changed")}
+                  className="
+                    w-full min-w-[130px] 
+                    bg-transparent text-neutral-500 text-sm
+                    border border-neutral-500 rounded-full
+                    px-4 py-2
+                    focus:outline-none focus:ring-2 focus:ring-neutral-600 focus:border-transparent
+                    transition-colors duration-200
+                    cursor-pointer appearance-none
+                  "
+                  aria-label="Sort options"
+                > 
+                  <option value="">Company</option>
+                  <option value="accepted" className="bg-white text-gray-900">Facebook</option>
+                  <option value="pending" className="bg-white text-gray-900">Microsoft</option>
+                  <option value="rejected" className="bg-white text-gray-900">Others</option>
+                </select>
+                
+                {/* Custom dropdown arrow */}
+                <div className="absolute right-2 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                  <TiArrowSortedDown className="text-neutral-500 text-lg" />
+                </div>
+              </div>
+            </div>
             {showFilters && (
               <button
-                className="flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-50 rounded-lg border border-gray-300 font-semibold text-gray-700 cursor-pointer transition-colors"
+                className="flex items-center gap-2 px-4 py-2 bg-neutral-200 hover:bg-gray-50 rounded-full border border-gray-300 font-normal text-sm text-neutral-500 cursor-pointer transition-colors"
                 onClick={() => setShowFiltersModal(true)}
               >
                 <CiFilter className="w-5 h-5" />
-                <span>Filters</span>
+                <span>All Filters</span>
               </button>
             )}
-          </div>
+            </div>
         </div>
       )}
 
@@ -783,22 +875,22 @@ export default function CandidatesList({
                           onClick={(e) => e.stopPropagation()}
                         />
                       </td>
-                      <td className="px-3 py-4 text-gray-700">
+                      <td className="px-3 py-4 text-gray-900">
                         {candidate.application_id}
                       </td>
-                      <td className="px-3 py-4 text-gray-700">
+                      <td className="px-3 py-4 text-gray-900">
                         {new Date(candidate.applied_date).toLocaleDateString()}
                       </td>
-                      <td className="px-3 py-4 text-gray-700">
+                      <td className="px-3 py-4 text-gray-900">
                         {candidate.name}
                       </td>
-                      <td className="px-3 py-4 text-gray-700">
+                      <td className="px-3 py-4 text-gray-900">
                         {candidate.candidate_email}
                       </td>
-                      <td className="px-3 py-4 text-gray-700">
+                      <td className="px-3 py-4 text-gray-900">
                         {candidate.job_location || "—"}
                       </td>
-                      <td className="px-3 py-4 text-gray-700">
+                      <td className="px-3 py-4 text-gray-900">
                         {candidate.min_experience_needed &&
                         candidate.max_experience_needed
                           ? `${candidate.min_experience_needed}-${candidate.max_experience_needed} years`

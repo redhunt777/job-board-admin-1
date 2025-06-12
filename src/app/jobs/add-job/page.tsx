@@ -32,7 +32,7 @@ export default function AddJob() {
 
   // Initialize authentication if not already done
   useEffect(() => {
-    if (!user || !roles || !organization) {
+    if (!user && !loading) {
         dispatch(initializeAuth());
     }
   }, [user, dispatch, roles, organization]);
