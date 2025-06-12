@@ -8,6 +8,7 @@ import {
   COMMAND_PRIORITY_EDITOR,
   LexicalCommand,
 } from "lexical";
+import { $patchStyleText } from "@lexical/selection";
 import {
   INSERT_UNORDERED_LIST_COMMAND,
   INSERT_ORDERED_LIST_COMMAND,
@@ -74,14 +75,9 @@ export default function ToolbarPlugin() {
           const selection = $getSelection();
           if (!$isRangeSelection(selection)) return false;
 
-          const nodes = selection.getNodes();
-          nodes.forEach((node) => {
-            if (node.getType() === "text") {
-              const element = editor.getElementByKey(node.getKey());
-              if (element) {
-                element.style.color = color;
-              }
-            }
+          // Apply color using Lexical's style system
+          $patchStyleText(selection, {
+            color,
           });
         });
         return true;

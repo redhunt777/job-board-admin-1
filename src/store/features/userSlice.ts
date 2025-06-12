@@ -265,11 +265,16 @@ const userSlice = createSlice({
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.loading = false;
+        state.user = null;
+        state.profile = null;
+        state.organization = null;
+        state.roles = [];
+        state.completeUserData = null;
+        state.isAuthenticated = false;
         state.error =
           typeof action.payload === "string"
             ? action.payload
             : String(action.payload);
-        state.isAuthenticated = false;
       })
 
       // Logout User
