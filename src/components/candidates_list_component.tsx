@@ -316,6 +316,26 @@ function Pagination() {
   const pagination = useAppSelector(selectPagination);
   const filteredCandidates = useAppSelector(selectFilteredCandidatesWithAccess);
 
+  // Update total pages when filtered candidates change - moved before any conditional returns
+  useEffect(() => {
+    if (filteredCandidates && Array.isArray(filteredCandidates) && pagination) {
+      if (filteredCandidates.length >= 0) {
+        // Allow for 0 length
+        const totalPages = Math.max(
+          1,
+          Math.ceil(filteredCandidates.length / pagination.candidatesPerPage)
+        );
+        dispatch(
+          setPagination({
+            totalCandidates: filteredCandidates.length,
+            totalPages,
+            currentPage: Math.min(pagination.currentPage, totalPages),
+          })
+        );
+      }
+    }
+  }, [filteredCandidates, pagination, dispatch]);
+
   // Early return if no data
   if (
     !filteredCandidates ||
@@ -324,29 +344,6 @@ function Pagination() {
   ) {
     return null;
   }
-
-  // Update total pages when filtered candidates change
-  useEffect(() => {
-    if (filteredCandidates.length >= 0) {
-      // Allow for 0 length
-      const totalPages = Math.max(
-        1,
-        Math.ceil(filteredCandidates.length / pagination.candidatesPerPage)
-      );
-      dispatch(
-        setPagination({
-          totalCandidates: filteredCandidates.length,
-          totalPages,
-          currentPage: Math.min(pagination.currentPage, totalPages),
-        })
-      );
-    }
-  }, [
-    filteredCandidates.length,
-    pagination.candidatesPerPage,
-    dispatch,
-    pagination.currentPage,
-  ]);
 
   const handlePageChange = (page: number) => {
     if (page >= 1 && page <= pagination.totalPages) {
