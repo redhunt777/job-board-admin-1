@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useEffect } from "react";
+import { useMemo, useEffect } from "react";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { CiFilter } from "react-icons/ci";
 // import { CiLocationOn, CiMail, CiPhone } from "react-icons/ci";
@@ -36,6 +36,7 @@ interface CandidatesListProps {
   showSorting?: boolean;
   maxItems?: number;
   className?: string;
+  jobId?: string | null;
   onCandidateClick?: (candidate: CandidateWithApplication) => void;
 }
 
@@ -116,8 +117,6 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-// Removed old card component and table headers as we're using table format now
-
 export default function CandidatesList({
   showHeader = true,
   showFilters = true,
@@ -125,6 +124,7 @@ export default function CandidatesList({
   showSorting = true,
   maxItems,
   className = "",
+  jobId,
   onCandidateClick,
 }: CandidatesListProps) {
   const dispatch = useAppDispatch();
@@ -144,13 +144,15 @@ export default function CandidatesList({
   // const [selectedCandidate, setSelectedCandidate] = useState<CandidateWithApplication | null>(null);
   // const [showDetailsModal, setShowDetailsModal] = useState(false);
 
-  // Get candidates to display
+  // Get candidates to display with jobId filtering
   const candidatesToDisplay = useMemo(() => {
+    const candidatesSource = filteredCandidates;
+    
     if (maxItems && maxItems > 0) {
-      return paginatedCandidates.slice(0, maxItems);
+      return candidatesSource.slice(0, maxItems);
     }
-    return paginatedCandidates;
-  }, [paginatedCandidates, maxItems]);
+    return candidatesSource;
+  }, [filteredCandidates, maxItems]);
 
   // Fetch candidates effect
   useEffect(() => {
