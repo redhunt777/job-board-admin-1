@@ -247,7 +247,7 @@ function CandidateCard({
                     </ul>
                   </div>
                 )}
-              </div>             
+              </div>
             </div>
           </div>
         </div>
@@ -284,23 +284,23 @@ function Pagination() {
   const filteredCandidates = useAppSelector(selectFilteredCandidatesWithAccess);
 
   // Update total pages when filtered candidates change - moved before any conditional returns
-useEffect(() => {
-  if (filteredCandidates && Array.isArray(filteredCandidates) && pagination) {
-    if (filteredCandidates.length >= 0) {
-      const totalPages = Math.max(
-        1,
-        Math.ceil(filteredCandidates.length / pagination.candidatesPerPage)
-      );
-      dispatch(
-        setPagination({
-          totalCandidates: filteredCandidates.length,
-          totalPages,
-          currentPage: Math.min(pagination.currentPage, totalPages),
-        })
-      );
+  useEffect(() => {
+    if (filteredCandidates && Array.isArray(filteredCandidates) && pagination) {
+      if (filteredCandidates.length >= 0) {
+        const totalPages = Math.max(
+          1,
+          Math.ceil(filteredCandidates.length / pagination.candidatesPerPage)
+        );
+        dispatch(
+          setPagination({
+            totalCandidates: filteredCandidates.length,
+            totalPages,
+            currentPage: Math.min(pagination.currentPage, totalPages),
+          })
+        );
+      }
     }
-  }
-}, [filteredCandidates, pagination?.candidatesPerPage, dispatch]);
+  }, [filteredCandidates, pagination?.candidatesPerPage, dispatch, pagination]);
 
   // Early return if no data
   if (
@@ -424,8 +424,8 @@ export default function CandidatesList({
   const filters = useAppSelector(selectFilters);
   const sortBy = useAppSelector(selectSortBy);
   const userContext = useAppSelector(selectUserContext);
-  const hasFullAccess = useAppSelector(selectHasFullAccess);
-  const isTAOnly = useAppSelector(selectIsTAOnly);
+  // const hasFullAccess = useAppSelector(selectHasFullAccess);
+  // const isTAOnly = useAppSelector(selectIsTAOnly);
 
   // Local state
   const [showFiltersModal, setShowFiltersModal] = useState(false);
@@ -767,7 +767,7 @@ export default function CandidatesList({
             )}
           </div>
           <div className="flex items-center justify-center gap-2">
-            <div className="border-r border-neutral-400 pr-2 flex hidden md:flex gap-2">
+            <div className="border-r border-neutral-400 pr-2 hidden md:flex gap-2">
               <div className="relative">
                 <select
                   value={sortBy}

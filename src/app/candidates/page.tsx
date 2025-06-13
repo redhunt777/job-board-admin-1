@@ -84,9 +84,6 @@ const CandidatesContent = ({
     selectIsTAOnly(state as RootState)
   );
 
-  // Get the primary role (first role) with fallback
-  const primaryRole = roles[0]?.role?.name || "Unknown";
-
   // Memoize user context to prevent unnecessary re-renders
   const memoizedUserContext = useMemo((): UserContext | null => {
     console.log("Memoizing user context:", {
