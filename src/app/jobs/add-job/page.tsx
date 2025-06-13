@@ -296,7 +296,7 @@ export default function AddJob() {
 
   return (
     <div
-      className={`transition-all duration-300 min-h-full md:pb-0 px-0 ${
+      className={`transition-all duration-300 min-h-full md:pb-0 px-3 md:px-6 ${
         collapsed ? "md:ml-20" : "md:ml-60"
       } md:pt-0 pt-4`}
     >
@@ -305,20 +305,20 @@ export default function AddJob() {
         <div className="flex items-center gap-1 mb-4">
           <Link
             href="/dashboard"
-            className="flex items-center text-neutral-500 hover:text-neutral-700 font-semibold text-lg"
+            className="flex items-center text-neutral-500 hover:text-neutral-700 font-semibold text-base"
           >
-            <HiOutlineArrowCircleLeft className="w-6 h-6 mr-1" />
+            <HiOutlineArrowCircleLeft className="w-5 h-5 mr-1" />
             <span>Back to Dashboard</span>
           </Link>
           <span className="text-base text-neutral-500 font-light">/</span>
           <Link
             href="/jobs"
-            className="text-neutral-500 hover:text-neutral-700 font-medium text-base"
+            className="text-neutral-500 hover:text-neutral-700 font-medium text-sm"
           >
             Jobs
           </Link>
-          <span className="text-base text-neutral-500 font-light">/</span>
-          <span className="text-base font-medium text-neutral-900">
+          <span className="text-sm text-neutral-500 font-light">/</span>
+          <span className="text-sm font-medium text-neutral-900">
             Add a New Job
           </span>
         </div>
@@ -337,25 +337,27 @@ export default function AddJob() {
         )}
 
         {/* Step Navigation */}
-        <div className="flex gap-4 mb-6">
-          <div className="flex gap-4 border-b border-neutral-300 w-fit">
-            {steps.map((s, i) => (
-              <button
-                key={s}
-                className={`px-4 py-2 text-center font-medium transition-colors whitespace-nowrap cursor-pointer ${
-                  i === step
-                    ? "border-b-4 border-blue-600 text-blue-600"
-                    : i < step
-                    ? "text-green-600"
-                    : "text-neutral-500"
-                }`}
-                onClick={() => setStep(i)}
-                type="button"
-                disabled={i > step}
-              >
-                {s}
-              </button>
-            ))}
+        <div className="w-full overflow-x-auto">
+          <div className="flex gap-4 mb-6 min-w-fit">
+            <div className="flex gap-4 border-b border-neutral-300">
+              {steps.map((s, i) => (
+                <button
+                  key={s}
+                  className={`px-3 sm:px-4 py-2 text-sm sm:text-base text-center font-medium transition-colors whitespace-nowrap cursor-pointer ${
+                    i === step
+                      ? "border-b-4 border-blue-600 text-blue-600"
+                      : i < step
+                      ? "text-green-600"
+                      : "text-neutral-500"
+                  }`}
+                  onClick={() => setStep(i)}
+                  type="button"
+                  disabled={i > step}
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 

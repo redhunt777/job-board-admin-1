@@ -90,67 +90,65 @@ type JobCardProps = {
 
 const JobCard = ({ job }: { job: JobCardProps }) => {
   const router = useRouter();
-  console.log("JobCard job:", job);
   const formatSalary = (min: number, max: number) => {
     if (min === 0 && max === 0) return "Salary not specified";
     if (min === max) return `${min.toLocaleString()}`;
     return `${min.toLocaleString()} - ${max.toLocaleString()}`;
   };
 
+  const handleCardClick = () => {
+    const params = new URLSearchParams({ jobId: job.id });
+    router.push(`jobs/job-details?${params.toString()}`);
+  };
+
   return (
-    <div className="bg-white rounded-2xl shadow-sm p-3 md:p-6  hover:shadow-md transition-shadow duration-200">
-      <div className="flex items-center justify-between mb-4">
-        <div>
+    <div
+      onClick={handleCardClick}
+      className="bg-white rounded-2xl shadow-sm p-4 md:p-6 hover:shadow-md transition-all duration-200 cursor-pointer group h-full flex flex-col"
+    >
+      <div className="flex items-start gap-4 mb-4">
+        <div className="flex-shrink-0">
           <Image
             src={job.company_logo_url || "/demo.png"}
             alt={`${job.company_name} logo`}
             width={56}
             height={56}
-            className="w-14 h-14 rounded-xl object-cover"
+            className="w-12 h-12 md:w-14 md:h-14 rounded-xl object-cover"
             onError={(e) => {
               const target = e.target as HTMLImageElement;
               target.src = "/demo.png";
             }}
           />
         </div>
-        <div className="flex-1 ml-4">
-          <h2 className="text-xl font-semibold text-neutral-900 line-clamp-2">
+        <div className="flex-1 min-w-0">
+          <h2 className="text-lg md:text-xl font-semibold text-neutral-900 line-clamp-2 group-hover:text-blue-600 transition-colors">
             {job.title}
           </h2>
-          <p className="text-sm text-neutral-500 mt-1">{job.company_name}</p>
-          <p className="text-sm text-neutral-500 mt-1 block md:hidden">
-            {job.location}
+          <p className="text-sm text-neutral-500 mt-1 truncate">
+            {job.company_name}
           </p>
         </div>
       </div>
-      <div className="space-y-2 hidden md:block">
-        <div className="block">
-          <div className="inline-flex items-center justify-start gap-2 bg-neutral-200 px-4 py-2 rounded-lg">
-            <MdCurrencyRupee className="w-5 h-5 text-blue-600" />
-            <p className="text-sm text-neutral-500">
+
+      <div className="space-y-2 mt-auto">
+        <div className="flex flex-col gap-2">
+          <div className="inline-flex items-center gap-2 bg-neutral-100 px-3 py-1.5 rounded-lg w-fit">
+            <MdCurrencyRupee className="w-4 h-4 text-blue-600 flex-shrink-0" />
+            <p className="text-sm text-neutral-600 truncate">
               {formatSalary(job.min_salary, job.max_salary)}
             </p>
           </div>
-        </div>
-        <div className="block">
-          <div className="inline-flex items-center justify-start gap-2 bg-neutral-200 px-4 py-2 rounded-lg">
-            <IoLocationOutline className="w-5 h-5 text-blue-600" />
-            <p className="text-sm text-neutral-500">{job.location}</p>
+          <div className="inline-flex items-center gap-2 bg-neutral-100 px-3 py-1.5 rounded-lg w-fit">
+            <IoLocationOutline className="w-4 h-4 text-blue-600 flex-shrink-0" />
+            <p className="text-sm text-neutral-600 truncate">{job.location}</p>
           </div>
         </div>
-      </div>
 
-      <div className="flex items-center justify-between mt-4">
-        <button
-          type="button"
-          className="text-neutral-900 mr-0 ml-auto font-medium text-sm py-2 flex items-center gap-2 cursor-pointer hover:text-blue-600 transition-colors"
-          onClick={() => {
-            const params = new URLSearchParams({ jobId: job.id });
-            router.push(`jobs/job-details?${params.toString()}`);
-          }}
-        >
-          View Details <FaChevronRight className="w-4 h-4" />
-        </button>
+        <div className="flex items-center justify-end mt-4">
+          <span className="text-neutral-800 font-medium group-hover:text-blue-600 transition-colors flex items-center gap-1">
+            View Details <FaChevronRight className="w-3 h-3" />
+          </span>
+        </div>
       </div>
     </div>
   );

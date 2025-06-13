@@ -147,12 +147,12 @@ export default function Settings() {
       onChange: () => void;
       children: React.ReactNode;
     }) => (
-      <div className="flex items-start gap-3 p-4 hover:bg-neutral-50 rounded-md transition-colors">
+      <div className="flex items-start gap-3 p-4 transition-colors">
         <button
           type="button"
-          className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+          className={`w-6 h-6 rounded border-2 flex items-center justify-center transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 cursor-pointer ${
             checked
-              ? "bg-green-500 border-green-500 text-white hover:bg-green-600"
+              ? "bg-green-600 text-white hover:bg-green-700"
               : "border-neutral-300 hover:border-neutral-400 bg-white"
           }`}
           onClick={onChange}
@@ -175,7 +175,7 @@ export default function Settings() {
 
   return (
     <div
-      className={`transition-all duration-300 min-h-full md:pb-0 px-0 ${
+      className={`transition-all duration-300 min-h-full md:pb-0 px-3 md:px-6 ${
         collapsed ? "md:ml-20" : "md:ml-60"
       } md:pt-0 pt-4`}
     >
@@ -205,12 +205,12 @@ export default function Settings() {
         </div>
 
         {/* Main content area with title and description */}
-        <div className="flex items-center justify-between my-6">
+        <div className="flex items-center justify-between mt-6 mb-3">
           <div>
             <h1 className="text-2xl font-semibold text-neutral-900">
               Settings
             </h1>
-            <p className="text-sm text-neutral-500 mt-2 max-w-2xl">
+            <p className="text-sm text-neutral-500 mt-2">
               Customize your account, notifications, roles and recruitment
               preferences to better suit your workflow.
             </p>
@@ -223,9 +223,9 @@ export default function Settings() {
             {steps.map((stepName, index) => (
               <button
                 key={stepName}
-                className={`px-4 py-3 text-center font-medium transition-colors whitespace-nowrap cursor-pointer focus:outline-none ${
+                className={`px-10 py-3 text-center font-medium transition-colors whitespace-nowrap cursor-pointer focus:outline-none ${
                   index === step
-                    ? "border-b-2 border-blue-600 text-neutral-800"
+                    ? "border-b-4 border-blue-600 text-neutral-800"
                     : "text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50"
                 }`}
                 onClick={() => setStep(index)}
@@ -241,14 +241,14 @@ export default function Settings() {
 
         {/* Content section */}
         <div className="flex justify-center items-center w-full">
-          <div className="max-w-5xl w-full pb-20">
+          <div className="max-w-7xl w-full pb-20">
             {step === 0 && (
-              <div className="bg-white rounded-lg shadow-sm border border-neutral-200 p-6 mx-4">
+              <div className="bg-white rounded-lg shadow p-6">
                 <div className="text-center mb-6">
                   <h2 className="font-semibold text-xl mb-4 text-neutral-900">
                     Your Recruitment Team
                   </h2>
-                  <p className="text-neutral-500 text-base font-normal max-w-3xl mx-auto">
+                  <p className="text-neutral-500 text-sm mx-auto">
                     To streamline your hiring process, you can collaborate with
                     your team on{" "}
                     <span className="text-neutral-800 font-medium">
@@ -267,7 +267,7 @@ export default function Settings() {
                     type="button"
                   >
                     <FaPlus className="w-4 h-4" />
-                    <span>Add Team Member</span>
+                    <span>Add Member</span>
                   </button>
                 </div>
 
@@ -366,8 +366,8 @@ export default function Settings() {
 
             {step === 1 && (
               <>
-                <div className="bg-white rounded-lg shadow-sm border border-neutral-200 p-6 mx-4">
-                  <div className="space-y-1 max-w-3xl mx-auto">
+                <div className="bg-white rounded-lg shadow px-4 py-2">
+                  <div className="mx-auto text-sm">
                     <CheckboxItem
                       checked={preferences.applications}
                       onChange={() => handleCheckboxChange("applications")}
@@ -418,11 +418,11 @@ export default function Settings() {
                     </CheckboxItem>
                   </div>
                 </div>
-                <div className="flex justify-center mt-8">
+                <div className="flex justify-center mt-6">
                   <button
                     onClick={handleSaveChanges}
                     disabled={isLoading}
-                    className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed text-white font-medium px-8 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+                    className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed text-white font-medium px-4 py-2 rounded-lg transition-colors cursor-pointer"
                   >
                     {isLoading ? "Saving..." : "Save Changes"}
                   </button>

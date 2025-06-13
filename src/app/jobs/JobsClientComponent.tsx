@@ -364,7 +364,7 @@ export default function JobsClientComponent({
               type="button"
               onClick={handleAddJob}
               aria-label="Add New Job"
-              className="bg-blue-600 w-full md:w-auto hover:bg-blue-700 text-white font-medium text-xl rounded-lg py-2 transition-colors cursor-pointer px-5 flex items-center justify-center md:justify-start gap-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              className="bg-blue-600 w-full sm:w-auto hover:bg-blue-700 text-white font-medium text-xl rounded-lg py-2 transition-colors cursor-pointer px-5 flex items-center justify-center md:justify-start gap-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
             >
               <GoPlus className="h-8 w-8" />
               Add Job
