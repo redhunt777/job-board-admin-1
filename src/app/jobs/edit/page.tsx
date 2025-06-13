@@ -10,7 +10,7 @@ import { FaArrowRight } from "react-icons/fa6";
 import Link from "next/link";
 import LexicalEditor from "@/components/LexicalEditor";
 import { getSignedURL } from "@/app/jobs/actions";
-import { updateJob, fetchJobById, selectSelectedJob, selectJobsLoading } from "@/store/features/jobSlice";
+import { updateJob, fetchJobById, selectSelectedJob } from "@/store/features/jobSlice";
 import { initializeAuth } from "@/store/features/userSlice";
 import type { RawJob } from "@/store/features/jobSlice";
 import type { FormErrors, JobFormData } from "@/types/custom";
@@ -84,7 +84,7 @@ export default function EditJob() {
         maxSalary: selectedJob.salary_max?.toString() || "",
         jobDescription: selectedJob.description || "",
         applicationDeadline: selectedJob.application_deadline || "",
-        status: (selectedJob.status as any) || "active",
+        status: selectedJob.status || "active",
       });
       
       // Set logo preview if exists
@@ -339,7 +339,7 @@ export default function EditJob() {
           <div className="flex justify-center items-center min-h-[400px]">
             <div className="text-center">
               <h3 className="text-xl font-semibold text-gray-900 mb-2">Job not found</h3>
-              <p className="text-gray-600 mb-4">The job you're trying to edit doesn't exist or has been removed.</p>
+              <p className="text-gray-600 mb-4">The job you&apos;re trying to edit doesn&apos;t exist or has been removed.</p>
               <Link href="/jobs" className="text-blue-600 hover:text-blue-800">← Back to Jobs</Link>
             </div>
           </div>
