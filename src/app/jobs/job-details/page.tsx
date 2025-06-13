@@ -473,8 +473,15 @@ export default function JobDetailsComponent() {
               )}
 
               {step === 1 && (
-                <div data-testid="candidates-tab" className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
-                  <CandidatesList onCandidateClick={handleCandidateClick} />
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                  <CandidatesList 
+                    jobId={jobId}
+                    showHeader={false}
+                    maxItems={10}
+                    onCandidateClick={(candidate) => {
+                      console.log('Candidate clicked:', candidate);
+                    }}
+                  />
                 </div>
               )}
 
