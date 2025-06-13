@@ -315,9 +315,12 @@ export default function CandidatesList({
     {
       key: "app_status",
       header: "App. Status",
-      width: "120px",
+      width: "140px",
+      className: "text-center",
       render: (candidate: CandidateWithApplication) => (
-        <StatusBadge status={candidate.application_status} />
+        <div className="flex justify-center">
+          <StatusBadge status={candidate.application_status} />
+        </div>
       ),
     },
     {
