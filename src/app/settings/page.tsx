@@ -5,6 +5,7 @@ import { HiOutlineArrowCircleLeft } from "react-icons/hi";
 import { useAppSelector } from "@/store/hooks";
 import { FaPlus, FaRegEdit, FaCaretDown, FaCheck } from "react-icons/fa";
 import { Overlay } from "@/components/settings-overlay";
+import GlobalStickyTable from "@/components/GlobalStickyTable";
 
 // Types for better type safety
 interface TeamMember {
@@ -272,84 +273,82 @@ export default function Settings() {
                 </div>
 
                 <div className="overflow-x-auto rounded-lg border border-neutral-200">
-                  <table className="min-w-full text-left">
-                    <thead className="bg-neutral-50 border-b border-neutral-200">
-                      <tr>
-                        <th className="px-4 py-4 text-sm font-medium text-neutral-900">
+                  <GlobalStickyTable
+                    columns={[
+                      {
+                        key: "checkbox",
+                        header: (
                           <input
                             type="checkbox"
                             className="rounded border-neutral-300 text-blue-600 focus:ring-blue-500"
                             aria-label="Select all team members"
                           />
-                        </th>
-                        <th className="px-4 py-4 text-sm font-medium text-neutral-900">
-                          Name
-                        </th>
-                        <th className="px-4 py-4 text-sm font-medium text-neutral-900">
-                          Email
-                        </th>
-                        <th className="px-4 py-4 text-sm font-medium text-neutral-900">
-                          Role
-                        </th>
-                        <th className="px-4 py-4 text-sm font-medium text-neutral-900 text-right">
-                          Actions
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-neutral-200 bg-white">
-                      {teamMembers.map((member) => (
-                        <tr
-                          key={member.id}
-                          className="hover:bg-neutral-50 transition-colors"
-                        >
-                          <td className="px-4 py-4">
-                            <input
-                              type="checkbox"
-                              className="rounded border-neutral-300 text-blue-600 focus:ring-blue-500"
-                              aria-label={`Select ${member.name}`}
-                            />
-                          </td>
-                          <td className="px-4 py-4 font-medium text-neutral-900">
-                            {member.name}
-                          </td>
-                          <td className="px-4 py-4 text-neutral-700">
-                            {member.email}
-                          </td>
-                          <td className="px-4 py-4 text-neutral-700">
-                            <div className="relative inline-block w-full max-w-xs">
-                              <select
-                                value={member.role}
-                                onChange={(e) =>
-                                  handleRoleChange(member.id, e.target.value)
-                                }
-                                className="w-full border border-neutral-300 px-3 pr-8 rounded-md py-2 text-sm text-neutral-700 bg-white appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 cursor-pointer hover:border-neutral-400 transition-colors"
-                              >
-                                <option value="admin">Admin</option>
-                                <option value="ta">
-                                  TCL (Talent Acquisition) Lead
-                                </option>
-                                <option value="hr">HR Manager</option>
-                              </select>
-                              <FaCaretDown
-                                className="absolute top-1/2 right-3 transform -translate-y-1/2 pointer-events-none text-neutral-400"
-                                size={12}
-                              />
-                            </div>
-                          </td>
-                          <td className="px-4 py-4 text-right">
-                            <button
-                              type="button"
-                              onClick={() => handleEditMember(member)}
-                              className="p-2 text-neutral-600 hover:text-neutral-800 hover:bg-neutral-100 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-md cursor-pointer transition-colors"
-                              aria-label={`Edit ${member.name}`}
+                        ),
+                        width: "48px",
+                        render: (member) => (
+                          <input
+                            type="checkbox"
+                            className="rounded border-neutral-300 text-blue-600 focus:ring-blue-500"
+                            aria-label={`Select ${member.name}`}
+                          />
+                        ),
+                      },
+                      {
+                        key: "name",
+                        header: "Name",
+                        render: (member) => (
+                          <span className="font-medium text-neutral-900">{member.name}</span>
+                        ),
+                      },
+                      {
+                        key: "email",
+                        header: "Email",
+                        render: (member) => (
+                          <span className="text-neutral-700">{member.email}</span>
+                        ),
+                      },
+                      {
+                        key: "role",
+                        header: "Role",
+                        render: (member) => (
+                          <div className="relative inline-block w-full max-w-xs">
+                            <select
+                              value={member.role}
+                              onChange={(e) => handleRoleChange(member.id, e.target.value)}
+                              className="w-full border border-neutral-300 px-3 pr-8 rounded-md py-2 text-sm text-neutral-700 bg-white appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 cursor-pointer hover:border-neutral-400 transition-colors"
                             >
-                              <FaRegEdit className="h-4 w-4" />
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                              <option value="admin">Admin</option>
+                              <option value="ta">TCL (Talent Acquisition) Lead</option>
+                              <option value="hr">HR Manager</option>
+                            </select>
+                            <FaCaretDown
+                              className="absolute top-1/2 right-3 transform -translate-y-1/2 pointer-events-none text-neutral-400"
+                              size={12}
+                            />
+                          </div>
+                        ),
+                      },
+                      {
+                        key: "actions",
+                        header: <span className="text-right">Actions</span>,
+                        width: "80px",
+                        render: (member) => (
+                          <button
+                            type="button"
+                            onClick={() => handleEditMember(member)}
+                            className="p-2 text-neutral-600 hover:text-neutral-800 hover:bg-neutral-100 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-md cursor-pointer transition-colors"
+                            aria-label={`Edit ${member.name}`}
+                          >
+                            <FaRegEdit className="h-4 w-4" />
+                          </button>
+                        ),
+                        className: "text-right",
+                      },
+                    ]}
+                    data={teamMembers}
+                    stickyFirst
+                    stickyLastTwo
+                  />
                 </div>
 
                 <div className="flex justify-end mt-6">
