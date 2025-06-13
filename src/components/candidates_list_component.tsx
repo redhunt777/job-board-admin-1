@@ -2,10 +2,11 @@
 
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
-import { CiFilter, CiLocationOn, CiMail, CiPhone } from "react-icons/ci";
-import { HiOutlineDownload, HiOutlineEye, HiOutlineBriefcase, HiOutlineAcademicCap } from "react-icons/hi";
-import { BsCurrencyDollar, BsCalendar3, BsPersonCheck } from "react-icons/bs";
-import Image from "next/image";
+import { CiFilter } from "react-icons/ci";
+// import { CiLocationOn, CiMail, CiPhone } from "react-icons/ci";
+// import { HiOutlineDownload, HiOutlineEye, HiOutlineBriefcase, HiOutlineAcademicCap } from "react-icons/hi";
+// import { BsCurrencyDollar, BsCalendar3, BsPersonCheck } from "react-icons/bs";
+// import Image from "next/image";
 import {
   fetchJobApplicationsWithAccess,
   updateApplicationStatusWithAccess,
@@ -306,7 +307,7 @@ export default function CandidatesList({
                 >
                   <option value="">Company</option>
                   {Array.from(new Set(filteredCandidates.map(c => c.company_name).filter(Boolean))).map(company => (
-                    <option key={company} value={company}>{company}</option>
+                    <option key={company} value={company ?? ""}>{company}</option>
                   ))}
                 </select>
                 <TiArrowSortedDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" />

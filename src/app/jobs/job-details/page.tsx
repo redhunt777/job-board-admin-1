@@ -300,8 +300,8 @@ export default function JobDetailsComponent() {
     }
   }, [memoizedUserContext, userContext, dispatch]);
 
-  // Load candidates when user context is available
-  useEffect(() => {
+  // Debug logging function - moved outside useEffect
+  const logDebugInfo = useCallback(() => {
     console.log("Candidates loading effect:", {
       memoizedUserContext: !!memoizedUserContext,
       userContext: !!userContext,
@@ -309,8 +309,19 @@ export default function JobDetailsComponent() {
       candidatesLoading,
       currentCandidatesCount: candidates?.length,
     });
+  }, [
+    memoizedUserContext,
+    userContext,
+    jobId,
+    candidatesLoading,
+    candidates?.length,
+  ]);
 
+  // Load candidates when user context is available
+  useEffect(() => {
     if (memoizedUserContext && jobId) {
+      logDebugInfo();
+
       console.log("Dispatching fetchJobApplicationsWithAccess:", {
         jobId,
         userContext: memoizedUserContext,
@@ -323,7 +334,7 @@ export default function JobDetailsComponent() {
         })
       );
     }
-  }, [dispatch, memoizedUserContext, jobId]);
+  }, [dispatch, memoizedUserContext, jobId, logDebugInfo]);
 
   // Initialize job data - Fixed the error here
   useEffect(() => {
