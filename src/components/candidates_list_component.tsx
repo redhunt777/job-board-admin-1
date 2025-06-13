@@ -252,6 +252,7 @@ export default function CandidatesList({
           type="checkbox"
           className="rounded border-gray-300"
           onClick={(e) => e.stopPropagation()}
+          aria-label={`Select ${candidate.name}`}
         />
       ),
     },
