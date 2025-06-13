@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useMemo, useEffect } from "react";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { CiFilter } from "react-icons/ci";
 // import { CiLocationOn, CiMail, CiPhone } from "react-icons/ci";
@@ -9,7 +9,7 @@ import { CiFilter } from "react-icons/ci";
 // import Image from "next/image";
 import {
   fetchJobApplicationsWithAccess,
-  updateApplicationStatusWithAccess,
+  // updateApplicationStatusWithAccess,
   setFilters,
   // clearFilters,
   setSortBy,
