@@ -27,6 +27,7 @@ import {
 } from "@/store/features/candidatesSlice";
 // import { MdErrorOutline } from "react-icons/md";
 import { TiArrowSortedDown } from "react-icons/ti";
+import GlobalStickyTable from "@/components/GlobalStickyTable";
 
 // Types for component props
 interface CandidatesListProps {
@@ -238,6 +239,101 @@ export default function CandidatesList({
     return hash.substring(0, 8);
   };
 
+  // Table columns for GlobalStickyTable
+  const columns = [
+    {
+      key: "checkbox",
+      header: (
+        <input type="checkbox" className="rounded border-gray-300" />
+      ),
+      width: "48px",
+      render: (candidate: CandidateWithApplication) => (
+        <input
+          type="checkbox"
+          className="rounded border-gray-300"
+          onClick={(e) => e.stopPropagation()}
+        />
+      ),
+    },
+    {
+      key: "id",
+      header: "ID",
+      render: (candidate: CandidateWithApplication) => (
+        <span className="text-sm font-medium text-gray-900">
+          {generateShortId(candidate.application_id)}
+        </span>
+      ),
+    },
+    {
+      key: "applied_date",
+      header: "Applied Date",
+      render: (candidate: CandidateWithApplication) => (
+        <span className="text-sm text-gray-900">
+          {formatDate(candidate.applied_date)}
+        </span>
+      ),
+    },
+    {
+      key: "candidate_name",
+      header: "Candidate Name",
+      render: (candidate: CandidateWithApplication) => (
+        <div>
+          <div className="text-sm font-medium text-gray-900">{candidate.name}</div>
+          <div className="text-sm text-gray-500">{candidate.candidate_email}</div>
+        </div>
+      ),
+    },
+    {
+      key: "job_title",
+      header: "Job",
+      render: (candidate: CandidateWithApplication) => (
+        <span className="text-sm text-gray-900">{candidate.job_title}</span>
+      ),
+    },
+    {
+      key: "company_name",
+      header: "Company",
+      render: (candidate: CandidateWithApplication) => (
+        <span className="text-sm text-gray-900">{candidate.company_name || "—"}</span>
+      ),
+    },
+    {
+      key: "location",
+      header: "Location",
+      render: (candidate: CandidateWithApplication) => (
+        <span className="text-sm text-gray-900">{candidate.address || candidate.job_location || "—"}</span>
+      ),
+    },
+    {
+      key: "years_of_exp",
+      header: "Years of Exp.",
+      render: (candidate: CandidateWithApplication) => (
+        <span className="text-sm text-gray-900">{calculateExperience(candidate)}</span>
+      ),
+    },
+    {
+      key: "app_status",
+      header: "App. Status",
+      width: "120px",
+      render: (candidate: CandidateWithApplication) => (
+        <StatusBadge status={candidate.application_status} />
+      ),
+    },
+    {
+      key: "action",
+      header: "Action",
+      width: "120px",
+      render: (candidate: CandidateWithApplication) => (
+        <button
+          onClick={() => handleViewCandidate(candidate)}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+        >
+          View
+        </button>
+      ),
+    },
+  ];
+
   // Handle error state
   if (error) {
     return (
@@ -412,117 +508,12 @@ export default function CandidatesList({
 
       {/* Table */}
       {!loading && (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left">
-                    <input
-                      type="checkbox"
-                      className="rounded border-gray-300"
-                    />
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    ID
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Applied Date
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Candidate Name
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Job
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Company
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Location
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Years of Exp.
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    App. Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Action
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {candidatesToDisplay.length === 0 ? (
-                  <tr>
-                    <td colSpan={10} className="px-6 py-12 text-center">
-                      <div className="text-gray-500">
-                        <p className="text-lg font-medium">
-                          No candidates found
-                        </p>
-                        <p className="text-sm mt-1">
-                          Try adjusting your filters to see more results.
-                        </p>
-                      </div>
-                    </td>
-                  </tr>
-                ) : (
-                  candidatesToDisplay.map((candidate) => (
-                    <tr
-                      key={candidate.application_id}
-                      className="hover:bg-gray-50"
-                    >
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <input
-                          type="checkbox"
-                          className="rounded border-gray-300"
-                          onClick={(e) => e.stopPropagation()}
-                        />
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {generateShortId(candidate.application_id)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {formatDate(candidate.applied_date)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">
-                          {candidate.name}
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          {candidate.candidate_email}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {candidate.job_title}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {candidate.company_name || "—"}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {candidate.address || candidate.job_location || "—"}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {calculateExperience(candidate)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <StatusBadge status={candidate.application_status} />
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <button
-                          onClick={() => handleViewCandidate(candidate)}
-                          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                        >
-                          View
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <GlobalStickyTable
+          columns={columns}
+          data={candidatesToDisplay}
+          stickyFirst
+          stickyLastTwo
+        />
       )}
     </div>
   );
