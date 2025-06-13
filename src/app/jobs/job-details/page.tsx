@@ -404,7 +404,7 @@ export default function JobDetailsComponent() {
                 <div data-testid="job-details-tab" className="space-y-6">
                   {/* Enhanced Job Header Card */}
                   <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
-                    <JobHeader jobMetadata={jobMetadata} />
+                    <JobHeader jobMetadata={jobMetadata} jobId={jobId || undefined} />
                     
                     <div className="mt-6 pt-6 border-t border-gray-100">
                       <JobInfoTags
