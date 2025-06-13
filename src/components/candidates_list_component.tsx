@@ -1,18 +1,13 @@
 "use client";
 
-import React, { useState, useMemo, useEffect, useRef } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
-import { CiFilter, CiLocationOn, CiMail, CiPhone } from "react-icons/ci";
-import { HiOutlineDownload, HiOutlineEye, HiOutlineBriefcase, HiOutlineAcademicCap } from "react-icons/hi";
-import { BsCurrencyDollar, BsCalendar3, BsPersonCheck } from "react-icons/bs";
-import Image from "next/image";
+import { CiFilter } from "react-icons/ci";
 import {
   fetchJobApplicationsWithAccess,
   updateApplicationStatusWithAccess,
   setFilters,
-  clearFilters,
   setSortBy,
-  selectCandidates,
   selectCandidatesLoading,
   selectCandidatesError,
   selectFilters,
@@ -21,10 +16,8 @@ import {
   selectPaginatedCandidatesWithAccess,
   selectFilteredCandidatesWithAccess,
   CandidateWithApplication,
-  CandidateFilters,
   SortOption,
 } from "@/store/features/candidatesSlice";
-import { MdErrorOutline } from "react-icons/md";
 import { TiArrowSortedDown } from "react-icons/ti";
 
 // Types for component props
@@ -100,12 +93,9 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-// Removed old card component and table headers as we're using table format now
-
 export default function CandidatesList({
   showHeader = true,
   showFilters = true,
-  showPagination = true,
   showSorting = true,
   maxItems,
   className = "",
@@ -122,10 +112,6 @@ export default function CandidatesList({
   const filters = useAppSelector(selectFilters);
   const sortBy = useAppSelector(selectSortBy);
   const userContext = useAppSelector(selectUserContext);
-
-  // Local state
-  const [selectedCandidate, setSelectedCandidate] = useState<CandidateWithApplication | null>(null);
-  const [showDetailsModal, setShowDetailsModal] = useState(false);
 
   // Filter candidates by jobId if provided
   const jobSpecificCandidates = useMemo(() => {
@@ -166,29 +152,7 @@ export default function CandidatesList({
     }
   }, [filters.status, filters.company, filters.dateFrom, filters.dateTo, userContext, dispatch, jobId]);
 
-  // Handlers
-  const handleStatusUpdate = async (applicationId: string, status: string) => {
-    if (!userContext) {
-      console.log("User context not available");
-      return;
-    }
-
-    try {
-      await dispatch(
-        updateApplicationStatusWithAccess({
-          applicationId,
-          status,
-          userContext,
-        })
-      ).unwrap();
-    } catch (error) {
-      console.error("Failed to update status:", error);
-    }
-  };
-
   const handleViewCandidate = (candidate: CandidateWithApplication) => {
-    setSelectedCandidate(candidate);
-    setShowDetailsModal(true);
     if (onCandidateClick) {
       onCandidateClick(candidate);
     }
@@ -289,7 +253,7 @@ export default function CandidatesList({
                 <div className="relative">
                   <select
                     value={filters.status}
-                    onChange={(e) => dispatch(setFilters({ ...filters, status: e.target.value as any }))}
+                    onChange={(e) => dispatch(setFilters({ ...filters, status: e.target.value as "All" | "pending" | "accepted" | "rejected" }))}
                     className="bg-transparent text-gray-600 text-sm border border-gray-300 rounded-full px-4 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-300 hover:border-gray-400 transition-colors cursor-pointer appearance-none"
                   >
                     <option value="All">App. Status</option>

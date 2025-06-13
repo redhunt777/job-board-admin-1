@@ -276,13 +276,7 @@ export default function JobDetailsComponent() {
     router.push("/jobs");
   }, [router]);
 
-  const handleCandidateClick = useCallback(
-    (candidate: CandidateWithApplication) => {
-      console.log("Candidate clicked:", candidate);
-      // Implement navigation to candidate detail page
-    },
-    []
-  );
+
 
   // Initialize authentication if not ready
   useEffect(() => {
@@ -321,7 +315,7 @@ export default function JobDetailsComponent() {
         })
       );
     }
-  }, [dispatch, memoizedUserContext, jobId]);
+  }, [dispatch, memoizedUserContext, jobId, candidates?.length, candidatesLoading, userContext]);
 
   // Initialize job data - Fixed the error here
   useEffect(() => {
