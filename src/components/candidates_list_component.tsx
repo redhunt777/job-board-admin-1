@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useEffect } from "react";
+import { useMemo, useEffect, useRef } from "react";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { CiFilter } from "react-icons/ci";
 // import { CiLocationOn, CiMail, CiPhone } from "react-icons/ci";
@@ -124,7 +124,7 @@ export default function CandidatesList({
   showSorting = true,
   maxItems,
   className = "",
-  // jobId,
+  jobId,
   onCandidateClick,
 }: CandidatesListProps) {
   const dispatch = useAppDispatch();
@@ -146,17 +146,28 @@ export default function CandidatesList({
 
   // Get candidates to display with jobId filtering
   const candidatesToDisplay = useMemo(() => {
-    const candidatesSource = filteredCandidates;
-
+    let candidatesSource = filteredCandidates;
+    if (jobId) {
+      candidatesSource = candidatesSource.filter(c => c.job_id === jobId);
+    }
     if (maxItems && maxItems > 0) {
       return candidatesSource.slice(0, maxItems);
     }
     return candidatesSource;
-  }, [filteredCandidates, maxItems]);
+  }, [filteredCandidates, jobId, maxItems]);
 
-  // Fetch candidates effect
+  // Prevent infinite fetch loop
+  const hasFetched = useRef(false);
+
   useEffect(() => {
-    if (userContext && !loading && candidatesToDisplay.length === 0 && !error) {
+    if (
+      userContext &&
+      !loading &&
+      !hasFetched.current &&
+      candidatesToDisplay.length === 0 &&
+      !error
+    ) {
+      hasFetched.current = true;
       dispatch(
         fetchJobApplicationsWithAccess({
           filters,
@@ -164,14 +175,7 @@ export default function CandidatesList({
         })
       );
     }
-  }, [
-    userContext,
-    loading,
-    candidatesToDisplay.length,
-    error,
-    dispatch,
-    filters,
-  ]);
+  }, [userContext, loading, candidatesToDisplay.length, error, dispatch, filters]);
 
   // Handlers
   // const handleStatusUpdate = async (applicationId: string, status: string) => {
