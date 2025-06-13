@@ -1,11 +1,10 @@
 "use client";
 
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useMemo, useEffect } from "react";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { CiFilter } from "react-icons/ci";
 import {
   fetchJobApplicationsWithAccess,
-  updateApplicationStatusWithAccess,
   setFilters,
   setSortBy,
   selectCandidatesLoading,
@@ -150,7 +149,7 @@ export default function CandidatesList({
         })
       );
     }
-  }, [filters.status, filters.company, filters.dateFrom, filters.dateTo, userContext, dispatch, jobId]);
+  }, [filters, userContext, dispatch, jobId]);
 
   const handleViewCandidate = (candidate: CandidateWithApplication) => {
     if (onCandidateClick) {

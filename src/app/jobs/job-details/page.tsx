@@ -17,7 +17,6 @@ import {
 import CandidatesList from "@/components/candidates_list_component";
 import JobDescriptionRenderer from "@/components/JobDescriptionRenderer";
 import {
-  CandidateWithApplication,
   UserContext,
   setUserContext,
   fetchJobApplicationsWithAccess,
