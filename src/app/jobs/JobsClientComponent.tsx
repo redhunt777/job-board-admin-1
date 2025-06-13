@@ -135,7 +135,7 @@ export default function JobsClientComponent({
     if (!initState.initialized && userRole && userId && organizationId) {
       initializeJobs();
     }
-  }, [dispatch, userRole, userId, organizationId]);
+  }, [dispatch, userRole, userId, organizationId, initState.initialized]);
 
   // Optimized handlers with better error handling
   const handleAddJob = useCallback(() => {

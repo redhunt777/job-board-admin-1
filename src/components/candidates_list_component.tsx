@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useEffect } from "react";
+import React, { useMemo } from "react";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { CiFilter } from "react-icons/ci";
 import {

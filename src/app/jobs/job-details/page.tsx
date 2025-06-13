@@ -60,7 +60,6 @@ export default function JobDetailsComponent() {
   const organization = useAppSelector((state) => state.user.organization);
   const roles = useAppSelector((state) => state.user.roles);
   const candidates = useAppSelector(selectCandidates);
-  const candidatesLoading = useAppSelector(selectCandidatesLoading);
 
   // URL params
   const params = useSearchParams();
