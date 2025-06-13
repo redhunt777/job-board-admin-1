@@ -35,7 +35,7 @@ interface CandidatesListProps {
   showSorting?: boolean;
   maxItems?: number;
   className?: string;
-  jobId?: string;
+  jobId?: string | null;
   onCandidateClick?: (candidate: CandidateWithApplication) => void;
 }
 
@@ -149,12 +149,13 @@ export default function CandidatesList({
     return candidatesSource;
   }, [jobSpecificCandidates, maxItems]);
 
-  // Fetch candidates effect - include jobId in filters if provided
+  // Handle filter changes - refetch data when filters change
   useEffect(() => {
-    if (userContext && !loading) {
+    // Only fetch if we have userContext and this is a filter change (not initial load)
+    if (userContext && (filters.status !== "All" || filters.company || filters.dateFrom || filters.dateTo)) {
       const fetchFilters = jobId 
-        ? { ...filters, jobId } // Include jobId filter if provided
-        : filters; // Use regular filters if no jobId
+        ? { ...filters, jobId }
+        : filters;
         
       dispatch(
         fetchJobApplicationsWithAccess({
@@ -163,20 +164,7 @@ export default function CandidatesList({
         })
       );
     }
-  }, [userContext, loading, dispatch, filters, jobId]);
-
-  // Clear candidates when jobId changes
-  useEffect(() => {
-    if (jobId && userContext) {
-      // When switching between jobs, we want to refetch candidates for the new job
-      dispatch(
-        fetchJobApplicationsWithAccess({
-          filters: { ...filters, jobId },
-          userContext: userContext,
-        })
-      );
-    }
-  }, [jobId, dispatch, filters, userContext]);
+  }, [filters.status, filters.company, filters.dateFrom, filters.dateTo, userContext, dispatch, jobId]);
 
   // Handlers
   const handleStatusUpdate = async (applicationId: string, status: string) => {
@@ -333,12 +321,12 @@ export default function CandidatesList({
               
               <div className="relative">
                 <select
-                  value={filters.company ?? ""}
+                  value={filters.company}
                   onChange={(e) => dispatch(setFilters({ ...filters, company: e.target.value }))}
                   className="bg-transparent text-gray-600 text-sm border border-gray-300 rounded-full px-4 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-300 hover:border-gray-400 transition-colors cursor-pointer appearance-none"
                 >
                   <option value="">Company</option>
-                  {Array.from(new Set(filteredCandidates.map(c => c.company_name).filter(Boolean))).map(company => (
+                  {Array.from(new Set(filteredCandidates.map(c => c.company_name).filter((company): company is string => Boolean(company)))).map(company => (
                     <option key={company} value={company}>{company}</option>
                   ))}
                 </select>
