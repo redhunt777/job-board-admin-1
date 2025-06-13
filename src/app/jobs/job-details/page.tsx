@@ -172,7 +172,7 @@ export default function JobDetailsComponent() {
         if (updateJob.fulfilled.match(result)) {
           console.log("Job status updated successfully");
         } else {
-          console.error("Error updating job status:", result.payload);
+          console.log("Error updating job status:", result.payload);
           alert("Failed to update job status");
         }
       } catch (err) {
@@ -368,7 +368,7 @@ export default function JobDetailsComponent() {
 
   return (
     <div className={containerClassName} data-testid="job-details-component">
-      <div className="max-w-7xl w-full mx-auto mt-4 px-2 md:px-4 py-4">
+      <div className="max-w-7xl w-full mx-auto md:mt-4 mt-0 px-2 md:px-4 py-0 md:py-4">
         <Breadcrumb jobTitle={jobMetadata.jobTitle} />
         <TabNavigation activeStep={step} onStepChange={setStep} />
 

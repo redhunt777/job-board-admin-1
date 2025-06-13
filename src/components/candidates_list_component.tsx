@@ -107,15 +107,11 @@ function StatusBadge({ status }: { status: string }) {
 function CandidateCard({
   candidate,
   onView,
-  onStatusUpdate,
   onClick,
-  canUpdateStatus,
 }: {
   candidate: CandidateWithApplication;
   onView: (candidate: CandidateWithApplication) => void;
-  onStatusUpdate: (applicationId: string, status: string) => void;
   onClick?: (candidate: CandidateWithApplication) => void;
-  canUpdateStatus: boolean;
 }) {
   const handleCardClick = () => {
     if (onClick) {
@@ -136,7 +132,6 @@ function CandidateCard({
   };
 
   const [isOpen, setIsOpen] = useState(false);
-  const [isUpdating, setIsUpdating] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Close dropdown when clicking outside
@@ -159,19 +154,6 @@ function CandidateCard({
   const handleToggleDropdown = (e: React.MouseEvent) => {
     e.stopPropagation();
     setIsOpen(!isOpen);
-  };
-
-  const handleStatusChange = async (newStatus: string) => {
-    if (!canUpdateStatus) return;
-
-    setIsUpdating(true);
-    try {
-      await onStatusUpdate(candidate.application_id, newStatus);
-    } catch (error) {
-      console.error("Failed to update status:", error);
-    } finally {
-      setIsUpdating(false);
-    }
   };
 
   const handleDelete = () => {
@@ -265,22 +247,7 @@ function CandidateCard({
                     </ul>
                   </div>
                 )}
-              </div>
-
-              {/* Status update dropdown - only show if user has permission */}
-              {canUpdateStatus && (
-                <select
-                  value={candidate.application_status}
-                  onChange={(e) => handleStatusChange(e.target.value)}
-                  disabled={isUpdating}
-                  className="text-xs border rounded px-2 py-1 min-w-20 disabled:opacity-50"
-                  onClick={(e) => e.stopPropagation()} // Prevent card click when interacting with select
-                >
-                  <option value="pending">Pending</option>
-                  <option value="accepted">Accepted</option>
-                  <option value="rejected">Rejected</option>
-                </select>
-              )}
+              </div>             
             </div>
           </div>
         </div>
@@ -303,7 +270,7 @@ function CandidateCard({
           }}
           className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-lg transition-colors"
         >
-          View Details
+          View
         </button>
       </div>
     </div>
@@ -647,11 +614,6 @@ export default function CandidatesList({
     setTempSortBy("date_desc");
   };
 
-  // Determine if user can update status (admin, hr, or ta with access)
-  const canUpdateStatus = Boolean(
-    hasFullAccess || (isTAOnly && userContext?.roles.includes("ta"))
-  );
-
   // Fix unused event parameters
   const handleSortChange = () => {
     console.log("Sort changed");
@@ -933,9 +895,7 @@ export default function CandidatesList({
                   key={candidate.application_id}
                   candidate={candidate}
                   onView={handleViewCandidate}
-                  onStatusUpdate={handleStatusUpdate}
                   onClick={onCandidateClick}
-                  canUpdateStatus={canUpdateStatus}
                 />
               ))
             )}
@@ -944,7 +904,7 @@ export default function CandidatesList({
           {/* Desktop Table */}
           <div className="hidden md:block overflow-x-auto bg-white rounded-2xl shadow-sm">
             <table className="min-w-full divide-y divide-neutral-200">
-              <thead className="bg-neutral-200">
+              <thead className="bg-neutral-100">
                 <tr>
                   {tableHeaders.map((header, idx) => (
                     <th key={idx} className={header.className}>

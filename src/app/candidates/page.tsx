@@ -146,18 +146,18 @@ const CandidatesContent = ({
         collapsed ? "md:ml-20" : "md:ml-64"
       } pt-4`}
     >
-      <div className="max-w-8xl mx-auto px-2 md:px-4 py-4">
+      <div className="max-w-8xl mx-auto px-0 md:px-4 py-0 md:py-4">
         {/* Back Navigation and Title */}
         <div className="flex items-center gap-2 mb-6">
           <Link
             href="/dashboard"
-            className="flex items-center text-neutral-500 hover:text-neutral-700 font-semibold text-lg transition-colors"
+            className="flex items-center text-neutral-500 hover:text-neutral-700 font-semibold md:text-lg text-sm transition-colors"
           >
             <HiOutlineArrowCircleLeft className="w-8 h-8 mr-2" />
             <span>Back to Dashboard</span>
           </Link>
-          <span className="text-lg text-neutral-300 font-light">/</span>
-          <span className="text-lg font-bold text-neutral-900">Candidates</span>
+          <span className="md:text-lg text-sm text-neutral-300 font-light">/</span>
+          <span className="md:text-lg text-sm font-bold text-neutral-900">Candidates</span>
         </div>
 
         {/* Header with Role-based Content */}
@@ -169,7 +169,7 @@ const CandidatesContent = ({
               </h1>
 
               {/* Role indicator badge */}
-              {isTAOnly && (
+              {/* {isTAOnly && (
                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                   TA Access
                 </span>
@@ -178,7 +178,7 @@ const CandidatesContent = ({
                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                   Full Access
                 </span>
-              )}
+              )} */}
             </div>
 
             <div className="mt-2">
@@ -189,12 +189,12 @@ const CandidatesContent = ({
               </p>
 
               {/* Organization and role info */}
-              <div className="flex flex-wrap gap-4 text-xs text-neutral-500 mt-1">
+              {/* <div className="flex flex-wrap gap-4 text-xs text-neutral-500 mt-1">
                 <span>
                   Organization: {organization.name || "Current Organization"}
                 </span>
                 <span>Role: {primaryRole}</span>
-              </div>
+              </div> */}
             </div>
           </div>
 
@@ -204,7 +204,7 @@ const CandidatesContent = ({
               (role) =>
                 (typeof role === "string" ? role : role?.role?.name) === "admin"
             )) && (
-            <div className="w-full md:w-auto mt-4 md:mt-0">
+            <div className="w-full hidden md:block md:w-auto mt-4 md:mt-0">
               <button
                 type="button"
                 onClick={handleAddJob}
@@ -264,7 +264,7 @@ const CandidatesContent = ({
         )}
 
         {/* Access Control Info for TA users */}
-        {isTAOnly && !loading && (
+        {/* {isTAOnly && !loading && (
           <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
             <div className="flex items-start">
               <div className="flex-shrink-0">
@@ -291,7 +291,7 @@ const CandidatesContent = ({
               </div>
             </div>
           </div>
-        )}
+        )} */}
 
         {/* Candidates List Component */}
         <CandidatesList
