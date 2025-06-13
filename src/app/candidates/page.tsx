@@ -298,7 +298,7 @@ const CandidatesContent = ({
         <CandidatesList
           showHeader={false} // We're showing our own header above
           showFilters={true}
-          showPagination={true}
+          // showPagination={true}
           showSorting={true}
           maxItems={20}
         />

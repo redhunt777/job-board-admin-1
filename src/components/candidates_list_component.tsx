@@ -32,7 +32,7 @@ import { TiArrowSortedDown } from "react-icons/ti";
 interface CandidatesListProps {
   showHeader?: boolean;
   showFilters?: boolean;
-  showPagination?: boolean;
+  // showPagination?: boolean;
   showSorting?: boolean;
   maxItems?: number;
   className?: string;
@@ -59,11 +59,23 @@ function ErrorMessage({
   return (
     <div className="flex flex-col items-center justify-center py-12 text-center">
       <div className="text-red-600 mb-4">
-        <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        <svg
+          className="w-12 h-12 mx-auto"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
         </svg>
       </div>
-      <h3 className="text-lg font-semibold text-gray-900 mb-2">Something went wrong</h3>
+      <h3 className="text-lg font-semibold text-gray-900 mb-2">
+        Something went wrong
+      </h3>
       <p className="text-gray-600 mb-4">{message}</p>
       {onRetry && (
         <button
@@ -80,22 +92,26 @@ function ErrorMessage({
 function StatusBadge({ status }: { status: string }) {
   const getStatusStyle = (status: string) => {
     switch (status?.toLowerCase()) {
-      case 'accepted':
-        return 'bg-green-100 text-green-800 border-green-200';
-      case 'rejected':
-        return 'bg-red-100 text-red-800 border-red-200';
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'on hold':
-        return 'bg-orange-100 text-orange-800 border-orange-200';
+      case "accepted":
+        return "bg-green-100 text-green-800 border-green-200";
+      case "rejected":
+        return "bg-red-100 text-red-800 border-red-200";
+      case "pending":
+        return "bg-yellow-100 text-yellow-800 border-yellow-200";
+      case "on hold":
+        return "bg-orange-100 text-orange-800 border-orange-200";
       default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
+        return "bg-gray-100 text-gray-800 border-gray-200";
     }
   };
 
   return (
-    <span className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusStyle(status)}`}>
-      {status?.charAt(0).toUpperCase() + status?.slice(1) || 'Unknown'}
+    <span
+      className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusStyle(
+        status
+      )}`}
+    >
+      {status?.charAt(0).toUpperCase() + status?.slice(1) || "Unknown"}
     </span>
   );
 }
@@ -105,7 +121,7 @@ function StatusBadge({ status }: { status: string }) {
 export default function CandidatesList({
   showHeader = true,
   showFilters = true,
-  showPagination = true,
+  // showPagination = true,
   showSorting = true,
   maxItems,
   className = "",
@@ -114,7 +130,9 @@ export default function CandidatesList({
   const dispatch = useAppDispatch();
 
   // Redux selectors
-  const paginatedCandidates = useAppSelector(selectPaginatedCandidatesWithAccess);
+  const paginatedCandidates = useAppSelector(
+    selectPaginatedCandidatesWithAccess
+  );
   const filteredCandidates = useAppSelector(selectFilteredCandidatesWithAccess);
   const loading = useAppSelector(selectCandidatesLoading);
   const error = useAppSelector(selectCandidatesError);
@@ -123,8 +141,8 @@ export default function CandidatesList({
   const userContext = useAppSelector(selectUserContext);
 
   // Local state
-  const [selectedCandidate, setSelectedCandidate] = useState<CandidateWithApplication | null>(null);
-  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  // const [selectedCandidate, setSelectedCandidate] = useState<CandidateWithApplication | null>(null);
+  // const [showDetailsModal, setShowDetailsModal] = useState(false);
 
   // Get candidates to display
   const candidatesToDisplay = useMemo(() => {
@@ -144,64 +162,73 @@ export default function CandidatesList({
         })
       );
     }
-  }, [userContext, loading, candidatesToDisplay.length, error, dispatch, filters]);
+  }, [
+    userContext,
+    loading,
+    candidatesToDisplay.length,
+    error,
+    dispatch,
+    filters,
+  ]);
 
   // Handlers
-  const handleStatusUpdate = async (applicationId: string, status: string) => {
-    if (!userContext) {
-      console.log("User context not available");
-      return;
-    }
+  // const handleStatusUpdate = async (applicationId: string, status: string) => {
+  //   if (!userContext) {
+  //     console.log("User context not available");
+  //     return;
+  //   }
 
-    try {
-      await dispatch(
-        updateApplicationStatusWithAccess({
-          applicationId,
-          status,
-          userContext,
-        })
-      ).unwrap();
-    } catch (error) {
-      console.error("Failed to update status:", error);
-    }
-  };
+  //   try {
+  //     await dispatch(
+  //       updateApplicationStatusWithAccess({
+  //         applicationId,
+  //         status,
+  //         userContext,
+  //       })
+  //     ).unwrap();
+  //   } catch (error) {
+  //     console.error("Failed to update status:", error);
+  //   }
+  // };
 
   const handleViewCandidate = (candidate: CandidateWithApplication) => {
-    setSelectedCandidate(candidate);
-    setShowDetailsModal(true);
+    // setSelectedCandidate(candidate);
+    // setShowDetailsModal(true);
     if (onCandidateClick) {
       onCandidateClick(candidate);
     }
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
     });
   };
 
   const calculateExperience = (candidate: CandidateWithApplication) => {
-    if (!candidate.experience || candidate.experience.length === 0) return '0';
-    
+    if (!candidate.experience || candidate.experience.length === 0) return "0";
+
     let totalMonths = 0;
-    candidate.experience.forEach(exp => {
+    candidate.experience.forEach((exp) => {
       if (exp.start_date) {
         const start = new Date(exp.start_date);
         const end = exp.end_date ? new Date(exp.end_date) : new Date();
-        const months = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
+        const months =
+          (end.getFullYear() - start.getFullYear()) * 12 +
+          (end.getMonth() - start.getMonth());
         totalMonths += months;
       }
     });
-    
+
     const years = Math.floor(totalMonths / 12);
     return years.toString();
   };
 
   const generateShortId = (applicationId: string) => {
     // Generate a shorter, more readable ID from the application ID
-    const hash = applicationId.split('-').pop() || applicationId;
+    const hash = applicationId.split("-").pop() || applicationId;
     return hash.substring(0, 8);
   };
 
@@ -230,14 +257,26 @@ export default function CandidatesList({
         <div className="mb-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">All Candidates</h1>
+              <h1 className="text-2xl font-bold text-gray-900">
+                All Candidates
+              </h1>
               <p className="text-gray-600 mt-1">
                 Manage all candidates and their applications with ease.
               </p>
             </div>
             <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 4v16m8-8H4"
+                />
               </svg>
               Add Job
             </button>
@@ -255,21 +294,49 @@ export default function CandidatesList({
                 <div className="relative">
                   <select
                     value={sortBy}
-                    onChange={(e) => dispatch(setSortBy(e.target.value as SortOption))}
+                    onChange={(e) =>
+                      dispatch(setSortBy(e.target.value as SortOption))
+                    }
                     className="bg-blue-600 text-white text-sm border border-blue-600 rounded-full px-4 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-300 hover:bg-blue-700 transition-colors cursor-pointer appearance-none"
                   >
-                    <option value="date_desc" className="bg-white text-gray-900">Newest First</option>
-                    <option value="date_asc" className="bg-white text-gray-900">Oldest First</option>
-                    <option value="name_asc" className="bg-white text-gray-900">Name (A-Z)</option>
-                    <option value="name_desc" className="bg-white text-gray-900">Name (Z-A)</option>
+                    <option
+                      value="date_desc"
+                      className="bg-white text-gray-900"
+                    >
+                      Newest First
+                    </option>
+                    <option value="date_asc" className="bg-white text-gray-900">
+                      Oldest First
+                    </option>
+                    <option value="name_asc" className="bg-white text-gray-900">
+                      Name (A-Z)
+                    </option>
+                    <option
+                      value="name_desc"
+                      className="bg-white text-gray-900"
+                    >
+                      Name (Z-A)
+                    </option>
                   </select>
                   <TiArrowSortedDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white pointer-events-none" />
                 </div>
-                
+
                 <div className="relative">
                   <select
                     value={filters.status}
-                    onChange={(e) => dispatch(setFilters({ ...filters, status: e.target.value as 'accepted' | 'rejected' | 'pending' | 'on hold' | 'All' }))}
+                    onChange={(e) =>
+                      dispatch(
+                        setFilters({
+                          ...filters,
+                          status: e.target.value as
+                            | "accepted"
+                            | "rejected"
+                            | "pending"
+                            | "on hold"
+                            | "All",
+                        })
+                      )
+                    }
                     className="bg-transparent text-gray-600 text-sm border border-gray-300 rounded-full px-4 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-300 hover:border-gray-400 transition-colors cursor-pointer appearance-none"
                   >
                     <option value="All">App. Status</option>
@@ -288,9 +355,7 @@ export default function CandidatesList({
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
               <div className="relative">
-                <select
-                  className="bg-transparent text-gray-600 text-sm border border-gray-300 rounded-full px-4 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-300 hover:border-gray-400 transition-colors cursor-pointer appearance-none"
-                >
+                <select className="bg-transparent text-gray-600 text-sm border border-gray-300 rounded-full px-4 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-300 hover:border-gray-400 transition-colors cursor-pointer appearance-none">
                   <option>Years of Exp.</option>
                   <option>0-2</option>
                   <option>3-5</option>
@@ -298,16 +363,28 @@ export default function CandidatesList({
                 </select>
                 <TiArrowSortedDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" />
               </div>
-              
+
               <div className="relative">
                 <select
                   value={filters.company ?? ""}
-                  onChange={(e) => dispatch(setFilters({ ...filters, company: e.target.value }))}
+                  onChange={(e) =>
+                    dispatch(
+                      setFilters({ ...filters, company: e.target.value })
+                    )
+                  }
                   className="bg-transparent text-gray-600 text-sm border border-gray-300 rounded-full px-4 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-300 hover:border-gray-400 transition-colors cursor-pointer appearance-none"
                 >
                   <option value="">Company</option>
-                  {Array.from(new Set(filteredCandidates.map(c => c.company_name).filter(Boolean))).map(company => (
-                    <option key={company} value={company ?? ""}>{company}</option>
+                  {Array.from(
+                    new Set(
+                      filteredCandidates
+                        .map((c) => c.company_name)
+                        .filter(Boolean)
+                    )
+                  ).map((company) => (
+                    <option key={company} value={company ?? ""}>
+                      {company}
+                    </option>
                   ))}
                 </select>
                 <TiArrowSortedDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" />
@@ -335,7 +412,10 @@ export default function CandidatesList({
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left">
-                    <input type="checkbox" className="rounded border-gray-300" />
+                    <input
+                      type="checkbox"
+                      className="rounded border-gray-300"
+                    />
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     ID
@@ -371,17 +451,24 @@ export default function CandidatesList({
                   <tr>
                     <td colSpan={10} className="px-6 py-12 text-center">
                       <div className="text-gray-500">
-                        <p className="text-lg font-medium">No candidates found</p>
-                        <p className="text-sm mt-1">Try adjusting your filters to see more results.</p>
+                        <p className="text-lg font-medium">
+                          No candidates found
+                        </p>
+                        <p className="text-sm mt-1">
+                          Try adjusting your filters to see more results.
+                        </p>
                       </div>
                     </td>
                   </tr>
                 ) : (
                   candidatesToDisplay.map((candidate) => (
-                    <tr key={candidate.application_id} className="hover:bg-gray-50">
+                    <tr
+                      key={candidate.application_id}
+                      className="hover:bg-gray-50"
+                    >
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <input 
-                          type="checkbox" 
+                        <input
+                          type="checkbox"
                           className="rounded border-gray-300"
                           onClick={(e) => e.stopPropagation()}
                         />
@@ -393,17 +480,21 @@ export default function CandidatesList({
                         {formatDate(candidate.applied_date)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">{candidate.name}</div>
-                        <div className="text-sm text-gray-500">{candidate.candidate_email}</div>
+                        <div className="text-sm font-medium text-gray-900">
+                          {candidate.name}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          {candidate.candidate_email}
+                        </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {candidate.job_title}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {candidate.company_name || '—'}
+                        {candidate.company_name || "—"}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {candidate.address || candidate.job_location || '—'}
+                        {candidate.address || candidate.job_location || "—"}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {calculateExperience(candidate)}
