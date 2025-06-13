@@ -105,7 +105,7 @@ export default function JobsClientComponent({
       if (initState.initialized) return;
 
       try {
-        if (!isValidProps) {
+        if (!userRole || !userId || !organizationId) {
           throw new Error(
             "Missing required authentication data. Please ensure you are logged in and part of an organization."
           );
@@ -132,15 +132,10 @@ export default function JobsClientComponent({
       }
     };
 
-    initializeJobs();
-  }, [
-    dispatch,
-    userRole,
-    userId,
-    organizationId,
-    initState.initialized,
-    isValidProps,
-  ]);
+    if (!initState.initialized && userRole && userId && organizationId) {
+      initializeJobs();
+    }
+  }, [dispatch, userRole, userId, organizationId]);
 
   // Optimized handlers with better error handling
   const handleAddJob = useCallback(() => {
