@@ -22,7 +22,7 @@ import {
   fetchJobApplicationsWithAccess,
   selectUserContext,
   selectCandidates,
-  selectCandidatesLoading,
+  // selectCandidatesLoading,
 } from "@/store/features/candidatesSlice";
 import { initializeAuth } from "@/store/features/userSlice";
 import { JobMetadata, JobStatus } from "@/types/custom";

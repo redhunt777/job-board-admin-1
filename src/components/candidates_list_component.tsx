@@ -19,7 +19,7 @@ import {
   selectFilters,
   selectSortBy,
   selectUserContext,
-  selectPaginatedCandidatesWithAccess,
+  // selectPaginatedCandidatesWithAccess,
   selectFilteredCandidatesWithAccess,
   CandidateWithApplication,
   // CandidateFilters,
@@ -124,15 +124,15 @@ export default function CandidatesList({
   showSorting = true,
   maxItems,
   className = "",
-  jobId,
+  // jobId,
   onCandidateClick,
 }: CandidatesListProps) {
   const dispatch = useAppDispatch();
 
   // Redux selectors
-  const paginatedCandidates = useAppSelector(
-    selectPaginatedCandidatesWithAccess
-  );
+  // const paginatedCandidates = useAppSelector(
+  //   selectPaginatedCandidatesWithAccess
+  // );
   const filteredCandidates = useAppSelector(selectFilteredCandidatesWithAccess);
   const loading = useAppSelector(selectCandidatesLoading);
   const error = useAppSelector(selectCandidatesError);
@@ -147,7 +147,7 @@ export default function CandidatesList({
   // Get candidates to display with jobId filtering
   const candidatesToDisplay = useMemo(() => {
     const candidatesSource = filteredCandidates;
-    
+
     if (maxItems && maxItems > 0) {
       return candidatesSource.slice(0, maxItems);
     }
