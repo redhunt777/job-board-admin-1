@@ -21,7 +21,7 @@ import {
   setUserContext,
   fetchJobApplicationsWithAccess,
   selectUserContext,
-  selectCandidates
+  selectCandidates,
 } from "@/store/features/candidatesSlice";
 import { initializeAuth } from "@/store/features/userSlice";
 import { JobMetadata, JobStatus } from "@/types/custom";
