@@ -2,7 +2,14 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   images: {
-    domains: ['recrivio-bucket.s3.ap-south-1.amazonaws.com'],
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "recrivio-bucket.s3.ap-south-1.amazonaws.com",
+        port: "",
+        pathname: "/**",
+      },
+    ],
   },
   webpack: (config, { isServer }) => {
     if (!isServer) {
