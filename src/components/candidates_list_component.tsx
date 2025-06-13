@@ -300,7 +300,7 @@ function Pagination() {
         );
       }
     }
-  }, [filteredCandidates, pagination?.candidatesPerPage, dispatch, pagination]);
+  }, [filteredCandidates, pagination?.candidatesPerPage, dispatch]);
 
   // Early return if no data
   if (

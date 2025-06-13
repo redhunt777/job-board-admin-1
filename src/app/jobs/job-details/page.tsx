@@ -22,6 +22,7 @@ import {
   setUserContext,
   fetchJobApplicationsWithAccess,
   selectUserContext,
+  selectFilteredCandidatesWithAccess,
 } from "@/store/features/candidatesSlice";
 import { initializeAuth } from "@/store/features/userSlice";
 import { JobMetadata, JobStatus } from "@/types/custom";
@@ -47,7 +48,6 @@ export default function JobDetailsComponent() {
   // State management
   const [step, setStep] = useState(0);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [numberOfCandidates] = useState(0);
 
   // Redux selectors - moved up for better organization
   const collapsed = useAppSelector((state) => state.ui.sidebar.collapsed);
@@ -59,10 +59,17 @@ export default function JobDetailsComponent() {
   const user = useAppSelector((state) => state.user.user);
   const organization = useAppSelector((state) => state.user.organization);
   const roles = useAppSelector((state) => state.user.roles);
+  const candidates = useAppSelector(selectFilteredCandidatesWithAccess);
 
   // URL params
   const params = useSearchParams();
   const jobId = params.get("jobID") || params.get("jobId");
+
+  // Calculate number of candidates for this specific job
+  const numberOfCandidates = useMemo(() => {
+    if (!jobId || !candidates) return 0;
+    return candidates.filter(candidate => candidate.job_id === jobId).length;
+  }, [jobId, candidates]);
 
   // Helper function to safely get user role
   const getUserRole = useCallback(() => {
@@ -272,15 +279,15 @@ export default function JobDetailsComponent() {
 
   // Load candidates when user context is available
   useEffect(() => {
-    if (memoizedUserContext && userContext) {
+    if (memoizedUserContext && userContext && jobId) {
       dispatch(
         fetchJobApplicationsWithAccess({
-          filters: {},
+          filters: { jobId },
           userContext: memoizedUserContext,
         })
       );
     }
-  }, [dispatch, memoizedUserContext, userContext]);
+  }, [dispatch, memoizedUserContext, userContext, jobId]);
 
   // Initialize job data - Fixed the error here
   useEffect(() => {
