@@ -204,12 +204,15 @@ export default function JobsClientComponent({
     }
   }, [dispatch, userRole, userId, organizationId, isValidProps]);
 
-  const toggleFilterDropdown = useCallback((filterType: 'status' | 'location' | 'company') => {
-    setFilterDropdowns((prev) => ({
-      ...prev,
-      isOpen: prev.isOpen === filterType ? false : filterType,
-    }));
-  }, []);
+  const toggleFilterDropdown = useCallback(
+    (filterType: "status" | "location" | "company") => {
+      setFilterDropdowns((prev) => ({
+        ...prev,
+        isOpen: prev.isOpen === filterType ? false : filterType,
+      }));
+    },
+    []
+  );
 
   const handleClearAllFilters = useCallback(() => {
     try {
@@ -266,21 +269,21 @@ export default function JobsClientComponent({
   // Enhanced loading component
   const LoadingView = () => (
     <div
-      className={`transition-all duration-300 min-h-full md:pb-0 px-0 ${
-        collapsed ? "md:ml-20" : "md:ml-64"
+      className={`transition-all duration-300 min-h-full md:pb-0 px-3 md:px-6 ${
+        collapsed ? "md:ml-20" : "md:ml-60"
       } md:pt-0 pt-4`}
     >
       <div className="mt-4 px-2 md:px-4 py-4">
-        <div className="flex items-center gap-2 mb-4">
+        <div className="flex items-center gap-1 mb-4">
           <Link
             href="/dashboard"
-            className="flex items-center text-neutral-500 hover:text-neutral-700 font-semibold text-lg"
+            className="flex items-center text-neutral-500 hover:text-neutral-700 font-medium text-base"
           >
-            <HiOutlineArrowCircleLeft className="w-8 h-8 mr-2" />
+            <HiOutlineArrowCircleLeft className="w-6 h-6 mr-1" />
             <p>Back to Dashboard</p>
           </Link>
-          <span className="text-lg text-neutral-300">/</span>
-          <span className="text-lg font-bold text-neutral-900">Jobs</span>
+          <span className="text-base text-neutral-500 font-light">/</span>
+          <span className="text-base font-medium text-neutral-900">Jobs</span>
         </div>
 
         <div className="flex items-center justify-between my-6">
@@ -312,8 +315,8 @@ export default function JobsClientComponent({
   if (initState.error) {
     return (
       <div
-        className={`transition-all duration-300 min-h-full md:pb-0 px-0 ${
-          collapsed ? "md:ml-20" : "md:ml-64"
+        className={`transition-all duration-300 min-h-full md:pb-0 px-3 md:px-6 ${
+          collapsed ? "md:ml-20" : "md:ml-60"
         } md:pt-0 pt-4`}
       >
         <div className="mt-4 px-2 md:px-4 py-4">
@@ -328,22 +331,22 @@ export default function JobsClientComponent({
 
   return (
     <div
-      className={`transition-all duration-300 min-h-full md:pb-0 px-0 ${
-        collapsed ? "md:ml-20" : "md:ml-64"
+      className={`transition-all duration-300 min-h-full md:pb-0 px-3 md:px-6 ${
+        collapsed ? "md:ml-20" : "md:ml-60"
       } md:pt-0 pt-4`}
     >
       <div className="mt-4 px-2 md:px-4 py-4">
         {/* Header section */}
-        <div className="flex items-center gap-2 mb-4">
+        <div className="flex items-center gap-1 mb-4">
           <Link
             href="/dashboard"
-            className="flex items-center text-neutral-500 hover:text-neutral-700 font-semibold text-lg transition-colors"
+            className="flex items-center text-neutral-500 hover:text-neutral-700 font-medium text-base transition-colors"
           >
-            <HiOutlineArrowCircleLeft className="w-8 h-8 mr-2" />
+            <HiOutlineArrowCircleLeft className="w-6 h-6 mr-1" />
             <p>Back to Dashboard</p>
           </Link>
-          <span className="text-lg text-neutral-300">/</span>
-          <span className="text-lg font-bold text-neutral-900">Jobs</span>
+          <span className="text-base text-neutral-500 font-light">/</span>
+          <span className="text-base font-medium text-neutral-900">Jobs</span>
         </div>
 
         {/* Title and Add Job section */}

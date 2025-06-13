@@ -6,6 +6,7 @@ import { BsBriefcase } from "react-icons/bs";
 import { GoPeople, GoGear } from "react-icons/go";
 import { HiOutlineChatAlt2 } from "react-icons/hi";
 import { FiSidebar } from "react-icons/fi";
+import { MdMenu } from "react-icons/md";
 import Image from "next/image";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { toggleSidebar } from "@/store/features/uiSlice";
@@ -21,7 +22,7 @@ export default function Sidebar() {
   return (
     <aside
       className={`hidden md:flex fixed top-0 left-0 h-full z-50 transition-all duration-300 flex-col justify-between \
-        ${collapsed ? "w-20" : "w-64"} \
+        ${collapsed ? "w-20" : "w-60"} \
         bg-linear-to-b from-[#1E3170] to-[#07123A] shadow-lg`}
     >
       <div>
@@ -29,44 +30,52 @@ export default function Sidebar() {
           <Image
             src={collapsed ? "/logomark-white.svg" : "/wordmark-white.svg"}
             alt="Recrivio Logo"
-            height={44}
-            width={collapsed ? 44 : 176}
+            height={40}
+            width={collapsed ? 40 : 172}
             className="h-11 w-full object-contain"
             priority
             draggable={false}
           />
-          <div className="flex justify-end mt-10 mr-1 -mb-2">
+          <div
+            className={`flex justify-end mt-10 -mb-2 ${
+              collapsed ? "mr-0.5" : "-mr-0.5"
+            }`}
+          >
             <button
               onClick={() => dispatch(toggleSidebar())}
               className="cursor-pointer"
               aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
             >
-              <FiSidebar className="w-10 h-10 text-white p-2 rounded-lg hover:bg-blue-900" />
+              {collapsed ? (
+                <MdMenu className="w-10 h-10 text-white p-2 rounded-lg hover:bg-blue-900" />
+              ) : (
+                <FiSidebar className="w-10 h-10 text-white p-2 rounded-lg hover:bg-blue-900" />
+              )}
             </button>
           </div>
         </div>
         <nav className="mt-4 flex flex-col gap-2 px-2">
           <SidebarLink
             collapsed={collapsed}
-            icon={<BiHomeAlt className="w-6 h-6" />}
+            icon={<BiHomeAlt className="w-5 h-5" />}
             label="Dashboard"
             to="/dashboard"
           />
           <SidebarLink
             collapsed={collapsed}
-            icon={<BsBriefcase className="w-6 h-6" />}
+            icon={<BsBriefcase className="w-5 h-5" />}
             label="Jobs"
             to="/jobs"
           />
           <SidebarLink
             collapsed={collapsed}
-            icon={<GoPeople className="w-6 h-6" />}
+            icon={<GoPeople className="w-5 h-5" />}
             label="Candidates"
             to="/candidates"
           />
           <SidebarLink
             collapsed={collapsed}
-            icon={<HiOutlineChatAlt2 className="w-6 h-6" />}
+            icon={<HiOutlineChatAlt2 className="w-5 h-5" />}
             label="Inbox"
             to="/inbox"
           />
@@ -75,7 +84,7 @@ export default function Sidebar() {
       <div className="mb-6 px-2">
         <SidebarLink
           collapsed={collapsed}
-          icon={<GoGear className="w-6 h-6" />}
+          icon={<GoGear className="w-5 h-5" />}
           label="Settings"
           to="/settings"
         />
@@ -104,12 +113,12 @@ function SidebarLink({ icon, label, to, collapsed }: SidebarLinkProps) {
   return (
     <Link
       href={to}
-      className={`flex items-center gap-4 px-4 py-3 rounded-lg text-white transition-colors duration-200 \
+      className={`flex items-center gap-3 px-2 py-2 rounded-lg text-white transition-colors duration-200 \
         ${collapsed ? "justify-center" : ""} \
         ${isActive ? "bg-blue-900" : "hover:bg-blue-900"}`}
     >
       {icon}
-      {!collapsed && <span className="text-lg font-medium">{label}</span>}
+      {!collapsed && <span className="text-sm font-medium">{label}</span>}
     </Link>
   );
 }

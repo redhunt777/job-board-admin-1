@@ -14,26 +14,29 @@ import { createJob } from "@/store/features/jobSlice";
 import { initializeAuth } from "@/store/features/userSlice";
 import type { RawJob } from "@/store/features/jobSlice";
 import type { FormErrors, JobFormData } from "@/types/custom";
-import {computeChecksum, renderError} from "./utils"
+import { computeChecksum, renderError } from "./utils";
 
 const steps = ["Company", "Job Details", "Job Description"];
 
 export default function AddJob() {
   const dispatch = useAppDispatch();
   const router = useRouter();
-  const collapsed = useAppSelector((state: RootState) => state.ui.sidebar.collapsed);
-  const loading  = useAppSelector((state: RootState) => state.jobs.loading);
-
+  const collapsed = useAppSelector(
+    (state: RootState) => state.ui.sidebar.collapsed
+  );
+  const loading = useAppSelector((state: RootState) => state.jobs.loading);
 
   // Get user info from user slice
   const user = useAppSelector((state: RootState) => state.user.user);
-  const organization = useAppSelector((state: RootState) => state.user.organization);
+  const organization = useAppSelector(
+    (state: RootState) => state.user.organization
+  );
   const roles = useAppSelector((state: RootState) => state.user.roles);
 
   // Initialize authentication if not already done
   useEffect(() => {
     if (!user && !loading) {
-        dispatch(initializeAuth());
+      dispatch(initializeAuth());
     }
   }, [user, dispatch, roles, organization, loading]);
 
@@ -95,9 +98,13 @@ export default function AddJob() {
           newErrors.workingType = "Working type is required";
         }
         if (!formData.minExperience || !formData.maxExperience) {
-          newErrors.experience = "Both minimum and maximum experience are required";
-        } else if (Number(formData.minExperience) > Number(formData.maxExperience)) {
-          newErrors.experience = "Minimum experience cannot be greater than maximum";
+          newErrors.experience =
+            "Both minimum and maximum experience are required";
+        } else if (
+          Number(formData.minExperience) > Number(formData.maxExperience)
+        ) {
+          newErrors.experience =
+            "Minimum experience cannot be greater than maximum";
         }
         if (!formData.minSalary || !formData.maxSalary) {
           newErrors.salary = "Both minimum and maximum salary are required";
@@ -118,46 +125,53 @@ export default function AddJob() {
   };
   // Handlers
   const handleInputChange = (field: keyof JobFormData, value: string) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
   };
 
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      
+
       // Validate file type
       if (!file.type.match(/^image\/(jpeg|jpg|png)$/)) {
-        setErrors(prev => ({
+        setErrors((prev) => ({
           ...prev,
-          companyLogo: "Please select a valid image file (JPG, JPEG, or PNG)"
+          companyLogo: "Please select a valid image file (JPG, JPEG, or PNG)",
         }));
         return;
       }
 
       // Validate file size (max 5MB)
       if (file.size > 2 * 1024 * 1024) {
-        setErrors(prev => ({
+        setErrors((prev) => ({
           ...prev,
-          companyLogo: "File size must be less than 2MB"
+          companyLogo: "File size must be less than 2MB",
         }));
         return;
       }
 
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        companyLogo: file
+        companyLogo: file,
       }));
     }
   };
 
-  const handleUploadLogo = async (file: File): Promise<{ key: string; userId: string }> => {
+  const handleUploadLogo = async (
+    file: File
+  ): Promise<{ key: string; userId: string }> => {
     try {
       const checksum = await computeChecksum(file);
-      const signedURL = await getSignedURL(file.type, file.size, checksum, formData.companyName);
-      
+      const signedURL = await getSignedURL(
+        file.type,
+        file.size,
+        checksum,
+        formData.companyName
+      );
+
       if (signedURL.error) {
         throw new Error(signedURL.error);
       }
@@ -184,7 +198,11 @@ export default function AddJob() {
 
       return { key, userId };
     } catch (error) {
-      throw new Error(`Failed to upload company logo: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to upload company logo: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
     }
   };
 
@@ -203,7 +221,9 @@ export default function AddJob() {
 
   const handleSubmit = async () => {
     if (!user?.id || !organization?.id) {
-      setErrors({ general: "User authentication required. Please log in again." });
+      setErrors({
+        general: "User authentication required. Please log in again.",
+      });
       return;
     }
 
@@ -222,7 +242,7 @@ export default function AddJob() {
       const logoUrl = `https://${process.env.NEXT_PUBLIC_AWS_BUCKET_NAME}.s3.${process.env.NEXT_PUBLIC_AWS_BUCKET_REGION}.amazonaws.com/${uploadResult.key}`;
 
       // Prepare job data matching the database schema
-      const jobData: Omit<RawJob, 'id' | 'created_at' | 'updated_at'> = {
+      const jobData: Omit<RawJob, "id" | "created_at" | "updated_at"> = {
         organization_id: organization?.id || null,
         title: formData.jobTitle.trim(),
         description: formData.jobDescription.trim(),
@@ -243,19 +263,23 @@ export default function AddJob() {
 
       // Create job using Redux action
       const resultAction = await dispatch(createJob(jobData));
-      
+
       if (createJob.fulfilled.match(resultAction)) {
         // Success - redirect to jobs page
         router.push("/jobs");
       } else {
         // Handle error from Redux action
-        const errorMessage = resultAction.payload as string || "Failed to create job";
+        const errorMessage =
+          (resultAction.payload as string) || "Failed to create job";
         setErrors({ general: errorMessage });
       }
     } catch (error) {
       console.log("Error creating job:", error);
-      setErrors({ 
-        general: error instanceof Error ? error.message : "An unexpected error occurred" 
+      setErrors({
+        general:
+          error instanceof Error
+            ? error.message
+            : "An unexpected error occurred",
       });
     } finally {
       setIsSubmitting(false);
@@ -273,28 +297,28 @@ export default function AddJob() {
   return (
     <div
       className={`transition-all duration-300 min-h-full md:pb-0 px-0 ${
-        collapsed ? "md:ml-20" : "md:ml-64"
+        collapsed ? "md:ml-20" : "md:ml-60"
       } md:pt-0 pt-4`}
     >
       <div className="max-w-7xl w-full mx-auto mt-4 px-2 md:px-4 py-4">
         {/* Breadcrumb */}
-        <div className="flex items-center gap-2 mb-4">
+        <div className="flex items-center gap-1 mb-4">
           <Link
             href="/dashboard"
             className="flex items-center text-neutral-500 hover:text-neutral-700 font-semibold text-lg"
           >
-            <HiOutlineArrowCircleLeft className="w-8 h-8 mr-2" />
+            <HiOutlineArrowCircleLeft className="w-6 h-6 mr-1" />
             <span>Back to Dashboard</span>
           </Link>
-          <span className="text-lg text-neutral-300">/</span>
+          <span className="text-base text-neutral-500 font-light">/</span>
           <Link
             href="/jobs"
-            className="text-neutral-500 hover:text-neutral-700 font-semibold text-lg"
+            className="text-neutral-500 hover:text-neutral-700 font-medium text-base"
           >
             Jobs
           </Link>
-          <span className="text-lg text-neutral-300">/</span>
-          <span className="text-lg font-semibold text-neutral-900">
+          <span className="text-base text-neutral-500 font-light">/</span>
+          <span className="text-base font-medium text-neutral-900">
             Add a New Job
           </span>
         </div>
@@ -350,8 +374,8 @@ export default function AddJob() {
                   </label>
                   <label
                     className={`flex flex-col items-center justify-center rounded-lg p-6 my-8 cursor-pointer transition max-w-sm mx-auto ${
-                      errors.companyLogo 
-                        ? "bg-red-50 border-2 border-red-200 hover:bg-red-100" 
+                      errors.companyLogo
+                        ? "bg-red-50 border-2 border-red-200 hover:bg-red-100"
                         : "bg-neutral-100 hover:bg-neutral-200/80"
                     }`}
                     htmlFor="company-logo-upload"
@@ -399,11 +423,15 @@ export default function AddJob() {
                   <input
                     type="text"
                     className={`w-full border rounded-lg px-3 py-2 mb-2 ${
-                      errors.companyName ? "border-red-300" : "border-neutral-300"
+                      errors.companyName
+                        ? "border-red-300"
+                        : "border-neutral-300"
                     }`}
                     placeholder="e.g. Google"
                     value={formData.companyName}
-                    onChange={(e) => handleInputChange('companyName', e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("companyName", e.target.value)
+                    }
                   />
                   {errors.companyName && renderError(errors.companyName)}
                 </div>
@@ -420,11 +448,15 @@ export default function AddJob() {
                       <input
                         type="text"
                         className={`w-full border rounded-lg px-3 py-2 mb-2 ${
-                          errors.jobTitle ? "border-red-300" : "border-neutral-300"
+                          errors.jobTitle
+                            ? "border-red-300"
+                            : "border-neutral-300"
                         }`}
                         placeholder="e.g. UI/UX Designer"
                         value={formData.jobTitle}
-                        onChange={(e) => handleInputChange('jobTitle', e.target.value)}
+                        onChange={(e) =>
+                          handleInputChange("jobTitle", e.target.value)
+                        }
                       />
                       {errors.jobTitle && renderError(errors.jobTitle)}
                     </div>
@@ -435,10 +467,14 @@ export default function AddJob() {
                       </label>
                       <select
                         className={`w-full border rounded-lg px-3 py-2 mb-2 ${
-                          errors.jobType ? "border-red-300" : "border-neutral-300"
+                          errors.jobType
+                            ? "border-red-300"
+                            : "border-neutral-300"
                         }`}
                         value={formData.jobType}
-                        onChange={(e) => handleInputChange('jobType', e.target.value)}
+                        onChange={(e) =>
+                          handleInputChange("jobType", e.target.value)
+                        }
                       >
                         <option value="">Select</option>
                         <option value="full-time">Full-Time</option>
@@ -455,17 +491,22 @@ export default function AddJob() {
                       </label>
                       <select
                         className={`w-full border rounded-lg px-3 py-2 mb-2 ${
-                          errors.jobLocationType ? "border-red-300" : "border-neutral-300"
+                          errors.jobLocationType
+                            ? "border-red-300"
+                            : "border-neutral-300"
                         }`}
                         value={formData.jobLocationType}
-                        onChange={(e) => handleInputChange('jobLocationType', e.target.value)}
+                        onChange={(e) =>
+                          handleInputChange("jobLocationType", e.target.value)
+                        }
                       >
                         <option value="">Select</option>
                         <option value="on-site">On-site</option>
                         <option value="remote">Remote</option>
                         <option value="hybrid">Hybrid</option>
                       </select>
-                      {errors.jobLocationType && renderError(errors.jobLocationType)}
+                      {errors.jobLocationType &&
+                        renderError(errors.jobLocationType)}
                     </div>
 
                     <div>
@@ -474,10 +515,14 @@ export default function AddJob() {
                       </label>
                       <select
                         className={`w-full border rounded-lg px-3 py-2 mb-2 ${
-                          errors.jobLocation ? "border-red-300" : "border-neutral-300"
+                          errors.jobLocation
+                            ? "border-red-300"
+                            : "border-neutral-300"
                         }`}
                         value={formData.jobLocation}
-                        onChange={(e) => handleInputChange('jobLocation', e.target.value)}
+                        onChange={(e) =>
+                          handleInputChange("jobLocation", e.target.value)
+                        }
                       >
                         <option value="">Select</option>
                         <option value="Remote">Remote</option>
@@ -496,10 +541,14 @@ export default function AddJob() {
                       </label>
                       <select
                         className={`w-full border rounded-lg px-3 py-2 mb-2 ${
-                          errors.workingType ? "border-red-300" : "border-neutral-300"
+                          errors.workingType
+                            ? "border-red-300"
+                            : "border-neutral-300"
                         }`}
                         value={formData.workingType}
-                        onChange={(e) => handleInputChange('workingType', e.target.value)}
+                        onChange={(e) =>
+                          handleInputChange("workingType", e.target.value)
+                        }
                       >
                         <option value="">Select</option>
                         <option value="Day">Day</option>
@@ -516,7 +565,9 @@ export default function AddJob() {
                       <select
                         className="w-full border border-neutral-300 rounded-lg px-3 py-2 mb-2"
                         value={formData.status}
-                        onChange={(e) => handleInputChange('status', e.target.value)}
+                        onChange={(e) =>
+                          handleInputChange("status", e.target.value)
+                        }
                       >
                         <option value="active">Active</option>
                         <option value="paused">Paused</option>
@@ -533,10 +584,14 @@ export default function AddJob() {
                     <div className="flex gap-2">
                       <select
                         className={`w-full border rounded-lg px-3 py-2 ${
-                          errors.experience ? "border-red-300" : "border-neutral-300"
+                          errors.experience
+                            ? "border-red-300"
+                            : "border-neutral-300"
                         }`}
                         value={formData.minExperience}
-                        onChange={(e) => handleInputChange('minExperience', e.target.value)}
+                        onChange={(e) =>
+                          handleInputChange("minExperience", e.target.value)
+                        }
                       >
                         <option value="">Min.</option>
                         {[...Array(11).keys()].map((y) => (
@@ -547,10 +602,14 @@ export default function AddJob() {
                       </select>
                       <select
                         className={`w-full border rounded-lg px-3 py-2 ${
-                          errors.experience ? "border-red-300" : "border-neutral-300"
+                          errors.experience
+                            ? "border-red-300"
+                            : "border-neutral-300"
                         }`}
                         value={formData.maxExperience}
-                        onChange={(e) => handleInputChange('maxExperience', e.target.value)}
+                        onChange={(e) =>
+                          handleInputChange("maxExperience", e.target.value)
+                        }
                       >
                         <option value="">Max</option>
                         {[...Array(11).keys()].map((y) => (
@@ -566,15 +625,21 @@ export default function AddJob() {
                   <div className="mt-4">
                     <label className="block font-medium mb-2">
                       Salary<span className="text-red-500">*</span>{" "}
-                      <span className="text-neutral-400">(Lakhs per annum)</span>
+                      <span className="text-neutral-400">
+                        (Lakhs per annum)
+                      </span>
                     </label>
                     <div className="flex gap-2">
                       <select
                         className={`w-full border rounded-lg px-3 py-2 ${
-                          errors.salary ? "border-red-300" : "border-neutral-300"
+                          errors.salary
+                            ? "border-red-300"
+                            : "border-neutral-300"
                         }`}
                         value={formData.minSalary}
-                        onChange={(e) => handleInputChange('minSalary', e.target.value)}
+                        onChange={(e) =>
+                          handleInputChange("minSalary", e.target.value)
+                        }
                       >
                         <option value="">Min.</option>
                         {[...Array(51).keys()].map((s) => (
@@ -585,10 +650,14 @@ export default function AddJob() {
                       </select>
                       <select
                         className={`w-full border rounded-lg px-3 py-2 ${
-                          errors.salary ? "border-red-300" : "border-neutral-300"
+                          errors.salary
+                            ? "border-red-300"
+                            : "border-neutral-300"
                         }`}
                         value={formData.maxSalary}
-                        onChange={(e) => handleInputChange('maxSalary', e.target.value)}
+                        onChange={(e) =>
+                          handleInputChange("maxSalary", e.target.value)
+                        }
                       >
                         <option value="">Max</option>
                         {[...Array(51).keys()].map((s) => (
@@ -609,10 +678,18 @@ export default function AddJob() {
                   <label className="block font-medium mb-2">
                     Job Description<span className="text-red-500">*</span>
                   </label>
-                  <div className={errors.jobDescription ? "border border-red-300 rounded-lg" : ""}>
+                  <div
+                    className={
+                      errors.jobDescription
+                        ? "border border-red-300 rounded-lg"
+                        : ""
+                    }
+                  >
                     <LexicalEditor
                       value={formData.jobDescription}
-                      onChange={(value) => handleInputChange('jobDescription', value)}
+                      onChange={(value) =>
+                        handleInputChange("jobDescription", value)
+                      }
                     />
                   </div>
                   {errors.jobDescription && renderError(errors.jobDescription)}
@@ -639,7 +716,9 @@ export default function AddJob() {
                 {isSubmitting || loading ? (
                   <>
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    {step === steps.length - 1 ? "Creating..." : "Processing..."}
+                    {step === steps.length - 1
+                      ? "Creating..."
+                      : "Processing..."}
                   </>
                 ) : (
                   <>

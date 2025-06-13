@@ -55,12 +55,12 @@ export default function DashboardPage() {
 
   return (
     <div
-      className={`transition-all duration-300 min-h-full px-3 ${
-        collapsed ? "md:ml-20" : "md:ml-64"
+      className={`transition-all duration-300 min-h-full px-3 md:px-6 ${
+        collapsed ? "md:ml-20" : "md:ml-60"
       } md:pt-0 pt-4`}
     >
       <div className="max-w-8xl mx-auto px-2 py-8">
-        <h1 className="text-3xl font-bold text-neutral-800 mb-4">Dashboard</h1>
+        <h1 className="text-3xl font-semibold text-neutral-800 mb-4">Dashboard</h1>
         {/* Stat Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           {stats.map((stat) => (
@@ -95,7 +95,7 @@ export default function DashboardPage() {
         {/* Applications Over Time Chart */}
         <div className="bg-white rounded-2xl shadow-sm p-6">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4 gap-2">
-            <h2 className="text-2xl font-bold text-neutral-900">
+            <h2 className="text-2xl font-semibold text-neutral-900">
               Applications Over Time
             </h2>
             <div className="flex gap-2 flex-wrap">

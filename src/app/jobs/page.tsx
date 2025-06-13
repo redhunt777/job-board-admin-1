@@ -59,8 +59,8 @@ export default function JobsPage() {
   if (error) {
     return (
       <div
-        className={`transition-all duration-300 h-full px-3 md:px-0 ${
-          collapsed ? "md:ml-20" : "md:ml-64"
+        className={`transition-all duration-300 h-full px-3 md:px-6 ${
+          collapsed ? "md:ml-20" : "md:ml-60"
         } pt-4`}
       >
         <div className="max-w-8xl mx-auto px-2 md:px-4 py-4">
@@ -77,8 +77,8 @@ export default function JobsPage() {
   if (isLoading || !user) {
     return (
       <div
-        className={`transition-all duration-300 h-full px-3 md:px-0 ${
-          collapsed ? "md:ml-20" : "md:ml-64"
+        className={`transition-all duration-300 h-full px-3 md:px-6 ${
+          collapsed ? "md:ml-20" : "md:ml-60"
         } pt-4`}
       >
         <div className="max-w-8xl mx-auto px-2 md:px-4 py-4">
@@ -92,8 +92,8 @@ export default function JobsPage() {
   if (!organization) {
     return (
       <div
-        className={`transition-all duration-300 h-full px-3 md:px-0 ${
-          collapsed ? "md:ml-20" : "md:ml-64"
+        className={`transition-all duration-300 h-full px-3 md:px-6 ${
+          collapsed ? "md:ml-20" : "md:ml-60"
         } pt-4`}
       >
         <div className="max-w-8xl mx-auto px-2 md:px-4 py-4">
@@ -110,8 +110,8 @@ export default function JobsPage() {
   if (!roles || roles.length === 0) {
     return (
       <div
-        className={`transition-all duration-300 h-full px-3 md:px-0 ${
-          collapsed ? "md:ml-20" : "md:ml-64"
+        className={`transition-all duration-300 h-full px-3 md:px-6 ${
+          collapsed ? "md:ml-20" : "md:ml-60"
         } pt-4`}
       >
         <div className="max-w-8xl mx-auto px-2 md:px-4 py-4">

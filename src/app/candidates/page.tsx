@@ -139,22 +139,26 @@ const CandidatesContent = ({
 
   return (
     <div
-      className={`transition-all duration-300 h-full px-3 md:px-0 ${
-        collapsed ? "md:ml-20" : "md:ml-64"
+      className={`transition-all duration-300 h-full px-3 md:px-6 ${
+        collapsed ? "md:ml-20" : "md:ml-60"
       } pt-4`}
     >
       <div className="max-w-8xl mx-auto px-0 md:px-4 py-0 md:py-4">
         {/* Back Navigation and Title */}
-        <div className="flex items-center gap-2 mb-6">
+        <div className="flex items-center gap-1 mb-6">
           <Link
             href="/dashboard"
-            className="flex items-center text-neutral-500 hover:text-neutral-700 font-semibold md:text-lg text-sm transition-colors"
+            className="flex items-center text-neutral-500 hover:text-neutral-700 font-medium md:text-base text-sm transition-colors"
           >
-            <HiOutlineArrowCircleLeft className="w-8 h-8 mr-2" />
+            <HiOutlineArrowCircleLeft className="w-6 h-6 mr-1" />
             <span>Back to Dashboard</span>
           </Link>
-          <span className="md:text-lg text-sm text-neutral-300 font-light">/</span>
-          <span className="md:text-lg text-sm font-bold text-neutral-900">Candidates</span>
+          <span className="md:text-base text-sm text-neutral-500 font-light">
+            /
+          </span>
+          <span className="md:text-base text-sm font-medium text-neutral-900">
+            Candidates
+          </span>
         </div>
 
         {/* Header with Role-based Content */}
@@ -333,7 +337,7 @@ export default function Candidates() {
     return (
       <div
         className={`transition-all duration-300 h-full px-3 md:px-0 ${
-          collapsed ? "md:ml-20" : "md:ml-64"
+          collapsed ? "md:ml-20" : "md:ml-60"
         } pt-4`}
       >
         <div className="max-w-8xl mx-auto px-2 md:px-4 py-4">
@@ -351,7 +355,7 @@ export default function Candidates() {
     return (
       <div
         className={`transition-all duration-300 h-full px-3 md:px-0 ${
-          collapsed ? "md:ml-20" : "md:ml-64"
+          collapsed ? "md:ml-20" : "md:ml-60"
         } pt-4`}
       >
         <div className="max-w-8xl mx-auto px-2 md:px-4 py-4">
@@ -366,7 +370,7 @@ export default function Candidates() {
     return (
       <div
         className={`transition-all duration-300 h-full px-3 md:px-0 ${
-          collapsed ? "md:ml-20" : "md:ml-64"
+          collapsed ? "md:ml-20" : "md:ml-60"
         } pt-4`}
       >
         <div className="max-w-8xl mx-auto px-2 md:px-4 py-4">
@@ -384,7 +388,7 @@ export default function Candidates() {
     return (
       <div
         className={`transition-all duration-300 h-full px-3 md:px-0 ${
-          collapsed ? "md:ml-20" : "md:ml-64"
+          collapsed ? "md:ml-20" : "md:ml-60"
         } pt-4`}
       >
         <div className="max-w-8xl mx-auto px-2 md:px-4 py-4">
@@ -402,7 +406,7 @@ export default function Candidates() {
     return (
       <div
         className={`transition-all duration-300 h-full px-3 md:px-0 ${
-          collapsed ? "md:ml-20" : "md:ml-64"
+          collapsed ? "md:ml-20" : "md:ml-60"
         } pt-4`}
       >
         <div className="max-w-8xl mx-auto px-2 md:px-4 py-4">

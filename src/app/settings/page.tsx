@@ -176,7 +176,7 @@ export default function Settings() {
   return (
     <div
       className={`transition-all duration-300 min-h-full md:pb-0 px-0 ${
-        collapsed ? "md:ml-20" : "md:ml-64"
+        collapsed ? "md:ml-20" : "md:ml-60"
       } md:pt-0 pt-4`}
     >
       <div className="mt-4 px-2 md:px-4 py-4">
@@ -190,16 +190,18 @@ export default function Settings() {
         )}
 
         {/* Header section with back link and title */}
-        <div className="flex items-center gap-2 mb-4">
+        <div className="flex items-center gap-1 mb-4">
           <Link
             href="/dashboard"
-            className="flex items-center text-neutral-500 hover:text-neutral-700 font-semibold text-lg transition-colors"
+            className="flex items-center text-neutral-500 hover:text-neutral-700 font-medium text-base transition-colors"
           >
-            <HiOutlineArrowCircleLeft className="w-8 h-8 mr-2" />
+            <HiOutlineArrowCircleLeft className="w-6 h-6 mr-1" />
             <span>Back to Dashboard</span>
           </Link>
-          <span className="text-lg text-neutral-300">/</span>
-          <span className="text-lg font-bold text-neutral-900">Settings</span>
+          <span className="text-base text-neutral-500 font-light">/</span>
+          <span className="text-base font-medium text-neutral-900">
+            Settings
+          </span>
         </div>
 
         {/* Main content area with title and description */}
@@ -252,8 +254,9 @@ export default function Settings() {
                     <span className="text-neutral-800 font-medium">
                       Recrivio
                     </span>
-                    . Simply add team members below and click &apos;Save Changes&apos;.
-                    We&apos;ll send an invitation email to any new users you add.
+                    . Simply add team members below and click &apos;Save
+                    Changes&apos;. We&apos;ll send an invitation email to any
+                    new users you add.
                   </p>
                 </div>
 
