@@ -22,7 +22,8 @@ import {
   setUserContext,
   fetchJobApplicationsWithAccess,
   selectUserContext,
-  selectFilteredCandidatesWithAccess,
+  selectCandidates,
+  selectCandidatesLoading,
 } from "@/store/features/candidatesSlice";
 import { initializeAuth } from "@/store/features/userSlice";
 import { JobMetadata, JobStatus } from "@/types/custom";
@@ -59,7 +60,8 @@ export default function JobDetailsComponent() {
   const user = useAppSelector((state) => state.user.user);
   const organization = useAppSelector((state) => state.user.organization);
   const roles = useAppSelector((state) => state.user.roles);
-  const candidates = useAppSelector(selectFilteredCandidatesWithAccess);
+  const candidates = useAppSelector(selectCandidates);
+  const candidatesLoading = useAppSelector(selectCandidatesLoading);
 
   // URL params
   const params = useSearchParams();
@@ -67,9 +69,28 @@ export default function JobDetailsComponent() {
 
   // Calculate number of candidates for this specific job
   const numberOfCandidates = useMemo(() => {
-    if (!jobId || !candidates) return 0;
-    return candidates.filter(candidate => candidate.job_id === jobId).length;
-  }, [jobId, candidates]);
+    console.log('Candidate count debug:', {
+      jobId,
+      candidatesArray: candidates,
+      candidatesLength: candidates?.length,
+      candidatesLoading,
+      userContext: !!userContext
+    });
+    
+    if (!jobId || !candidates || !Array.isArray(candidates)) {
+      return 0;
+    }
+    
+    const filteredCandidates = candidates.filter(candidate => candidate.job_id === jobId);
+    console.log('Filtered candidates:', {
+      jobId,
+      totalCandidates: candidates.length,
+      filteredCount: filteredCandidates.length,
+      candidateJobIds: candidates.map(c => c.job_id)
+    });
+    
+    return filteredCandidates.length;
+  }, [jobId, candidates, candidatesLoading, userContext]);
 
   // Helper function to safely get user role
   const getUserRole = useCallback(() => {
@@ -279,7 +300,20 @@ export default function JobDetailsComponent() {
 
   // Load candidates when user context is available
   useEffect(() => {
-    if (memoizedUserContext && userContext && jobId) {
+    console.log('Candidates loading effect:', {
+      memoizedUserContext: !!memoizedUserContext,
+      userContext: !!userContext,
+      jobId,
+      candidatesLoading,
+      currentCandidatesCount: candidates?.length
+    });
+    
+    if (memoizedUserContext && jobId) {
+      console.log('Dispatching fetchJobApplicationsWithAccess:', {
+        jobId,
+        userContext: memoizedUserContext
+      });
+      
       dispatch(
         fetchJobApplicationsWithAccess({
           filters: { jobId },
@@ -287,7 +321,7 @@ export default function JobDetailsComponent() {
         })
       );
     }
-  }, [dispatch, memoizedUserContext, userContext, jobId]);
+  }, [dispatch, memoizedUserContext, jobId]);
 
   // Initialize job data - Fixed the error here
   useEffect(() => {
@@ -500,6 +534,16 @@ export default function JobDetailsComponent() {
                   <div className="flex items-center justify-between">
                     <span className="text-gray-600">Job Type</span>
                     <span className="font-medium text-gray-900">{jobMetadata.jobType || 'Not specified'}</span>
+                  </div>
+                  
+                  {/* Debug info */}
+                  <div className="mt-4 p-3 bg-gray-50 rounded text-xs">
+                    <div><strong>Debug Info:</strong></div>
+                    <div>Job ID: {jobId}</div>
+                    <div>Candidates Loading: {candidatesLoading ? 'Yes' : 'No'}</div>
+                    <div>Total Candidates: {candidates?.length || 0}</div>
+                    <div>User Context: {userContext ? 'Ready' : 'Not ready'}</div>
+                    <div>Auth Ready: {isAuthReady ? 'Yes' : 'No'}</div>
                   </div>
                 </div>
               </div>

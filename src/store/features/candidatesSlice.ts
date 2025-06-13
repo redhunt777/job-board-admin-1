@@ -88,6 +88,7 @@ export interface CandidateFilters {
   gender: string;
   disability: boolean | null;
   noticePreriod: string;
+  jobId?: string;
 }
 
 export type SortOption =
@@ -230,6 +231,11 @@ export const fetchJobApplicationsWithAccess = createAsyncThunk(
       // Apply other filters
       if (filters.status && filters.status !== "All") {
         query = query.eq("application_status", filters.status);
+      }
+
+      // Add jobId filter support
+      if (filters.jobId) {
+        query = query.eq("job_id", filters.jobId);
       }
 
       if (filters.dateFrom) {
