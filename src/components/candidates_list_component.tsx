@@ -4,7 +4,6 @@ import React, { useMemo, useEffect } from "react";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { CiFilter } from "react-icons/ci";
 import {
-  fetchJobApplicationsWithAccess,
   setFilters,
   setSortBy,
   selectCandidatesLoading,
@@ -134,22 +133,8 @@ export default function CandidatesList({
     return candidatesSource;
   }, [jobSpecificCandidates, maxItems]);
 
-  // Handle filter changes - refetch data when filters change
-  useEffect(() => {
-    // Only fetch if we have userContext and this is a filter change (not initial load)
-    if (userContext && (filters.status !== "All" || filters.company || filters.dateFrom || filters.dateTo)) {
-      const fetchFilters = jobId 
-        ? { ...filters, jobId }
-        : filters;
-        
-      dispatch(
-        fetchJobApplicationsWithAccess({
-          filters: fetchFilters,
-          userContext: userContext,
-        })
-      );
-    }
-  }, [filters, userContext, dispatch, jobId]);
+  // Note: Data fetching is handled by parent components
+  // This component is purely for display and filtering UI
 
   const handleViewCandidate = (candidate: CandidateWithApplication) => {
     if (onCandidateClick) {

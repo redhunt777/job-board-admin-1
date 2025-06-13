@@ -314,7 +314,7 @@ export default function JobDetailsComponent() {
         })
       );
     }
-  }, [dispatch, memoizedUserContext, jobId, candidates?.length, candidatesLoading, userContext]);
+  }, [dispatch, memoizedUserContext, jobId]);
 
   // Initialize job data - Fixed the error here
   useEffect(() => {
