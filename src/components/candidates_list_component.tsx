@@ -35,6 +35,7 @@ interface CandidatesListProps {
   showSorting?: boolean;
   maxItems?: number;
   className?: string;
+  jobId?: string;
   onCandidateClick?: (candidate: CandidateWithApplication) => void;
 }
 
@@ -108,6 +109,7 @@ export default function CandidatesList({
   showSorting = true,
   maxItems,
   className = "",
+  jobId,
   onCandidateClick,
 }: CandidatesListProps) {
   const dispatch = useAppDispatch();
@@ -125,25 +127,56 @@ export default function CandidatesList({
   const [selectedCandidate, setSelectedCandidate] = useState<CandidateWithApplication | null>(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
 
-  // Get candidates to display
-  const candidatesToDisplay = useMemo(() => {
-    if (maxItems && maxItems > 0) {
-      return paginatedCandidates.slice(0, maxItems);
+  // Filter candidates by jobId if provided
+  const jobSpecificCandidates = useMemo(() => {
+    if (!jobId) {
+      return paginatedCandidates; // Show all candidates if no jobId specified
     }
-    return paginatedCandidates;
-  }, [paginatedCandidates, maxItems]);
+    
+    // Filter candidates who applied to this specific job
+    return paginatedCandidates.filter(candidate => 
+      candidate.job_id === jobId
+    );
+  }, [paginatedCandidates, jobId]);
 
-  // Fetch candidates effect
+  // Get candidates to display with jobId filtering
+  const candidatesToDisplay = useMemo(() => {
+    const candidatesSource = jobSpecificCandidates;
+    
+    if (maxItems && maxItems > 0) {
+      return candidatesSource.slice(0, maxItems);
+    }
+    return candidatesSource;
+  }, [jobSpecificCandidates, maxItems]);
+
+  // Fetch candidates effect - include jobId in filters if provided
   useEffect(() => {
-    if (userContext && !loading && candidatesToDisplay.length === 0 && !error) {
+    if (userContext && !loading) {
+      const fetchFilters = jobId 
+        ? { ...filters, jobId } // Include jobId filter if provided
+        : filters; // Use regular filters if no jobId
+        
       dispatch(
         fetchJobApplicationsWithAccess({
-          filters,
+          filters: fetchFilters,
           userContext: userContext,
         })
       );
     }
-  }, [userContext, loading, candidatesToDisplay.length, error, dispatch, filters]);
+  }, [userContext, loading, dispatch, filters, jobId]);
+
+  // Clear candidates when jobId changes
+  useEffect(() => {
+    if (jobId && userContext) {
+      // When switching between jobs, we want to refetch candidates for the new job
+      dispatch(
+        fetchJobApplicationsWithAccess({
+          filters: { ...filters, jobId },
+          userContext: userContext,
+        })
+      );
+    }
+  }, [jobId, dispatch, filters, userContext]);
 
   // Handlers
   const handleStatusUpdate = async (applicationId: string, status: string) => {
