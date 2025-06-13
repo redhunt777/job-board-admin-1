@@ -2,6 +2,7 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { useSearchParams, useRouter } from "next/navigation";
+import Image from "next/image";
 import {
   fetchJobById,
   deleteJob,
@@ -13,6 +14,7 @@ import {
   selectSelectedJob,
 } from "@/store/features/jobSlice";
 import CandidatesList from "@/components/candidates_list_component";
+import JobDescriptionRenderer from "@/components/JobDescriptionRenderer";
 import {
   CandidateWithApplication,
   UserContext,
@@ -368,68 +370,153 @@ export default function JobDetailsComponent() {
 
   return (
     <div className={containerClassName} data-testid="job-details-component">
-      <div className="max-w-7xl w-full mx-auto md:mt-4 mt-0 px-2 md:px-4 py-0 md:py-4">
-        <Breadcrumb jobTitle={jobMetadata.jobTitle} />
-        <TabNavigation activeStep={step} onStepChange={setStep} />
+      {/* Background with subtle gradient */}
+      <div className="bg-gradient-to-br from-slate-50 to-blue-50/30 min-h-screen -mt-4 pt-4">
+        <div className="max-w-7xl w-full mx-auto px-4 md:px-6 py-6">
+          <Breadcrumb jobTitle={jobMetadata.jobTitle} />
+          <TabNavigation activeStep={step} onStepChange={setStep} />
 
-        <div className="flex justify-center items-center w-full">
-          <div className="max-w-8xl w-full pb-20">
-            {step === 0 && (
-              <div data-testid="job-details-tab">
-                <JobHeader jobMetadata={jobMetadata} />
+          <div className="grid grid-cols-1 xl:grid-cols-4 gap-8">
+            {/* Main Content Area */}
+            <div className="xl:col-span-3 space-y-6">
+              {step === 0 && (
+                <div data-testid="job-details-tab" className="space-y-6">
+                  {/* Enhanced Job Header Card */}
+                  <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+                    <JobHeader jobMetadata={jobMetadata} />
+                    
+                    <div className="mt-6 pt-6 border-t border-gray-100">
+                      <JobInfoTags
+                        jobMetadata={jobMetadata}
+                        numberOfCandidates={numberOfCandidates}
+                        formatSalary={() => formattedSalary}
+                      />
+                    </div>
+                  </div>
 
-                <div className="flex flex-col lg:flex-row mb-6 justify-between items-start lg:items-end gap-6">
-                  <JobInfoTags
-                    jobMetadata={jobMetadata}
-                    numberOfCandidates={numberOfCandidates}
-                    formatSalary={() => formattedSalary}
+                  {/* Enhanced Job Description Card */}
+                  <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8" data-testid="job-description">
+                    <div className="flex items-center gap-3 mb-6">
+                      <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
+                        <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                      </div>
+                      <h2 className="text-2xl font-bold text-gray-900">
+                        Job Description
+                      </h2>
+                    </div>
+                    
+                    <div className="relative">
+                      {/* Subtle background pattern */}
+                      <div className="absolute top-0 left-0 w-full h-full opacity-[0.02] bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl"></div>
+                      <div className="relative bg-gradient-to-br from-gray-50/50 to-blue-50/30 rounded-xl p-6 border border-gray-100/50">
+                        <JobDescriptionRenderer content={jobMetadata.jobDescription} />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {step === 1 && (
+                <div data-testid="candidates-tab" className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+                  <CandidatesList onCandidateClick={handleCandidateClick} />
+                </div>
+              )}
+
+              {step === 2 && (
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 text-center">
+                  <div className="max-w-md mx-auto">
+                    <div className="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                      <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                    </div>
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">Settings Coming Soon</h3>
+                    <p className="text-gray-600">Job settings and configuration features are currently under development.</p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Enhanced Sidebar */}
+            <div className="xl:col-span-1 space-y-6">
+              {/* Action Card */}
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
+                <div className="space-y-3">
+                  <StatusDropdown
+                    status={jobMetadata.status}
+                    onChange={handleStatusChange}
+                    disabled={loading}
                   />
-
-                  <div className="flex flex-wrap gap-3">
-                    <StatusDropdown
-                      status={jobMetadata.status}
-                      onChange={handleStatusChange}
-                      disabled={loading}
-                    />
-                    <ActionButtons
-                      jobId={jobId || ""}
-                      loading={loading}
-                      onShare={handleShare}
-                      onDelete={() => setShowDeleteModal(true)}
-                    />
-                  </div>
+                  <ActionButtons
+                    jobId={jobId || ""}
+                    loading={loading}
+                    onShare={handleShare}
+                    onDelete={() => setShowDeleteModal(true)}
+                  />
                 </div>
+              </div>
 
-                <div className="my-6" data-testid="job-description">
-                  <h2 className="text-xl font-semibold text-neutral-900 mb-4">
-                    Job Description
-                  </h2>
-                  <div className="text-neutral-500 text-sm font-normal whitespace-pre-wrap">
-                    {jobMetadata.jobDescription ||
-                      "No job description provided."}
+              {/* Job Stats Card */}
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Job Statistics</h3>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-600">Total Applications</span>
+                    <span className="font-semibold text-gray-900">{numberOfCandidates}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-600">Status</span>
+                    <span className={`font-medium capitalize ${
+                      jobMetadata.status === 'active' ? 'text-green-600' : 
+                      jobMetadata.status === 'closed' ? 'text-red-600' : 'text-yellow-600'
+                    }`}>
+                      {jobMetadata.status}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-600">Job Type</span>
+                    <span className="font-medium text-gray-900">{jobMetadata.jobType || 'Not specified'}</span>
                   </div>
                 </div>
               </div>
-            )}
 
-            {step === 1 && (
-              <div data-testid="candidates-tab">
-                <CandidatesList onCandidateClick={handleCandidateClick} />
+              {/* Company Info Card */}
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Company Details</h3>
+                <div className="text-center">
+                  <div className="w-16 h-16 mx-auto mb-3 rounded-2xl overflow-hidden bg-gray-100">
+                    <Image
+                      src={jobMetadata.company_logo_url || "/demo.png"}
+                      alt={`${jobMetadata.companyName} logo`}
+                      width={64}
+                      height={64}
+                      className="w-full h-full object-cover"
+                                             onError={(e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+                         const target = e.target as HTMLImageElement;
+                         target.src = "/demo.png";
+                       }}
+                    />
+                  </div>
+                  <h4 className="font-semibold text-gray-900">{jobMetadata.companyName}</h4>
+                  <p className="text-sm text-gray-600 mt-1">{jobMetadata.jobLocation}</p>
+                </div>
               </div>
-            )}
-
-            {step === 2 && <>Setting Feature is under development.</>}
+            </div>
           </div>
-        </div>
 
-        <DeleteConfirmationModal
-          isOpen={showDeleteModal}
-          jobTitle={jobMetadata.jobTitle}
-          loading={loading}
-          error={error}
-          onConfirm={confirmDelete}
-          onCancel={() => setShowDeleteModal(false)}
-        />
+          <DeleteConfirmationModal
+            isOpen={showDeleteModal}
+            jobTitle={jobMetadata.jobTitle}
+            loading={loading}
+            error={error}
+            onConfirm={confirmDelete}
+            onCancel={() => setShowDeleteModal(false)}
+          />
+        </div>
       </div>
     </div>
   );

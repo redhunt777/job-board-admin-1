@@ -196,18 +196,19 @@ export const StatusDropdown: React.FC<{
   onChange: (status: JobStatus) => void;
   disabled: boolean;
 }> = ({ status, onChange, disabled }) => (
-  <div className="relative" data-testid="status-dropdown">
+  <div className="relative w-full" data-testid="status-dropdown">
+    <label className="block text-sm font-medium text-gray-700 mb-2">Job Status</label>
     <select
       value={status}
       onChange={(e) => onChange(e.target.value as JobStatus)}
       disabled={disabled}
-      className={`appearance-none text-sm font-medium px-3 py-2 rounded-lg focus:outline-none focus:ring-2 transition-colors pr-8 ${
+      className={`w-full appearance-none text-sm font-medium px-4 py-3 rounded-xl border-2 focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200 pr-10 ${
         status === "active"
-          ? "bg-green-100 text-green-700 focus:ring-green-500"
+          ? "bg-green-50 text-green-700 border-green-200 focus:ring-green-500"
           : status === "closed"
-          ? "bg-red-100 text-red-700 focus:ring-red-500"
-          : "bg-yellow-100 text-yellow-700 focus:ring-yellow-500"
-      } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
+          ? "bg-red-50 text-red-700 border-red-200 focus:ring-red-500"
+          : "bg-yellow-50 text-yellow-700 border-yellow-200 focus:ring-yellow-500"
+      } ${disabled ? "opacity-50 cursor-not-allowed" : "hover:shadow-md"}`}
     >
       {JOB_STATUSES.map((statusOption) => (
         <option key={statusOption} value={statusOption}>
@@ -215,7 +216,9 @@ export const StatusDropdown: React.FC<{
         </option>
       ))}
     </select>
-    <FaCaretDown className="absolute right-2 top-1/2 transform -translate-y-1/2 text-black pointer-events-none" />
+    <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none mt-7">
+      <FaCaretDown className="text-gray-400" />
+    </div>
   </div>
 );
 
@@ -226,10 +229,10 @@ export const ActionButtons: React.FC<{
   onShare: () => void;
   onDelete: () => void;
 }> = ({ jobId, loading, onShare, onDelete }) => (
-  <div className="flex flex-wrap gap-3" data-testid="action-buttons">
+  <div className="flex flex-col gap-3" data-testid="action-buttons">
     <Link
       href={`/jobs/edit?jobId=${jobId}`}
-      className="text-white text-sm font-normal bg-blue-600 hover:bg-blue-700 px-3 py-2 rounded-lg transition-colors flex items-center"
+      className="text-white text-sm font-medium bg-blue-600 hover:bg-blue-700 px-4 py-3 rounded-xl transition-all duration-200 flex items-center justify-center hover:shadow-md"
       data-testid="edit-job-button"
     >
       <FiEdit3 className="mr-2 h-4 w-4" />
@@ -238,7 +241,7 @@ export const ActionButtons: React.FC<{
 
     <button
       onClick={onShare}
-      className="text-neutral-700 text-sm font-normal bg-neutral-200 hover:bg-neutral-300 px-3 py-2 rounded-lg transition-colors flex items-center"
+      className="text-gray-700 text-sm font-medium bg-gray-100 hover:bg-gray-200 px-4 py-3 rounded-xl transition-all duration-200 flex items-center justify-center hover:shadow-md"
       type="button"
       data-testid="share-button"
     >
@@ -249,7 +252,7 @@ export const ActionButtons: React.FC<{
     <button
       onClick={onDelete}
       disabled={loading}
-      className="text-white text-sm font-medium bg-red-600 hover:bg-red-700 px-3 py-2 rounded-lg transition-colors flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
+      className="text-white text-sm font-medium bg-red-600 hover:bg-red-700 px-4 py-3 rounded-xl transition-all duration-200 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-md"
       type="button"
       data-testid="delete-button"
     >
@@ -334,29 +337,53 @@ export const DeleteConfirmationModal: React.FC<{
 export const JobHeader: React.FC<{ jobMetadata: JobMetadata }> = ({
   jobMetadata,
 }) => (
-  <div className="flex gap-8 mb-8 items-center" data-testid="job-header">
-    <Image
-      src={jobMetadata.company_logo_url || "/demo.png"}
-      alt={`${jobMetadata.companyName} logo`}
-      width={96}
-      height={96}
-      className="rounded-2xl object-cover"
-      onError={(e) => {
-        const target = e.target as HTMLImageElement;
-        target.src = "/demo.png";
-      }}
-      data-testid="company-logo"
-    />
-    <div className="flex-1">
-      <h1
-        className="text-2xl font-semibold text-neutral-900 mb-1"
-        data-testid="job-title"
-      >
-        {jobMetadata.jobTitle}
-      </h1>
-      <p className="text-neutral-500 text-lg" data-testid="company-name">
-        {jobMetadata.companyName}
-      </p>
+  <div className="flex gap-6 items-start" data-testid="job-header">
+    <div className="flex-shrink-0">
+      <div className="w-20 h-20 rounded-2xl overflow-hidden bg-gray-100 border-2 border-gray-200 shadow-sm">
+        <Image
+          src={jobMetadata.company_logo_url || "/demo.png"}
+          alt={`${jobMetadata.companyName} logo`}
+          width={80}
+          height={80}
+          className="w-full h-full object-cover"
+          onError={(e) => {
+            const target = e.target as HTMLImageElement;
+            target.src = "/demo.png";
+          }}
+          data-testid="company-logo"
+        />
+      </div>
+    </div>
+    <div className="flex-1 min-w-0">
+      <div className="flex items-start justify-between">
+        <div className="min-w-0 flex-1">
+          <h1
+            className="text-3xl font-bold text-gray-900 mb-2 leading-tight"
+            data-testid="job-title"
+          >
+            {jobMetadata.jobTitle}
+          </h1>
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+              <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H3m2 0h3M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-lg font-semibold text-gray-900" data-testid="company-name">
+                {jobMetadata.companyName}
+              </p>
+              <p className="text-sm text-gray-600">Hiring Company</p>
+            </div>
+          </div>
+        </div>
+        <div className="flex-shrink-0 ml-4">
+          <div className="text-right">
+            <p className="text-sm text-gray-600">Job ID</p>
+            <p className="font-mono text-sm text-gray-900">#{Math.random().toString(36).substr(2, 9).toUpperCase()}</p>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 );
@@ -367,42 +394,75 @@ export const JobInfoTags: React.FC<{
   numberOfCandidates: number;
   formatSalary: (min: string, max: string) => string;
 }> = ({ jobMetadata, numberOfCandidates, formatSalary }) => (
-  <div className="flex-1" data-testid="job-info-tags">
+  <div className="w-full" data-testid="job-info-tags">
     {/* Job Type Tags */}
-    <div className="flex flex-wrap gap-2 mb-4">
+    <div className="flex flex-wrap gap-3 mb-6">
       {jobMetadata.jobType && (
-        <span className="text-neutral-500 text-sm font-normal bg-neutral-200 px-3 py-2 rounded-lg">
+        <span className="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-blue-100 text-blue-800 border border-blue-200">
+          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0V6a2 2 0 012 2v6M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m-8 0V6a2 2 0 00-2 2v6" />
+          </svg>
           {jobMetadata.jobType}
         </span>
       )}
       {jobMetadata.jobLocationType && (
-        <span className="text-neutral-500 text-sm font-normal bg-neutral-200 px-3 py-2 rounded-lg">
+        <span className="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-green-100 text-green-800 border border-green-200">
+          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
           {jobMetadata.jobLocationType}
         </span>
       )}
       {jobMetadata.workingType && (
-        <span className="text-neutral-500 text-sm font-normal bg-neutral-200 px-3 py-2 rounded-lg">
+        <span className="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-purple-100 text-purple-800 border border-purple-200">
+          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
           {jobMetadata.workingType}
         </span>
       )}
     </div>
 
-    {/* Job Info */}
-    <div className="flex flex-wrap gap-2">
+    {/* Job Info Grid */}
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       {jobMetadata.jobLocation && (
-        <span className="text-neutral-500 text-sm font-normal bg-neutral-200 px-3 py-2 rounded-lg flex items-center">
-          <GrLocation className="text-blue-600 text-base mr-2" />
-          {jobMetadata.jobLocation}
-        </span>
+        <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+          <div className="flex items-center">
+            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
+              <GrLocation className="text-blue-600 text-lg" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">Location</p>
+              <p className="font-semibold text-gray-900">{jobMetadata.jobLocation}</p>
+            </div>
+          </div>
+        </div>
       )}
-      <span className="text-neutral-500 text-sm font-normal bg-neutral-200 px-3 py-2 rounded-lg flex items-center">
-        <LiaRupeeSignSolid className="text-blue-600 text-base mr-1" />
-        {formatSalary(jobMetadata.salary.min, jobMetadata.salary.max)}
-      </span>
-      <span className="text-neutral-500 text-sm font-normal bg-neutral-200 px-3 py-2 rounded-lg flex items-center">
-        <MdOutlinePeopleAlt className="text-blue-600 text-base mr-2" />
-        {numberOfCandidates} Applicant{numberOfCandidates !== 1 ? "s" : ""}
-      </span>
+      
+      <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+        <div className="flex items-center">
+          <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mr-3">
+            <LiaRupeeSignSolid className="text-green-600 text-xl" />
+          </div>
+          <div>
+            <p className="text-sm text-gray-600">Salary</p>
+            <p className="font-semibold text-gray-900">{formatSalary(jobMetadata.salary.min, jobMetadata.salary.max)}</p>
+          </div>
+        </div>
+      </div>
+      
+      <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+        <div className="flex items-center">
+          <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center mr-3">
+            <MdOutlinePeopleAlt className="text-purple-600 text-lg" />
+          </div>
+          <div>
+            <p className="text-sm text-gray-600">Applications</p>
+            <p className="font-semibold text-gray-900">{numberOfCandidates} Applicant{numberOfCandidates !== 1 ? "s" : ""}</p>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 );
