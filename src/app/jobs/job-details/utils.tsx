@@ -334,8 +334,9 @@ export const DeleteConfirmationModal: React.FC<{
 };
 
 // Job Header Component
-export const JobHeader: React.FC<{ jobMetadata: JobMetadata }> = ({
+export const JobHeader: React.FC<{ jobMetadata: JobMetadata; jobId?: string }> = ({
   jobMetadata,
+  jobId,
 }) => (
   <div className="flex gap-6 items-start" data-testid="job-header">
     <div className="flex-shrink-0">
@@ -380,7 +381,9 @@ export const JobHeader: React.FC<{ jobMetadata: JobMetadata }> = ({
         <div className="flex-shrink-0 ml-4">
           <div className="text-right">
             <p className="text-sm text-gray-600">Job ID</p>
-            <p className="font-mono text-sm text-gray-900">#{Math.random().toString(36).substr(2, 9).toUpperCase()}</p>
+            <p className="font-mono text-sm text-gray-900 truncate max-w-[120px]" title={jobId}>
+              {jobId ? `#${jobId.slice(-8).toUpperCase()}` : '#--------'}
+            </p>
           </div>
         </div>
       </div>

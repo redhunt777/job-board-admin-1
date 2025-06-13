@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { useSearchParams, useRouter } from "next/navigation";
 import Image from "next/image";
@@ -68,28 +68,13 @@ export default function JobDetailsComponent() {
 
   // Calculate number of candidates for this specific job
   const numberOfCandidates = useMemo(() => {
-    console.log('Candidate count debug:', {
-      jobId,
-      candidatesArray: candidates,
-      candidatesLength: candidates?.length,
-      candidatesLoading,
-      userContext: !!userContext
-    });
-    
     if (!jobId || !candidates || !Array.isArray(candidates)) {
       return 0;
     }
     
     const filteredCandidates = candidates.filter(candidate => candidate.job_id === jobId);
-    console.log('Filtered candidates:', {
-      jobId,
-      totalCandidates: candidates.length,
-      filteredCount: filteredCandidates.length,
-      candidateJobIds: candidates.map(c => c.job_id)
-    });
-    
     return filteredCandidates.length;
-  }, [jobId, candidates, candidatesLoading, userContext]);
+  }, [jobId, candidates]);
 
   // Helper function to safely get user role
   const getUserRole = useCallback(() => {
@@ -292,21 +277,11 @@ export default function JobDetailsComponent() {
   }, [memoizedUserContext, userContext, dispatch]);
 
   // Load candidates when user context is available
+  const shouldLoadCandidates = useRef(false);
+  
   useEffect(() => {
-    console.log('Candidates loading effect:', {
-      memoizedUserContext: !!memoizedUserContext,
-      userContext: !!userContext,
-      jobId,
-      candidatesLoading,
-      currentCandidatesCount: candidates?.length
-    });
-    
-    if (memoizedUserContext && jobId) {
-      console.log('Dispatching fetchJobApplicationsWithAccess:', {
-        jobId,
-        userContext: memoizedUserContext
-      });
-      
+    if (memoizedUserContext && jobId && !shouldLoadCandidates.current) {
+      shouldLoadCandidates.current = true;
       dispatch(
         fetchJobApplicationsWithAccess({
           filters: { jobId },
@@ -430,7 +405,7 @@ export default function JobDetailsComponent() {
                 <div data-testid="job-details-tab" className="space-y-6">
                   {/* Enhanced Job Header Card */}
                   <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
-                    <JobHeader jobMetadata={jobMetadata} />
+                    <JobHeader jobMetadata={jobMetadata} jobId={jobId || undefined} />
                     
                     <div className="mt-6 pt-6 border-t border-gray-100">
                       <JobInfoTags
@@ -534,16 +509,6 @@ export default function JobDetailsComponent() {
                   <div className="flex items-center justify-between">
                     <span className="text-gray-600">Job Type</span>
                     <span className="font-medium text-gray-900">{jobMetadata.jobType || 'Not specified'}</span>
-                  </div>
-                  
-                  {/* Debug info */}
-                  <div className="mt-4 p-3 bg-gray-50 rounded text-xs">
-                    <div><strong>Debug Info:</strong></div>
-                    <div>Job ID: {jobId}</div>
-                    <div>Candidates Loading: {candidatesLoading ? 'Yes' : 'No'}</div>
-                    <div>Total Candidates: {candidates?.length || 0}</div>
-                    <div>User Context: {userContext ? 'Ready' : 'Not ready'}</div>
-                    <div>Auth Ready: {isAuthReady ? 'Yes' : 'No'}</div>
                   </div>
                 </div>
               </div>
