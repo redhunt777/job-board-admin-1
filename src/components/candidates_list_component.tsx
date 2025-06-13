@@ -2,32 +2,27 @@
 
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
-import { CiFilter } from "react-icons/ci";
-import { HiDotsVertical } from "react-icons/hi";
-import { FiTrash } from "react-icons/fi";
-import { IoPersonCircleSharp } from "react-icons/io5";
-import FiltersModal from "@/components/filters-modal";
-import CandidatesDetailsOverlay from "@/components/candidates-details-overlay";
+import { CiFilter, CiLocationOn, CiMail, CiPhone } from "react-icons/ci";
+import { HiOutlineDownload, HiOutlineEye, HiOutlineBriefcase, HiOutlineAcademicCap } from "react-icons/hi";
+import { BsCurrencyDollar, BsCalendar3, BsPersonCheck } from "react-icons/bs";
+import Image from "next/image";
 import {
+  fetchJobApplicationsWithAccess,
   updateApplicationStatusWithAccess,
   setFilters,
   clearFilters,
   setSortBy,
-  selectFilteredCandidatesWithAccess,
-  selectPaginatedCandidatesWithAccess,
+  selectCandidates,
   selectCandidatesLoading,
   selectCandidatesError,
   selectFilters,
   selectSortBy,
-  selectPagination,
   selectUserContext,
-  // selectHasFullAccess,
-  // selectIsTAOnly,
-  setPagination,
+  selectPaginatedCandidatesWithAccess,
+  selectFilteredCandidatesWithAccess,
   CandidateWithApplication,
   CandidateFilters,
   SortOption,
-  fetchJobApplicationsWithAccess,
 } from "@/store/features/candidatesSlice";
 import { MdErrorOutline } from "react-icons/md";
 import { TiArrowSortedDown } from "react-icons/ti";
@@ -46,8 +41,8 @@ interface CandidatesListProps {
 // Loading component
 function LoadingSpinner() {
   return (
-    <div className="flex items-center justify-center py-12">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+    <div className="flex justify-center items-center py-12">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
     </div>
   );
 }
@@ -63,14 +58,16 @@ function ErrorMessage({
   return (
     <div className="flex flex-col items-center justify-center py-12 text-center">
       <div className="text-red-600 mb-4">
-        <MdErrorOutline className="w-12 h-12 mx-auto mb-2" />
-        <p className="text-lg font-semibold">Something went wrong</p>
-        <p className="text-sm text-neutral-600 mt-1">{message}</p>
+        <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
       </div>
+      <h3 className="text-lg font-semibold text-gray-900 mb-2">Something went wrong</h3>
+      <p className="text-gray-600 mb-4">{message}</p>
       {onRetry && (
         <button
           onClick={onRetry}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold"
+          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
         >
           Try Again
         </button>
@@ -81,327 +78,28 @@ function ErrorMessage({
 
 function StatusBadge({ status }: { status: string }) {
   const getStatusStyle = (status: string) => {
-    switch (status.toLowerCase()) {
-      case "accepted":
-        return "bg-green-100 text-green-700 border-green-200";
-      case "rejected":
-        return "bg-red-100 text-red-700 border-red-200";
-      case "pending":
-        return "bg-yellow-100 text-yellow-700 border-yellow-200";
+    switch (status?.toLowerCase()) {
+      case 'accepted':
+        return 'bg-green-100 text-green-800 border-green-200';
+      case 'rejected':
+        return 'bg-red-100 text-red-800 border-red-200';
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'on hold':
+        return 'bg-orange-100 text-orange-800 border-orange-200';
       default:
-        return "bg-neutral-100 text-neutral-700 border-neutral-200";
+        return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
 
   return (
-    <span
-      className={`px-3 py-1 rounded-full text-sm font-medium border ${getStatusStyle(
-        status
-      )}`}
-    >
-      {status.charAt(0).toUpperCase() + status.slice(1)}
+    <span className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusStyle(status)}`}>
+      {status?.charAt(0).toUpperCase() + status?.slice(1) || 'Unknown'}
     </span>
   );
 }
 
-function CandidateCard({
-  candidate,
-  onView,
-  onClick,
-}: {
-  candidate: CandidateWithApplication;
-  onView: (candidate: CandidateWithApplication) => void;
-  onClick?: (candidate: CandidateWithApplication) => void;
-}) {
-  const handleCardClick = () => {
-    if (onClick) {
-      onClick(candidate);
-    }
-  };
-
-  // Format salary display using correct field names from slice
-  const formatSalary = () => {
-    if (candidate.current_ctc && candidate.expected_ctc) {
-      return `Current: ₹${candidate.current_ctc}L | Expected: ₹${candidate.expected_ctc}L`;
-    } else if (candidate.expected_ctc) {
-      return `Expected: ₹${candidate.expected_ctc}L`;
-    } else if (candidate.current_ctc) {
-      return `Current: ₹${candidate.current_ctc}L`;
-    }
-    return "Not specified";
-  };
-
-  const [isOpen, setIsOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
-        setIsOpen(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
-
-  const handleToggleDropdown = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setIsOpen(!isOpen);
-  };
-
-  const handleDelete = () => {
-    // Add your delete logic here
-    console.log("Deleting candidate", candidate?.application_id);
-
-    // You can add confirmation dialog here if needed
-    const confirmDelete = window.confirm(
-      "Are you sure you want to delete this candidate?"
-    );
-    if (confirmDelete) {
-      // Perform actual delete operation
-      console.log("Candidate deleted!");
-    }
-
-    // Close dropdown after action
-    setIsOpen(false);
-  };
-
-  return (
-    <div
-      className={`bg-white rounded-2xl shadow-sm p-4 mb-4 hover:shadow-md transition-shadow ${
-        onClick ? "cursor-pointer" : ""
-      }`}
-      onClick={handleCardClick}
-    >
-      <div className="flex items-start gap-3">
-        <div className="w-16 h-16 rounded-full flex items-center justify-center flex-shrink-0">
-          <IoPersonCircleSharp className="w-16 h-16 text-neutral-400" />
-        </div>
-
-        <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between">
-            <div className="flex-1 min-w-0">
-              <h3 className="text-lg font-semibold text-neutral-900 truncate">
-                {candidate.name}
-              </h3>
-              <p className="text-neutral-600 text-sm truncate">
-                {candidate.candidate_email}
-              </p>
-              <p className="text-neutral-500 text-sm truncate">
-                {candidate.address || "Location not specified"}
-              </p>
-              <div className="mt-1 hidden sm:block">
-                <span className="text-sm text-neutral-600">Applied for: </span>
-                <span className="text-sm font-medium text-neutral-900">
-                  {candidate.job_title}
-                </span>
-                {candidate.company_name && (
-                  <span className="text-sm text-neutral-500">
-                    {" "}
-                    at {candidate.company_name}
-                  </span>
-                )}
-              </div>
-              <p className="text-xs text-neutral-500 hidden sm:block mt-1">
-                {formatSalary()}
-              </p>
-              {candidate.notice_period && (
-                <p className="text-xs text-neutral-500 hidden sm:block">
-                  Notice: {candidate.notice_period}
-                </p>
-              )}
-            </div>
-
-            <div className="flex flex-col items-end gap-2 ml-2">
-              <div
-                className="relative inline-block text-left"
-                ref={dropdownRef}
-              >
-                <button
-                  onClick={handleToggleDropdown}
-                  className="text-neutral-600 hover:text-neutral-800 p-1 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  aria-label="More options"
-                >
-                  <HiDotsVertical className="w-5 h-5" />
-                </button>
-
-                {isOpen && (
-                  <div className="absolute right-0 mt-2 w-28 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10">
-                    <ul className="py-1 text-sm text-neutral-700">
-                      <li>
-                        <button
-                          onClick={handleDelete}
-                          className="block px-4 py-2 w-full text-left hover:bg-neutral-100 hover:text-red-600 transition-colors duration-150"
-                        >
-                          <FiTrash className="inline mr-2" />
-                          Delete
-                        </button>
-                      </li>
-                    </ul>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="flex flex-wrap items-center gap-2 mt-3">
-        <StatusBadge status={candidate.application_status} />
-        <span className="text-neutral-400">•</span>
-        <span className="text-sm text-neutral-500">
-          Applied {new Date(candidate.applied_date).toLocaleDateString()}
-        </span>
-      </div>
-
-      {/* view details button */}
-      <div className="flex justify-end mt-4">
-        <button
-          onClick={(e) => {
-            e.stopPropagation(); // Prevent card click when clicking view button
-            onView(candidate);
-          }}
-          className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-lg transition-colors"
-        >
-          View
-        </button>
-      </div>
-    </div>
-  );
-}
-
-// Pagination component
-function Pagination() {
-  const dispatch = useAppDispatch();
-  const pagination = useAppSelector(selectPagination);
-  const filteredCandidates = useAppSelector(selectFilteredCandidatesWithAccess);
-
-  // Update total pages when filtered candidates change - moved before any conditional returns
-  useEffect(() => {
-    if (filteredCandidates && Array.isArray(filteredCandidates) && pagination) {
-      if (filteredCandidates.length >= 0) {
-        const totalPages = Math.max(
-          1,
-          Math.ceil(filteredCandidates.length / pagination.candidatesPerPage)
-        );
-        dispatch(
-          setPagination({
-            totalCandidates: filteredCandidates.length,
-            totalPages,
-            currentPage: Math.min(pagination.currentPage, totalPages),
-          })
-        );
-      }
-    }
-  }, [filteredCandidates, pagination?.candidatesPerPage, dispatch]);
-
-  // Early return if no data
-  if (
-    !filteredCandidates ||
-    !Array.isArray(filteredCandidates) ||
-    !pagination
-  ) {
-    return null;
-  }
-
-  const handlePageChange = (page: number) => {
-    if (page >= 1 && page <= pagination.totalPages) {
-      dispatch(setPagination({ currentPage: page }));
-    }
-  };
-
-  if (pagination.totalPages <= 1) return null;
-
-  const startRecord = Math.min(
-    (pagination.currentPage - 1) * pagination.candidatesPerPage + 1,
-    pagination.totalCandidates
-  );
-  const endRecord = Math.min(
-    pagination.currentPage * pagination.candidatesPerPage,
-    pagination.totalCandidates
-  );
-
-  return (
-    <div className="flex items-center justify-between px-4 py-3 bg-white border-t">
-      <div className="flex items-center text-sm text-neutral-700">
-        Showing {startRecord} to {endRecord} of {pagination.totalCandidates}{" "}
-        results
-      </div>
-
-      <div className="flex items-center gap-2">
-        <button
-          onClick={() => handlePageChange(pagination.currentPage - 1)}
-          disabled={pagination.currentPage <= 1}
-          className="px-3 py-1 border rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-neutral-50"
-        >
-          Previous
-        </button>
-
-        {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
-          const pageNum = i + 1;
-          return (
-            <button
-              key={pageNum}
-              onClick={() => handlePageChange(pageNum)}
-              className={`px-3 py-1 border rounded text-sm ${
-                pagination.currentPage === pageNum
-                  ? "bg-blue-600 text-white border-blue-600"
-                  : "hover:bg-neutral-50"
-              }`}
-            >
-              {pageNum}
-            </button>
-          );
-        })}
-
-        <button
-          onClick={() => handlePageChange(pagination.currentPage + 1)}
-          disabled={pagination.currentPage >= pagination.totalPages}
-          className="px-3 py-1 border rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-neutral-50"
-        >
-          Next
-        </button>
-      </div>
-    </div>
-  );
-}
-
-const tableHeaders = [
-  {
-    label: <input type="checkbox" className="rounded" />,
-    className: "px-4 py-3 text-left",
-  },
-  { label: "ID", className: "p-3 text-left font-semibold text-neutral-700" },
-  {
-    label: "Applied Date",
-    className: "p-3 text-left font-semibold text-neutral-700",
-  },
-  {
-    label: "Candidate Name",
-    className: "p-3 text-left font-semibold text-neutral-700",
-  },
-  { label: "Email", className: "p-3 text-left font-semibold text-neutral-700" },
-  {
-    label: "Location",
-    className: "p-3 text-left font-semibold text-neutral-700",
-  },
-  {
-    label: "Experience Req.",
-    className: "p-3 text-left font-semibold text-neutral-700",
-  },
-  {
-    label: "Status",
-    className: "p-3 text-left font-semibold text-neutral-700",
-  },
-  { label: "", className: "p-3 text-left font-semibold text-neutral-700" },
-];
+// Removed old card component and table headers as we're using table format now
 
 export default function CandidatesList({
   showHeader = true,
@@ -414,43 +112,20 @@ export default function CandidatesList({
 }: CandidatesListProps) {
   const dispatch = useAppDispatch();
 
-  // Redux selectors - using the new access-controlled selectors
-  const paginatedCandidates = useAppSelector(
-    selectPaginatedCandidatesWithAccess
-  );
+  // Redux selectors
+  const paginatedCandidates = useAppSelector(selectPaginatedCandidatesWithAccess);
   const filteredCandidates = useAppSelector(selectFilteredCandidatesWithAccess);
   const loading = useAppSelector(selectCandidatesLoading);
   const error = useAppSelector(selectCandidatesError);
   const filters = useAppSelector(selectFilters);
   const sortBy = useAppSelector(selectSortBy);
   const userContext = useAppSelector(selectUserContext);
-  // const hasFullAccess = useAppSelector(selectHasFullAccess);
-  // const isTAOnly = useAppSelector(selectIsTAOnly);
 
   // Local state
-  const [showFiltersModal, setShowFiltersModal] = useState(false);
-  const [candidatesDetailsOverlay, setCandidatesDetailsOverlay] = useState<{
-    candidate: CandidateWithApplication | null;
-    show: boolean;
-  }>({
-    candidate: null,
-    show: false,
-  });
+  const [selectedCandidate, setSelectedCandidate] = useState<CandidateWithApplication | null>(null);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
 
-  // Temporary filter states for modal
-  const [tempFilters, setTempFilters] = useState<CandidateFilters>(filters);
-  const [tempSortBy, setTempSortBy] = useState<SortOption>(sortBy);
-
-  // Update temp filters when actual filters change
-  useEffect(() => {
-    setTempFilters(filters);
-  }, [filters]);
-
-  useEffect(() => {
-    setTempSortBy(sortBy);
-  }, [sortBy]);
-
-  // Get candidates to display (with maxItems limit if specified)
+  // Get candidates to display
   const candidatesToDisplay = useMemo(() => {
     if (maxItems && maxItems > 0) {
       return paginatedCandidates.slice(0, maxItems);
@@ -458,105 +133,17 @@ export default function CandidatesList({
     return paginatedCandidates;
   }, [paginatedCandidates, maxItems]);
 
-  // Fetch candidates effect - moved before any conditional returns
+  // Fetch candidates effect
   useEffect(() => {
     if (userContext && !loading && candidatesToDisplay.length === 0 && !error) {
       dispatch(
         fetchJobApplicationsWithAccess({
-          filters: tempFilters,
+          filters,
           userContext: userContext,
         })
       );
     }
-  }, [
-    userContext,
-    loading,
-    candidatesToDisplay.length,
-    error,
-    dispatch,
-    tempFilters,
-  ]);
-
-  // Get unique filter options from candidates
-  const filterOptions = useMemo(() => {
-    const companies = Array.from(
-      new Set(
-        filteredCandidates
-          .map((c) => c.company_name)
-          .filter((value): value is string => Boolean(value))
-      )
-    );
-    const locations = Array.from(
-      new Set([
-        ...filteredCandidates
-          .map((c) => c.address)
-          .filter((value): value is string => Boolean(value)),
-        ...filteredCandidates
-          .map((c) => c.job_location)
-          .filter((value): value is string => Boolean(value)),
-      ])
-    );
-    const jobTitles = Array.from(
-      new Set(
-        filteredCandidates
-          .map((c) => c.job_title)
-          .filter((value): value is string => Boolean(value))
-      )
-    );
-
-    return [
-      {
-        id: "status",
-        label: "Application Status",
-        type: "radio" as const,
-        options: ["All", "pending", "accepted", "rejected"],
-        selected: [tempFilters.status],
-        onChange: (value: string) =>
-          setTempFilters({
-            ...tempFilters,
-            status: value as CandidateFilters["status"],
-          }),
-      },
-      {
-        id: "company",
-        label: "Company",
-        type: "checkbox" as const,
-        options: companies,
-        selected: tempFilters.company ? [tempFilters.company] : [],
-        onChange: (value: string) =>
-          setTempFilters({ ...tempFilters, company: value }),
-      },
-      {
-        id: "location",
-        label: "Location",
-        type: "checkbox" as const,
-        options: locations,
-        selected: tempFilters.location ? [tempFilters.location] : [],
-        onChange: (value: string) =>
-          setTempFilters({ ...tempFilters, location: value }),
-      },
-      {
-        id: "jobTitle",
-        label: "Job Title",
-        type: "checkbox" as const,
-        options: jobTitles,
-        selected: tempFilters.jobTitle ? [tempFilters.jobTitle] : [],
-        onChange: (value: string) =>
-          setTempFilters({ ...tempFilters, jobTitle: value }),
-      },
-      {
-        id: "experienceRange",
-        label: "Experience Range",
-        type: "radio" as const,
-        options: ["0-2", "3-5", "6-10", "10+"],
-        selected: tempFilters.experienceRange
-          ? [tempFilters.experienceRange]
-          : [],
-        onChange: (value: string) =>
-          setTempFilters({ ...tempFilters, experienceRange: value }),
-      },
-    ];
-  }, [filteredCandidates, tempFilters]);
+  }, [userContext, loading, candidatesToDisplay.length, error, dispatch, filters]);
 
   // Handlers
   const handleStatusUpdate = async (applicationId: string, status: string) => {
@@ -579,44 +166,42 @@ export default function CandidatesList({
   };
 
   const handleViewCandidate = (candidate: CandidateWithApplication) => {
-    setCandidatesDetailsOverlay({ candidate, show: true });
+    setSelectedCandidate(candidate);
+    setShowDetailsModal(true);
+    if (onCandidateClick) {
+      onCandidateClick(candidate);
+    }
   };
 
-  const applyFilters = () => {
-    dispatch(setFilters(tempFilters));
-    dispatch(setSortBy(tempSortBy));
-    setShowFiltersModal(false);
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
   };
 
-  const resetTempFilters = () => {
-    setTempFilters(filters);
-    setTempSortBy(sortBy);
+  const calculateExperience = (candidate: CandidateWithApplication) => {
+    if (!candidate.experience || candidate.experience.length === 0) return '0';
+    
+    let totalMonths = 0;
+    candidate.experience.forEach(exp => {
+      if (exp.start_date) {
+        const start = new Date(exp.start_date);
+        const end = exp.end_date ? new Date(exp.end_date) : new Date();
+        const months = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
+        totalMonths += months;
+      }
+    });
+    
+    const years = Math.floor(totalMonths / 12);
+    return years.toString();
   };
 
-  const clearAllFilters = () => {
-    dispatch(clearFilters());
-    const initialFilters: CandidateFilters = {
-      status: "All",
-      location: "",
-      jobTitle: "",
-      company: "",
-      experienceRange: "",
-      salaryMin: null,
-      salaryMax: null,
-      skills: "",
-      dateFrom: "",
-      dateTo: "",
-      gender: "",
-      disability: null,
-      noticePreriod: "",
-    };
-    setTempFilters(initialFilters);
-    setTempSortBy("date_desc");
-  };
-
-  // Fix unused event parameters
-  const handleSortChange = () => {
-    console.log("Sort changed");
+  const generateShortId = (applicationId: string) => {
+    // Generate a shorter, more readable ID from the application ID
+    const hash = applicationId.split('-').pop() || applicationId;
+    return hash.substring(0, 8);
   };
 
   // Handle error state
@@ -642,216 +227,96 @@ export default function CandidatesList({
       {/* Header */}
       {showHeader && (
         <div className="mb-6">
-          <h1 className="text-2xl font-semibold text-neutral-900">
-            All Candidates
-          </h1>
-          <p className="text-sm text-neutral-500 mt-2">
-            Manage all candidates and their applications with ease.
-          </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">All Candidates</h1>
+              <p className="text-gray-600 mt-1">
+                Manage all candidates and their applications with ease.
+              </p>
+            </div>
+            <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              Add Job
+            </button>
+          </div>
         </div>
       )}
 
-      {/* Controls */}
+      {/* Filters and Sorting */}
       {(showSorting || showFilters) && (
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-          <div className="flex items-center gap-2">
+          {/* Left side - Sorting */}
+          <div className="flex items-center gap-4">
             {showSorting && (
-              <>
+              <div className="flex items-center gap-2">
                 <div className="relative">
                   <select
                     value={sortBy}
-                    onChange={(e) =>
-                      dispatch(setSortBy(e.target.value as SortOption))
-                    }
-                    className="
-                      w-full md:min-w-36 
-                      min-w-16
-                      bg-blue-600 text-white md:text-sm
-                      text-xs
-                      border border-neutral-300 rounded-full
-                      px-4 py-2 md:pr-10
-                      focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-transparent
-                      hover:bg-blue-700 transition-colors duration-200
-                      cursor-pointer appearance-none
-                    "
-                    aria-label="Sort options"
-                    name="sortBy"
-                    id="sortBy"
+                    onChange={(e) => dispatch(setSortBy(e.target.value as SortOption))}
+                    className="bg-blue-600 text-white text-sm border border-blue-600 rounded-full px-4 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-300 hover:bg-blue-700 transition-colors cursor-pointer appearance-none"
                   >
-                    <option
-                      value="date_desc"
-                      className="bg-white text-neutral-900"
-                    >
-                      Newest First
-                    </option>
-                    <option
-                      value="date_asc"
-                      className="bg-white text-neutral-900"
-                    >
-                      Oldest First
-                    </option>
-                    <option
-                      value="name_asc"
-                      className="bg-white text-neutral-900"
-                    >
-                      Name A-Z
-                    </option>
-                    <option
-                      value="name_desc"
-                      className="bg-white text-neutral-900"
-                    >
-                      Name Z-A
-                    </option>
-                    <option
-                      value="salary_desc"
-                      className="bg-white text-neutral-900"
-                    >
-                      Highest Salary
-                    </option>
-                    <option
-                      value="salary_asc"
-                      className="bg-white text-neutral-900"
-                    >
-                      Lowest Salary
-                    </option>
+                    <option value="date_desc" className="bg-white text-gray-900">Newest First</option>
+                    <option value="date_asc" className="bg-white text-gray-900">Oldest First</option>
+                    <option value="name_asc" className="bg-white text-gray-900">Name (A-Z)</option>
+                    <option value="name_desc" className="bg-white text-gray-900">Name (Z-A)</option>
                   </select>
-
-                  {/* Custom dropdown arrow */}
-                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                    <TiArrowSortedDown className="text-white text-lg" />
-                  </div>
+                  <TiArrowSortedDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white pointer-events-none" />
                 </div>
+                
                 <div className="relative">
                   <select
-                    value={sortBy}
-                    onChange={handleSortChange}
-                    className="
-                      w-full min-w-[110px] 
-                      md:min-w-[130px]
-                      bg-transparent text-neutral-500 text-xs md:text-sm
-                      border border-neutral-500 rounded-full
-                      px-4 py-2
-                      focus:outline-none focus:ring-2 focus:ring-neutral-600 focus:border-transparent
-                      transition-colors duration-200
-                      cursor-pointer appearance-none
-                    "
-                    aria-label="Sort options"
+                    value={filters.status}
+                    onChange={(e) => dispatch(setFilters({ ...filters, status: e.target.value as any }))}
+                    className="bg-transparent text-gray-600 text-sm border border-gray-300 rounded-full px-4 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-300 hover:border-gray-400 transition-colors cursor-pointer appearance-none"
                   >
-                    <option value="">App. Status</option>
-                    <option
-                      value="accepted"
-                      className="bg-white text-neutral-900"
-                    >
-                      Accepted
-                    </option>
-                    <option
-                      value="pending"
-                      className="bg-white text-neutral-900"
-                    >
-                      Pending
-                    </option>
-                    <option
-                      value="rejected"
-                      className="bg-white text-neutral-900"
-                    >
-                      Rejected
-                    </option>
+                    <option value="All">App. Status</option>
+                    <option value="accepted">Accepted</option>
+                    <option value="pending">Pending</option>
+                    <option value="rejected">Rejected</option>
+                    <option value="on hold">On Hold</option>
                   </select>
-
-                  {/* Custom dropdown arrow */}
-                  <div className="absolute right-2 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                    <TiArrowSortedDown className="text-neutral-500 text-lg" />
-                  </div>
+                  <TiArrowSortedDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" />
                 </div>
-              </>
+              </div>
             )}
           </div>
-          <div className="flex items-center justify-center gap-2">
-            <div className="border-r border-neutral-400 pr-2 hidden md:flex gap-2">
-              <div className="relative">
-                <select
-                  value={sortBy}
-                  onChange={handleSortChange}
-                  className="
-                    w-full min-w-[130px] 
-                    bg-transparent text-neutral-500 text-sm
-                    border border-neutral-500 rounded-full
-                    px-4 py-2
-                    focus:outline-none focus:ring-2 focus:ring-neutral-600 focus:border-transparent
-                    transition-colors duration-200
-                    cursor-pointer appearance-none
-                  "
-                  aria-label="Sort options"
-                >
-                  <option value="">Years of Exp.</option>
-                  <option
-                    value="accepted"
-                    className="bg-white text-neutral-900"
-                  >
-                    0-2
-                  </option>
-                  <option value="pending" className="bg-white text-neutral-900">
-                    3-5
-                  </option>
-                  <option
-                    value="rejected"
-                    className="bg-white text-neutral-900"
-                  >
-                    5+
-                  </option>
-                </select>
 
-                {/* Custom dropdown arrow */}
-                <div className="absolute right-2 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                  <TiArrowSortedDown className="text-neutral-500 text-lg" />
-                </div>
-              </div>
+          {/* Right side - Additional filters */}
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
               <div className="relative">
                 <select
-                  value={sortBy}
-                  onChange={handleSortChange}
-                  className="
-                    w-full min-w-[130px] 
-                    bg-transparent text-neutral-500 text-sm
-                    border border-neutral-500 rounded-full
-                    px-4 py-2
-                    focus:outline-none focus:ring-2 focus:ring-neutral-600 focus:border-transparent
-                    transition-colors duration-200
-                    cursor-pointer appearance-none
-                  "
-                  aria-label="Sort options"
+                  className="bg-transparent text-gray-600 text-sm border border-gray-300 rounded-full px-4 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-300 hover:border-gray-400 transition-colors cursor-pointer appearance-none"
+                >
+                  <option>Years of Exp.</option>
+                  <option>0-2</option>
+                  <option>3-5</option>
+                  <option>5+</option>
+                </select>
+                <TiArrowSortedDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" />
+              </div>
+              
+              <div className="relative">
+                <select
+                  value={filters.company ?? ""}
+                  onChange={(e) => dispatch(setFilters({ ...filters, company: e.target.value }))}
+                  className="bg-transparent text-gray-600 text-sm border border-gray-300 rounded-full px-4 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-300 hover:border-gray-400 transition-colors cursor-pointer appearance-none"
                 >
                   <option value="">Company</option>
-                  <option
-                    value="accepted"
-                    className="bg-white text-neutral-900"
-                  >
-                    Facebook
-                  </option>
-                  <option value="pending" className="bg-white text-neutral-900">
-                    Microsoft
-                  </option>
-                  <option
-                    value="rejected"
-                    className="bg-white text-neutral-900"
-                  >
-                    Others
-                  </option>
+                  {Array.from(new Set(filteredCandidates.map(c => c.company_name).filter(Boolean))).map(company => (
+                    <option key={company} value={company}>{company}</option>
+                  ))}
                 </select>
-
-                {/* Custom dropdown arrow */}
-                <div className="absolute right-2 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                  <TiArrowSortedDown className="text-neutral-500 text-lg" />
-                </div>
+                <TiArrowSortedDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" />
               </div>
             </div>
+
             {showFilters && (
-              <button
-                className="flex items-center gap-2 px-4 py-2 bg-neutral-200 hover:bg-neutral-50 rounded-full border border-neutral-300 font-normal text-sm text-neutral-500 cursor-pointer transition-colors"
-                onClick={() => setShowFiltersModal(true)}
-              >
-                <CiFilter className="w-5 h-5" />
-                <span>All Filters</span>
+              <button className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-full border border-gray-300 text-sm text-gray-600 transition-colors">
+                <CiFilter className="w-4 h-4" />
+                All Filters
               </button>
             )}
           </div>
@@ -861,122 +326,94 @@ export default function CandidatesList({
       {/* Loading State */}
       {loading && <LoadingSpinner />}
 
-      {/* Filters Modal */}
-      {showFilters && (
-        <FiltersModal
-          show={showFiltersModal}
-          onClose={() => {
-            resetTempFilters();
-            setShowFiltersModal(false);
-          }}
-          sortBy={tempSortBy}
-          setSortBy={(value: string) => setTempSortBy(value as SortOption)}
-          filterOptions={filterOptions}
-          onClearAll={clearAllFilters}
-          onApply={applyFilters}
-        />
-      )}
-
-      {/* Content */}
+      {/* Table */}
       {!loading && (
-        <>
-          {/* Mobile Cards */}
-          <div className="block md:hidden space-y-4">
-            {candidatesToDisplay.length === 0 ? (
-              <div className="text-center py-12">
-                <p className="text-neutral-500 text-lg">No candidates found</p>
-                <p className="text-neutral-400 text-sm mt-1">
-                  Try adjusting your filters
-                </p>
-              </div>
-            ) : (
-              candidatesToDisplay.map((candidate) => (
-                <CandidateCard
-                  key={candidate.application_id}
-                  candidate={candidate}
-                  onView={handleViewCandidate}
-                  onClick={onCandidateClick}
-                />
-              ))
-            )}
-          </div>
-
-          {/* Desktop Table */}
-          <div className="hidden md:block overflow-x-auto bg-white rounded-2xl shadow-sm">
-            <table className="min-w-full divide-y divide-neutral-200">
-              <thead className="bg-neutral-100">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
                 <tr>
-                  {tableHeaders.map((header, idx) => (
-                    <th key={idx} className={header.className}>
-                      {header.label}
-                    </th>
-                  ))}
+                  <th className="px-6 py-3 text-left">
+                    <input type="checkbox" className="rounded border-gray-300" />
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    ID
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Applied Date
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Candidate Name
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Job
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Company
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Location
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Years of Exp.
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    App. Status
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Action
+                  </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-neutral-100">
+              <tbody className="bg-white divide-y divide-gray-200">
                 {candidatesToDisplay.length === 0 ? (
                   <tr>
-                    <td
-                      colSpan={tableHeaders.length}
-                      className="px-4 py-12 text-center"
-                    >
-                      <p className="text-neutral-500 text-lg">
-                        No candidates found
-                      </p>
-                      <p className="text-neutral-400 text-sm mt-1">
-                        Try adjusting your filters
-                      </p>
+                    <td colSpan={10} className="px-6 py-12 text-center">
+                      <div className="text-gray-500">
+                        <p className="text-lg font-medium">No candidates found</p>
+                        <p className="text-sm mt-1">Try adjusting your filters to see more results.</p>
+                      </div>
                     </td>
                   </tr>
                 ) : (
                   candidatesToDisplay.map((candidate) => (
-                    <tr
-                      key={candidate.application_id}
-                      className={`hover:bg-neutral-50 ${
-                        onCandidateClick ? "cursor-pointer" : ""
-                      }`}
-                      onClick={() =>
-                        onCandidateClick && onCandidateClick(candidate)
-                      }
-                    >
-                      <td className="px-4 py-4">
-                        <input
-                          type="checkbox"
-                          className="rounded accent-blue-600"
+                    <tr key={candidate.application_id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <input 
+                          type="checkbox" 
+                          className="rounded border-gray-300"
                           onClick={(e) => e.stopPropagation()}
                         />
                       </td>
-                      <td className="px-3 py-4 text-neutral-900">
-                        {candidate.application_id}
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {generateShortId(candidate.application_id)}
                       </td>
-                      <td className="px-3 py-4 text-neutral-900">
-                        {new Date(candidate.applied_date).toLocaleDateString()}
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {formatDate(candidate.applied_date)}
                       </td>
-                      <td className="px-3 py-4 text-neutral-900">
-                        {candidate.name}
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">{candidate.name}</div>
+                        <div className="text-sm text-gray-500">{candidate.candidate_email}</div>
                       </td>
-                      <td className="px-3 py-4 text-neutral-900">
-                        {candidate.candidate_email}
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {candidate.job_title}
                       </td>
-                      <td className="px-3 py-4 text-neutral-900">
-                        {candidate.job_location || "—"}
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {candidate.company_name || '—'}
                       </td>
-                      <td className="px-3 py-4 text-neutral-900">
-                        {candidate.min_experience_needed &&
-                        candidate.max_experience_needed
-                          ? `${candidate.min_experience_needed}-${candidate.max_experience_needed} years`
-                          : "—"}
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {candidate.address || candidate.job_location || '—'}
                       </td>
-                      <td className="px-3 py-4">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {calculateExperience(candidate)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
                         <StatusBadge status={candidate.application_status} />
                       </td>
-                      <td className="px-3 py-4">
+                      <td className="px-6 py-4 whitespace-nowrap">
                         <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleViewCandidate(candidate);
-                          }}
-                          className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-lg transition-colors cursor-pointer"
+                          onClick={() => handleViewCandidate(candidate)}
+                          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
                         >
                           View
                         </button>
@@ -986,20 +423,8 @@ export default function CandidatesList({
                 )}
               </tbody>
             </table>
-
-            {/* Pagination */}
-            {showPagination && !maxItems && <Pagination />}
           </div>
-        </>
-      )}
-
-      {/* Candidate Details Overlay */}
-      {candidatesDetailsOverlay.show && candidatesDetailsOverlay.candidate && (
-        <CandidatesDetailsOverlay
-          candidatesDetailsOverlay={candidatesDetailsOverlay}
-          setCandidatesDetailsOverlay={setCandidatesDetailsOverlay}
-          onStatusUpdate={handleStatusUpdate}
-        />
+        </div>
       )}
     </div>
   );
