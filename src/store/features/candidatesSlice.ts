@@ -117,7 +117,7 @@ export const fetchJobApplicationsWithAccess = createAsyncThunk(
       filters = {},
       userContext,
     }: {
-      filters?: Partial<CandidateFilters>;
+      filters?: Partial<CandidateFilters> & { jobId?: string };
       userContext: UserContext;
     },
     { rejectWithValue }
@@ -533,6 +533,7 @@ const initialState: CandidatesState = {
     gender: "",
     disability: null,
     noticePreriod: "",
+    jobId: undefined,
   },
   sortBy: "date_desc",
   pagination: {
@@ -615,7 +616,10 @@ const candidatesSlice = createSlice({
     },
 
     clearFilters: (state) => {
-      state.filters = initialState.filters;
+      state.filters = {
+        ...initialState.filters,
+        jobId: undefined,
+      };
       state.pagination.currentPage = 1;
     },
 
