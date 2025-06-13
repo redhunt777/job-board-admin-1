@@ -12,6 +12,7 @@ import {
   selectJobsError,
   clearError,
   selectSelectedJob,
+  clearSelectedJob,
 } from "@/store/features/jobSlice";
 import CandidatesList from "@/components/candidates_list_component";
 import JobDescriptionRenderer from "@/components/JobDescriptionRenderer";
@@ -91,7 +92,12 @@ export default function JobDetailsComponent() {
 
   const currentJob = useMemo(() => {
     if (!jobId) return null;
-    return selectedJob || jobs.find((job) => job.id === jobId);
+    // First check if selectedJob matches current jobId
+    if (selectedJob && selectedJob.id === jobId) {
+      return selectedJob;
+    }
+    // Otherwise, find from jobs array
+    return jobs.find((job) => job.id === jobId) || null;
   }, [jobId, jobs, selectedJob]);
 
   const memoizedUserContext = useMemo((): UserContext | null => {
@@ -306,6 +312,13 @@ export default function JobDetailsComponent() {
       }
     };
   }, [error, dispatch]);
+
+  // Clear selected job when jobId changes
+  useEffect(() => {
+    if (jobId && selectedJob && selectedJob.id !== jobId) {
+      dispatch(clearSelectedJob());
+    }
+  }, [jobId, selectedJob, dispatch]);
 
   const containerClassName = useMemo(() => {
     return `transition-all duration-300 min-h-full md:pb-0 px-0 ${
