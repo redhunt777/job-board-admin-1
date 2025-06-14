@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useMemo, useEffect } from "react";
+import { useMemo, useEffect, useRef } from "react";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { CiFilter } from "react-icons/ci";
+import { useRouter } from "next/navigation";
 // import { CiLocationOn, CiMail, CiPhone } from "react-icons/ci";
 // import { HiOutlineDownload, HiOutlineEye, HiOutlineBriefcase, HiOutlineAcademicCap } from "react-icons/hi";
 // import { BsCurrencyDollar, BsCalendar3, BsPersonCheck } from "react-icons/bs";
@@ -19,7 +20,7 @@ import {
   selectFilters,
   selectSortBy,
   selectUserContext,
-  selectPaginatedCandidatesWithAccess,
+  // selectPaginatedCandidatesWithAccess,
   selectFilteredCandidatesWithAccess,
   CandidateWithApplication,
   // CandidateFilters,
@@ -27,6 +28,7 @@ import {
 } from "@/store/features/candidatesSlice";
 // import { MdErrorOutline } from "react-icons/md";
 import { TiArrowSortedDown } from "react-icons/ti";
+import GlobalStickyTable from "@/components/GlobalStickyTable";
 
 // Types for component props
 interface CandidatesListProps {
@@ -36,6 +38,7 @@ interface CandidatesListProps {
   showSorting?: boolean;
   maxItems?: number;
   className?: string;
+  jobId?: string | null;
   onCandidateClick?: (candidate: CandidateWithApplication) => void;
 }
 
@@ -116,8 +119,6 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-// Removed old card component and table headers as we're using table format now
-
 export default function CandidatesList({
   showHeader = true,
   showFilters = true,
@@ -125,14 +126,16 @@ export default function CandidatesList({
   showSorting = true,
   maxItems,
   className = "",
+  jobId,
   onCandidateClick,
 }: CandidatesListProps) {
   const dispatch = useAppDispatch();
+  const router = useRouter();
 
   // Redux selectors
-  const paginatedCandidates = useAppSelector(
-    selectPaginatedCandidatesWithAccess
-  );
+  // const paginatedCandidates = useAppSelector(
+  //   selectPaginatedCandidatesWithAccess
+  // );
   const filteredCandidates = useAppSelector(selectFilteredCandidatesWithAccess);
   const loading = useAppSelector(selectCandidatesLoading);
   const error = useAppSelector(selectCandidatesError);
@@ -144,17 +147,30 @@ export default function CandidatesList({
   // const [selectedCandidate, setSelectedCandidate] = useState<CandidateWithApplication | null>(null);
   // const [showDetailsModal, setShowDetailsModal] = useState(false);
 
-  // Get candidates to display
+  // Get candidates to display with jobId filtering
   const candidatesToDisplay = useMemo(() => {
-    if (maxItems && maxItems > 0) {
-      return paginatedCandidates.slice(0, maxItems);
+    let candidatesSource = filteredCandidates;
+    if (jobId) {
+      candidatesSource = candidatesSource.filter(c => c.job_id === jobId);
     }
-    return paginatedCandidates;
-  }, [paginatedCandidates, maxItems]);
+    if (maxItems && maxItems > 0) {
+      return candidatesSource.slice(0, maxItems);
+    }
+    return candidatesSource;
+  }, [filteredCandidates, jobId, maxItems]);
 
-  // Fetch candidates effect
+  // Prevent infinite fetch loop
+  const hasFetched = useRef(false);
+
   useEffect(() => {
-    if (userContext && !loading && candidatesToDisplay.length === 0 && !error) {
+    if (
+      userContext &&
+      !loading &&
+      !hasFetched.current &&
+      candidatesToDisplay.length === 0 &&
+      !error
+    ) {
+      hasFetched.current = true;
       dispatch(
         fetchJobApplicationsWithAccess({
           filters,
@@ -162,14 +178,7 @@ export default function CandidatesList({
         })
       );
     }
-  }, [
-    userContext,
-    loading,
-    candidatesToDisplay.length,
-    error,
-    dispatch,
-    filters,
-  ]);
+  }, [userContext, loading, candidatesToDisplay.length, error, dispatch, filters]);
 
   // Handlers
   // const handleStatusUpdate = async (applicationId: string, status: string) => {
@@ -192,8 +201,10 @@ export default function CandidatesList({
   // };
 
   const handleViewCandidate = (candidate: CandidateWithApplication) => {
-    // setSelectedCandidate(candidate);
-    // setShowDetailsModal(true);
+    // Extract a shorter ID from the application_id for cleaner URLs
+    const shortId = generateShortId(candidate.application_id);
+    router.push(`/candidates/${shortId}`);
+    
     if (onCandidateClick) {
       onCandidateClick(candidate);
     }
@@ -231,6 +242,105 @@ export default function CandidatesList({
     const hash = applicationId.split("-").pop() || applicationId;
     return hash.substring(0, 8);
   };
+
+  // Table columns for GlobalStickyTable
+  const columns = [
+    {
+      key: "checkbox",
+      header: (
+        <input type="checkbox" className="rounded border-gray-300" />
+      ),
+      width: "48px",
+      render: (candidate: CandidateWithApplication) => (
+        <input
+          type="checkbox"
+          className="rounded border-gray-300"
+          onClick={(e) => e.stopPropagation()}
+          aria-label={`Select ${candidate.name}`}
+        />
+      ),
+    },
+    {
+      key: "id",
+      header: "ID",
+      render: (candidate: CandidateWithApplication) => (
+        <span className="text-sm font-medium text-gray-900">
+          {generateShortId(candidate.application_id)}
+        </span>
+      ),
+    },
+    {
+      key: "applied_date",
+      header: "Applied Date",
+      render: (candidate: CandidateWithApplication) => (
+        <span className="text-sm text-gray-900">
+          {formatDate(candidate.applied_date)}
+        </span>
+      ),
+    },
+    {
+      key: "candidate_name",
+      header: "Candidate Name",
+      render: (candidate: CandidateWithApplication) => (
+        <div>
+          <div className="text-sm font-medium text-gray-900">{candidate.name}</div>
+          <div className="text-sm text-gray-500">{candidate.candidate_email}</div>
+        </div>
+      ),
+    },
+    {
+      key: "job_title",
+      header: "Job",
+      render: (candidate: CandidateWithApplication) => (
+        <span className="text-sm text-gray-900">{candidate.job_title}</span>
+      ),
+    },
+    {
+      key: "company_name",
+      header: "Company",
+      render: (candidate: CandidateWithApplication) => (
+        <span className="text-sm text-gray-900">{candidate.company_name || "—"}</span>
+      ),
+    },
+    {
+      key: "location",
+      header: "Location",
+      render: (candidate: CandidateWithApplication) => (
+        <span className="text-sm text-gray-900">{candidate.address || candidate.job_location || "—"}</span>
+      ),
+    },
+    {
+      key: "years_of_exp",
+      header: "Years of Exp.",
+      render: (candidate: CandidateWithApplication) => (
+        <span className="text-sm text-gray-900">{calculateExperience(candidate)}</span>
+      ),
+    },
+    {
+      key: "app_status",
+      header: "App. Status",
+      width: "140px",
+      className: "text-center",
+      render: (candidate: CandidateWithApplication) => (
+        <div className="flex justify-center">
+          <StatusBadge status={candidate.application_status} />
+        </div>
+      ),
+    },
+    {
+      key: "action",
+      header: "Action",
+      width: "120px",
+      render: (candidate: CandidateWithApplication) => (
+        <button
+          onClick={() => handleViewCandidate(candidate)}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+        >
+          View
+        </button>
+      ),
+    },
+  ];
 
   // Handle error state
   if (error) {
@@ -406,117 +516,12 @@ export default function CandidatesList({
 
       {/* Table */}
       {!loading && (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left">
-                    <input
-                      type="checkbox"
-                      className="rounded border-gray-300"
-                    />
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    ID
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Applied Date
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Candidate Name
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Job
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Company
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Location
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Years of Exp.
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    App. Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Action
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {candidatesToDisplay.length === 0 ? (
-                  <tr>
-                    <td colSpan={10} className="px-6 py-12 text-center">
-                      <div className="text-gray-500">
-                        <p className="text-lg font-medium">
-                          No candidates found
-                        </p>
-                        <p className="text-sm mt-1">
-                          Try adjusting your filters to see more results.
-                        </p>
-                      </div>
-                    </td>
-                  </tr>
-                ) : (
-                  candidatesToDisplay.map((candidate) => (
-                    <tr
-                      key={candidate.application_id}
-                      className="hover:bg-gray-50"
-                    >
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <input
-                          type="checkbox"
-                          className="rounded border-gray-300"
-                          onClick={(e) => e.stopPropagation()}
-                        />
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {generateShortId(candidate.application_id)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {formatDate(candidate.applied_date)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">
-                          {candidate.name}
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          {candidate.candidate_email}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {candidate.job_title}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {candidate.company_name || "—"}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {candidate.address || candidate.job_location || "—"}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {calculateExperience(candidate)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <StatusBadge status={candidate.application_status} />
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <button
-                          onClick={() => handleViewCandidate(candidate)}
-                          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                        >
-                          View
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <GlobalStickyTable
+          columns={columns}
+          data={candidatesToDisplay}
+          stickyFirst
+          stickyLastTwo
+        />
       )}
     </div>
   );

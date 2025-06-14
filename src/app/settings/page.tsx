@@ -1,18 +1,21 @@
 "use client";
 import Link from "next/link";
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect, useRef } from "react";
 import { HiOutlineArrowCircleLeft } from "react-icons/hi";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { FaPlus, FaRegEdit, FaCaretDown, FaCheck } from "react-icons/fa";
 import { Overlay } from "@/components/settings-overlay";
+import GlobalStickyTable from "@/components/GlobalStickyTable";
 import {
   fetchOrgMembers,
   addMemberRole,
+  updateMemberRole,
   selectMembers,
   selectOrganisationLoading,
   selectOrganisationError,
-  clearError
-} from "@/store/features/organisationSlice";
+  clearError,
+}
+from "@/store/features/organisationSlice";
 import { initializeAuth } from "@/store/features/userSlice";
 import { RootState } from "@/store/store";
 
@@ -50,6 +53,10 @@ export default function Settings() {
   const isLoading = useAppSelector((state: RootState) => state.user.loading);
   const userError = useAppSelector((state: RootState) => state.user.error);
 
+  // Ref to track if auth initialization has been attempted
+  const authInitialized = useRef(false);
+  const mountedRef = useRef(true);
+
   // Local state
   const [step, setStep] = useState(0);
   const [editingMember, setEditingMember] = useState<TeamMember | null>(null);
@@ -65,26 +72,58 @@ export default function Settings() {
     otherNotifications: true,
   });
 
-  // Initialize auth if needed
+  // Cleanup on unmount
   useEffect(() => {
-    if (!currentUser && !isLoading) {
-      console.log("User not found, initializing auth...");
-      dispatch(initializeAuth());
-    }
-  }, [currentUser, isLoading, dispatch]);
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
 
-  // Fetch organization members on component mount
+  // Initialize auth only once and only if user is truly not authenticated
   useEffect(() => {
-    if (currentOrgId) {
+    // Don't initialize if:
+    // 1. Already initialized
+    // 2. Currently loading
+    // 3. User exists (authenticated)
+    // 4. There's a user error (indicates logout or auth failure)
+    // 5. Component is unmounted
+    if (
+      authInitialized.current || 
+      isLoading || 
+      currentUser || 
+      userError ||
+      !mountedRef.current
+    ) {
+      return;
+    }
+
+    console.log("Initializing auth for the first time...");
+    authInitialized.current = true;
+    dispatch(initializeAuth());
+  }, []); // Empty dependency array - only run once on mount
+
+  // Reset auth initialization flag when user logs out
+  useEffect(() => {
+    if (userError && authInitialized.current) {
+      console.log("User error detected, resetting auth initialization flag");
+      authInitialized.current = false;
+    }
+  }, [userError]);
+
+  // Fetch organization members when we have a valid org ID
+  useEffect(() => {
+    if (currentOrgId && currentUser) {
       dispatch(fetchOrgMembers(currentOrgId));
     }
-  }, [dispatch, currentOrgId]);
+  }, [dispatch, currentOrgId, currentUser]);
 
   // Clear error after timeout
   useEffect(() => {
     if (error) {
       const timer = setTimeout(() => {
-        dispatch(clearError());
+        if (mountedRef.current) {
+          dispatch(clearError());
+        }
       }, 5000);
       return () => clearTimeout(timer);
     }
@@ -130,11 +169,10 @@ export default function Settings() {
             assigned_by: currentUser.id
           });
 
-          await dispatch(addMemberRole({
+          await dispatch(updateMemberRole({
             memberEmailId: editingMember.email,
-            role: memberData.role,
-            organization_id: currentOrgId,
-            assigned_by: currentUser.id
+            newRole: memberData.role,
+            updated_by: currentUser.id
           })).unwrap();
 
         } else {
@@ -240,12 +278,12 @@ export default function Settings() {
       onChange: () => void;
       children: React.ReactNode;
     }) => (
-      <div className="flex items-start gap-3 p-4 hover:bg-neutral-50 rounded-md transition-colors">
+      <div className="flex items-start gap-3 p-4 transition-colors">
         <button
           type="button"
-          className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+          className={`w-6 h-6 rounded border-2 flex items-center justify-center transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 cursor-pointer ${
             checked
-              ? "bg-green-500 border-green-500 text-white hover:bg-green-600"
+              ? "bg-green-600 text-white hover:bg-green-700"
               : "border-neutral-300 hover:border-neutral-400 bg-white"
           }`}
           onClick={onChange}
@@ -266,7 +304,7 @@ export default function Settings() {
 
   CheckboxItem.displayName = "CheckboxItem";
 
-  // Handle user authentication error - moved to render section
+  // Handle authentication error or unauthorized access
   if (userError) {
     return (
       <div
@@ -278,14 +316,22 @@ export default function Settings() {
           <div className="bg-red-50 border border-red-200 rounded-md p-4">
             <h3 className="text-red-800 font-medium">Authentication Error</h3>
             <p className="text-red-700 mt-2">{userError}</p>
+            <div className="mt-4">
+              <Link
+                href="/login"
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+              >
+                Go to Login
+              </Link>
+            </div>
           </div>
         </div>
       </div>
     );
   }
 
-  // Show loading if user is still being fetched - moved to render section
-  if (isLoading) {
+  // Show loading only during initial auth check
+  if (isLoading && !authInitialized.current) {
     return (
       <div
         className={`transition-all duration-300 h-full px-3 md:px-0 ${
@@ -300,10 +346,36 @@ export default function Settings() {
     );
   }
 
+  // If no user after auth initialization, redirect to login
+  if (!currentUser && authInitialized.current && !isLoading) {
+    return (
+      <div
+        className={`transition-all duration-300 h-full px-3 md:px-0 ${
+          collapsed ? "md:ml-20" : "md:ml-64"
+        } pt-4`}
+      >
+        <div className="max-w-8xl mx-auto px-2 md:px-4 py-4">
+          <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4">
+            <h3 className="text-yellow-800 font-medium">Authentication Required</h3>
+            <p className="text-yellow-700 mt-2">Please log in to access settings.</p>
+            <div className="mt-4">
+              <Link
+                href="/login"
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-yellow-600 hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500"
+              >
+                Go to Login
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
-      className={`transition-all duration-300 min-h-full md:pb-0 px-0 ${
-        collapsed ? "md:ml-20" : "md:ml-64"
+      className={`transition-all duration-300 min-h-full md:pb-0 px-3 md:px-6 ${
+        collapsed ? "md:ml-20" : "md:ml-60"
       } md:pt-0 pt-4`}
     >
       <div className="mt-4 px-2 md:px-4 py-4">
@@ -355,12 +427,12 @@ export default function Settings() {
         </div>
 
         {/* Main content area with title and description */}
-        <div className="flex items-center justify-between my-6">
+        <div className="flex items-center justify-between mt-6 mb-3">
           <div>
             <h1 className="text-2xl font-semibold text-neutral-900">
               Settings
             </h1>
-            <p className="text-sm text-neutral-500 mt-2 max-w-2xl">
+            <p className="text-sm text-neutral-500 mt-2">
               Customize your account, notifications, roles and recruitment
               preferences to better suit your workflow.
             </p>
@@ -373,9 +445,9 @@ export default function Settings() {
             {steps.map((stepName, index) => (
               <button
                 key={stepName}
-                className={`px-4 py-3 text-center font-medium transition-colors whitespace-nowrap cursor-pointer focus:outline-none ${
+                className={`px-10 py-3 text-center font-medium transition-colors whitespace-nowrap cursor-pointer focus:outline-none ${
                   index === step
-                    ? "border-b-2 border-blue-600 text-neutral-800"
+                    ? "border-b-4 border-blue-600 text-neutral-800"
                     : "text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50"
                 }`}
                 onClick={() => setStep(index)}
@@ -390,15 +462,15 @@ export default function Settings() {
         </div>
 
         {/* Content section */}
-        <div className="flex items-center w-full">
-          <div className="max-w-5xl w-full pb-20">
+        <div className="flex justify-center items-center w-full">
+          <div className="max-w-7xl w-full pb-20">
             {step === 0 && (
-              <div className="bg-white rounded-lg shadow-sm border border-neutral-200 p-6 mx-4">
+              <div className="bg-white rounded-lg shadow p-6">
                 <div className="text-center mb-6">
                   <h2 className="font-semibold text-xl mb-4 text-neutral-900">
                     Your Recruitment Team
                   </h2>
-                  <p className="text-neutral-500 text-base font-normal max-w-3xl mx-auto">
+                  <p className="text-neutral-500 text-sm mx-auto">
                     To streamline your hiring process, you can collaborate with
                     your team on{" "}
                     <span className="text-neutral-800 font-medium">
@@ -417,99 +489,88 @@ export default function Settings() {
                     disabled={loading || savingChanges}
                   >
                     <FaPlus className="w-4 h-4" />
-                    <span>Add Team Member</span>
+                    <span>Add Member</span>
                   </button>
                 </div>
 
-                {loading ? (
-                  <div className="flex justify-center items-center py-8">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                    <span className="ml-2 text-neutral-600">Loading team members...</span>
-                  </div>
-                ) : (
-                  <div className="overflow-x-auto rounded-lg border border-neutral-200">
-                    <table className="min-w-full text-left">
-                      <thead className="bg-neutral-50 border-b border-neutral-200">
-                        <tr>
-                          <th className="px-4 py-4 text-sm font-medium text-neutral-900">
+                <div className="overflow-x-auto rounded-lg border border-neutral-200">
+                  <GlobalStickyTable
+                    columns={[
+                      {
+                        key: "checkbox",
+                        header: (
+                          <input
+                            type="checkbox"
+                            className="rounded border-neutral-300 text-blue-600 focus:ring-blue-500"
+                            aria-label="Select all team members"
+                          />
+                        ),
+                        width: "48px",
+                        render: (member) => (
                             <input
                               type="checkbox"
                               className="rounded border-neutral-300 text-blue-600 focus:ring-blue-500"
-                              aria-label="Select all team members"
+                              aria-label={`Select ${member.name}`}
                             />
-                          </th>
-                          <th className="px-4 py-4 text-sm font-medium text-neutral-900">
-                            Name
-                          </th>
-                          <th className="px-4 py-4 text-sm font-medium text-neutral-900">
-                            Email
-                          </th>
-                          <th className="px-4 py-4 text-sm font-medium text-neutral-900">
-                            Role
-                          </th>
-                          <th className="px-4 py-4 text-sm font-medium text-neutral-900 text-right">
-                            Actions
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-neutral-200 bg-white">
-                        {teamMembers.map((member) => (
-                          <tr
-                            key={member.id}
-                            className="hover:bg-neutral-50 transition-colors"
-                          >
-                            <td className="px-4 py-4">
-                              <input
-                                type="checkbox"
-                                className="rounded border-neutral-300 text-blue-600 focus:ring-blue-500"
-                                aria-label={`Select ${member.name}`}
-                              />
-                            </td>
-                            <td className="px-4 py-4 font-medium text-neutral-900">
-                              {member.name}
-                            </td>
-                            <td className="px-4 py-4 text-neutral-700">
-                              {member.email}
-                            </td>
-                            <td className="px-4 py-4 text-neutral-700">
-                              <div className="relative inline-block w-full max-w-xs">
-                                <select
-                                  value={member.role}
-                                  onChange={(e) =>
-                                    handleRoleChange(member, e.target.value)
-                                  }
-                                  disabled={loading || savingChanges}
-                                  className="w-full border border-neutral-300 px-3 pr-8 rounded-md py-2 text-sm text-neutral-700 bg-white appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 cursor-pointer hover:border-neutral-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                  <option value="admin">Admin</option>
-                                  <option value="ta">
-                                    TCL (Talent Acquisition) Lead
-                                  </option>
-                                  <option value="hr">HR Manager</option>
-                                </select>
-                                <FaCaretDown
-                                  className="absolute top-1/2 right-3 transform -translate-y-1/2 pointer-events-none text-neutral-400"
-                                  size={12}
-                                />
-                              </div>
-                            </td>
-                            <td className="px-4 py-4 text-right">
-                              <button
-                                type="button"
-                                onClick={() => handleEditMember(member)}
-                                disabled={loading || savingChanges}
-                                className="p-2 text-neutral-600 hover:text-neutral-800 hover:bg-neutral-100 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-md cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                aria-label={`Edit ${member.name}`}
+                        ),
+                      },
+                      {
+                        key: "name",
+                        header: "Name",
+                        render: (member) => (
+                          <span className="font-medium text-neutral-900">{member.name}</span>
+                        ),
+                      },
+                      {
+                        key: "email",
+                        header: "Email",
+                        render: (member) => (
+                          <span className="text-neutral-700">{member.email}</span>
+                        ),
+                      },
+                      {
+                        key: "role",
+                        header: "Role",
+                        render: (member) => (
+                            <div className="relative inline-block w-full max-w-xs">
+                              <select
+                                value={member.role}
+                              onChange={(e) => handleRoleChange(member, e.target.value)}
+                                className="w-full border border-neutral-300 px-3 pr-8 rounded-md py-2 text-sm text-neutral-700 bg-white appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 cursor-pointer hover:border-neutral-400 transition-colors"
                               >
-                                <FaRegEdit className="h-4 w-4" />
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
+                                <option value="admin">Admin</option>
+                              <option value="ta">TCL (Talent Acquisition) Lead</option>
+                                <option value="hr">HR Manager</option>
+                              </select>
+                              <FaCaretDown
+                                className="absolute top-1/2 right-3 transform -translate-y-1/2 pointer-events-none text-neutral-400"
+                                size={12}
+                              />
+                            </div>
+                        ),
+                      },
+                      {
+                        key: "actions",
+                        header: <span className="text-right">Actions</span>,
+                        width: "80px",
+                        render: (member) => (
+                            <button
+                              type="button"
+                              onClick={() => handleEditMember(member)}
+                              className="p-2 text-neutral-600 hover:text-neutral-800 hover:bg-neutral-100 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-md cursor-pointer transition-colors"
+                              aria-label={`Edit ${member.name}`}
+                            >
+                              <FaRegEdit className="h-4 w-4" />
+                            </button>
+                        ),
+                        className: "text-right",
+                      },
+                    ]}
+                    data={teamMembers}
+                    stickyFirst
+                    stickyLastTwo
+                  />
+                </div>
 
                 <div className="flex justify-end mt-6">
                   <button
@@ -525,8 +586,8 @@ export default function Settings() {
 
             {step === 1 && (
               <>
-                <div className="bg-white rounded-lg shadow-sm border border-neutral-200 p-6 mx-4">
-                  <div className="space-y-1 max-w-3xl mx-auto">
+                <div className="bg-white rounded-lg shadow px-4 py-2">
+                  <div className="mx-auto text-sm">
                     <CheckboxItem
                       checked={preferences.applications}
                       onChange={() => handleCheckboxChange("applications")}
@@ -577,11 +638,11 @@ export default function Settings() {
                     </CheckboxItem>
                   </div>
                 </div>
-                <div className="flex justify-center mt-8">
+                <div className="flex justify-center mt-6">
                   <button
                     onClick={handleSaveChanges}
-                    disabled={loading || savingChanges}
-                    className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed text-white font-medium px-8 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+                    disabled={isLoading}
+                    className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed text-white font-medium px-4 py-2 rounded-lg transition-colors cursor-pointer"
                   >
                     {savingChanges ? "Saving..." : "Save Changes"}
                   </button>

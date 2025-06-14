@@ -184,6 +184,74 @@ export const addMemberRole = createAsyncThunk(
     }
 );
 
+export const updateMemberRole = createAsyncThunk(
+    'organisation/updateMember',
+    async (
+        { memberEmailId, newRole, updated_by }: {
+            memberEmailId: string;
+            newRole: string;
+            updated_by: string;
+        },
+        { rejectWithValue }
+    ) => {
+        try {
+            // Validate inputs
+            if (!memberEmailId || !newRole || !updated_by) {
+                throw new Error('All parameters are required');
+            }
+
+            // Call the RPC function to update role
+            const { error: rpcError } = await supabase.rpc('update_user_role', {
+                target_email_id: memberEmailId,
+                new_role_name: newRole,
+                updater_user_id: updated_by
+            });
+
+            if (rpcError) {
+                throw new Error(`Failed to update role: ${rpcError.message}`);
+            }
+
+            // Fetch updated member data
+            const { data: updatedMember, error: fetchError } = await supabase
+                .from('user_profiles')
+                .select(`
+                    id,
+                    email,
+                    full_name,
+                    is_active,
+                    organization_id,
+                    user_roles!user_roles_user_id_fkey!inner (
+                        id,
+                        assigned_by,
+                        assigned_at,
+                        is_active,
+                        roles (
+                            name,
+                            display_name
+                        )
+                    )
+                `)
+                .eq('email', memberEmailId)
+                .eq('user_roles.is_active', true)
+                .single();
+
+            if (fetchError) {
+                throw new Error(`Failed to fetch updated member: ${fetchError.message}`);
+            }
+
+            if (!updatedMember) {
+                throw new Error('Updated member data not found');
+            }
+
+            return transformUserToMember(updatedMember as UserProfileResponse);
+
+        } catch (error) {
+            const message = error instanceof Error ? error.message : 'Unknown error occurred';
+            return rejectWithValue(message);
+        }
+    }
+);
+
 // Slice
 const organisationSlice = createSlice({
     name: 'organisation',
@@ -238,6 +306,23 @@ const organisationSlice = createSlice({
                 state.loading = false;
                 state.error = action.payload as string;
             })
+            // Update member role
+            .addCase(updateMemberRole.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            }
+            )
+            .addCase(updateMemberRole.fulfilled, (state, action) => {
+                state.loading = false;
+                const memberIndex = state.members.findIndex(member => member.id === action.payload.id);
+                if (memberIndex !== -1) {
+                    state.members[memberIndex] = action.payload;
+                }
+            })
+            .addCase(updateMemberRole.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload as string;
+            });
     },
 });
 

@@ -529,6 +529,14 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
+      update_user_role: {
+        Args: {
+          target_email_id: string
+          new_role_name: string
+          updater_user_id: string
+        }
+        Returns: boolean
+      }
       user_has_role: {
         Args: {
           check_user_id: string

@@ -12,7 +12,7 @@ const stats = [
     label: "Active Jobs",
     value: 117,
     icon: (
-      <BsBriefcase className="w-14 h-14 text-indigo-400 bg-indigo-100 rounded-xl p-3" />
+      <BsBriefcase className="w-15 h-15 text-indigo-400 bg-indigo-100 rounded-2xl p-3" />
     ),
     change: "+8.5%",
     changeDesc: "Up from yesterday",
@@ -22,7 +22,7 @@ const stats = [
     label: "Application Received",
     value: 3567,
     icon: (
-      <TiDocumentDelete className="w-14 h-14 text-yellow-400 bg-yellow-100 rounded-xl p-3" />
+      <TiDocumentDelete className="w-15 h-15 text-amber-700/60 bg-amber-100 rounded-2xl p-3" />
     ),
     change: "+1.5%",
     changeDesc: "Up from past week",
@@ -32,7 +32,7 @@ const stats = [
     label: "Client Companies",
     value: 78,
     icon: (
-      <HiOutlineBuildingOffice2 className="w-14 h-14 text-green-400 bg-green-100 rounded-xl p-3" />
+      <HiOutlineBuildingOffice2 className="w-15 h-15 text-green-400 bg-green-100 rounded-2xl p-3" />
     ),
     change: "-3.4%",
     changeDesc: "Up from last month",
@@ -42,7 +42,7 @@ const stats = [
     label: "Total Candidates",
     value: 1576,
     icon: (
-      <GoPeople className="w-14 h-14 text-orange-400 bg-orange-100 rounded-xl p-3" />
+      <GoPeople className="w-15 h-15 text-orange-500 bg-red-200/80 rounded-2xl p-3" />
     ),
     change: "+1.5%",
     changeDesc: "Up from past week",
@@ -60,32 +60,38 @@ export default function DashboardPage() {
       } md:pt-0 pt-4`}
     >
       <div className="max-w-8xl mx-auto px-2 py-8">
-        <h1 className="text-3xl font-semibold text-neutral-800 mb-4">Dashboard</h1>
+        <h1 className="text-2xl font-semibold text-neutral-900 mb-4">
+          Dashboard
+        </h1>
         {/* Stat Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div className="flex flex-wrap gap-4 mb-8">
           {stats.map((stat) => (
             <div
               key={stat.label}
-              className="bg-white rounded-2xl shadow-sm flex flex-col justify-between p-6 min-w-0 h-44"
+              className="bg-white rounded-2xl shadow-sm flex flex-col justify-between p-4 min-w-3xs h-auto min-h-[11rem] sm:min-h-[11rem] flex-1"
             >
               {/* Top row: label, value, icon */}
-              <div className="flex items-center justify-between w-full mb-6">
-                <div>
-                  <div className="text-neutral-500 text-base font-medium">
+              <div className="flex items-start sm:items-center justify-between w-full">
+                <div className="flex-1">
+                  <div className="text-neutral-500 text-sm font-medium mb-4">
                     {stat.label}
                   </div>
-                  <div className="text-4xl font-bold text-neutral-900">
+                  <div className="text-3xl lg:text-4xl font-semibold text-neutral-900">
                     {stat.value.toLocaleString()}
                   </div>
                 </div>
-                <div>{stat.icon}</div>
+                <div className="flex-shrink-0">
+                  {stat.icon}
+                </div>
               </div>
               {/* Change info at the bottom */}
-              <div className="flex items-center gap-2 text-sm mt-auto pt-2">
-                <span className={stat.changeColor + " font-semibold"}>
+              <div className="flex items-center gap-2 text-xs sm:text-sm mt-auto">
+                <span
+                  className={`${stat.changeColor} font-semibold whitespace-nowrap`}
+                >
                   {stat.change}
                 </span>
-                <span className="text-neutral-400 font-medium">
+                <span className="text-neutral-400">
                   {stat.changeDesc}
                 </span>
               </div>
@@ -95,7 +101,7 @@ export default function DashboardPage() {
         {/* Applications Over Time Chart */}
         <div className="bg-white rounded-2xl shadow-sm p-6">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4 gap-2">
-            <h2 className="text-2xl font-semibold text-neutral-900">
+            <h2 className="text-xl font-semibold text-neutral-900">
               Applications Over Time
             </h2>
             <div className="flex gap-2 flex-wrap">
