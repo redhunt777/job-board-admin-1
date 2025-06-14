@@ -132,9 +132,9 @@ export default function CandidateDetailsPage() {
             </div>
             <div className="flex items-center gap-3">
               <div className={`px-3 py-1 rounded-full text-sm font-medium 
-                ${candidate.application_status === 'accepted' ? 'bg-green-100 text-green-800 border border-green-200' : 
-                  candidate.application_status === 'rejected' ? 'bg-red-100 text-red-800 border border-red-200' : 
-                  'bg-yellow-100 text-yellow-800 border border-yellow-200'}`}>
+                ${candidate.application_status === "accepted" ? "bg-green-100 text-green-800 border border-green-200" : 
+                  candidate.application_status === "rejected" ? "bg-red-100 text-red-800 border border-red-200" : 
+                  "bg-yellow-100 text-yellow-800 border border-yellow-200"}`}>
                 {candidate.application_status.charAt(0).toUpperCase() + candidate.application_status.slice(1)}
               </div>
               {candidate.resume_link && (
@@ -228,9 +228,9 @@ export default function CandidateDetailsPage() {
                 <div>
                   <p className="text-sm text-gray-500">Status</p>
                   <div className={`inline-block px-3 py-1 rounded-full text-xs font-medium 
-                    ${candidate.application_status === 'accepted' ? 'bg-green-100 text-green-800 border border-green-200' : 
-                      candidate.application_status === 'rejected' ? 'bg-red-100 text-red-800 border border-red-200' : 
-                      'bg-yellow-100 text-yellow-800 border border-yellow-200'}`}>
+                    ${candidate.application_status === "accepted" ? "bg-green-100 text-green-800 border border-green-200" : 
+                      candidate.application_status === "rejected" ? "bg-red-100 text-red-800 border border-red-200" : 
+                      "bg-yellow-100 text-yellow-800 border border-yellow-200"}`}>
                     {candidate.application_status.charAt(0).toUpperCase() + candidate.application_status.slice(1)}
                   </div>
                 </div>
@@ -325,7 +325,7 @@ export default function CandidateDetailsPage() {
                       <p className="text-gray-600">{exp.company_name}</p>
                     </div>
                     <div className="text-sm text-gray-500 mt-1 md:mt-0">
-                      {exp.start_date && formatDate(exp.start_date)} - {exp.currently_working ? 'Present' : exp.end_date ? formatDate(exp.end_date) : 'N/A'}
+                      {exp.start_date && formatDate(exp.start_date)} - {exp.currently_working ? "Present" : exp.end_date ? formatDate(exp.end_date) : "N/A"}
                     </div>
                   </div>
                 </div>
@@ -350,7 +350,7 @@ export default function CandidateDetailsPage() {
                       {edu.grade_percentage && <p className="text-gray-500 text-sm">Grade: {edu.grade_percentage}</p>}
                     </div>
                     <div className="text-sm text-gray-500 mt-1 md:mt-0">
-                      {edu.start_date && formatDate(edu.start_date)} - {edu.is_current ? 'Present' : edu.end_date ? formatDate(edu.end_date) : 'N/A'}
+                      {edu.start_date && formatDate(edu.start_date)} - {edu.is_current ? "Present" : edu.end_date ? formatDate(edu.end_date) : "N/A"}
                     </div>
                   </div>
                 </div>
