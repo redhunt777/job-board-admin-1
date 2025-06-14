@@ -1,10 +1,20 @@
 "use client";
 import Link from "next/link";
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { HiOutlineArrowCircleLeft } from "react-icons/hi";
-import { useAppSelector } from "@/store/hooks";
+import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { FaPlus, FaRegEdit, FaCaretDown, FaCheck } from "react-icons/fa";
 import { Overlay } from "@/components/settings-overlay";
+import {
+  fetchOrgMembers,
+  addMemberRole,
+  selectMembers,
+  selectOrganisationLoading,
+  selectOrganisationError,
+  clearError
+} from "@/store/features/organisationSlice";
+import { initializeAuth } from "@/store/features/userSlice";
+import { RootState } from "@/store/store";
 
 // Types for better type safety
 interface TeamMember {
@@ -26,20 +36,25 @@ interface NotificationPreferences {
 const steps = ["Roles", "Notifications"];
 
 export default function Settings() {
+  const dispatch = useAppDispatch();
   const collapsed = useAppSelector((state) => state.ui.sidebar.collapsed);
+  
+  // Redux selectors
+  const members = useAppSelector(selectMembers);
+  const loading = useAppSelector(selectOrganisationLoading);
+  const error = useAppSelector(selectOrganisationError);
+  
+  // Get current user and organization from your auth/user state
+  const currentUser = useAppSelector((state: RootState) => state.user?.user);
+  const currentOrgId = useAppSelector((state: RootState) => state.user?.organization?.id);
+  const isLoading = useAppSelector((state: RootState) => state.user.loading);
+  const userError = useAppSelector((state: RootState) => state.user.error);
+
+  // Local state
   const [step, setStep] = useState(0);
   const [editingMember, setEditingMember] = useState<TeamMember | null>(null);
   const [showOverlay, setShowOverlay] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-
-  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([
-    {
-      id: "1",
-      name: "Rohan Gupta",
-      email: "rohangupta@gmail.com",
-      role: "admin",
-    },
-  ]);
+  const [savingChanges, setSavingChanges] = useState(false);
 
   const [preferences, setPreferences] = useState<NotificationPreferences>({
     applications: true,
@@ -49,6 +64,39 @@ export default function Settings() {
     communityEvents: false,
     otherNotifications: true,
   });
+
+  // Initialize auth if needed
+  useEffect(() => {
+    if (!currentUser && !isLoading) {
+      console.log("User not found, initializing auth...");
+      dispatch(initializeAuth());
+    }
+  }, [currentUser, isLoading, dispatch]);
+
+  // Fetch organization members on component mount
+  useEffect(() => {
+    if (currentOrgId) {
+      dispatch(fetchOrgMembers(currentOrgId));
+    }
+  }, [dispatch, currentOrgId]);
+
+  // Clear error after timeout
+  useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => {
+        dispatch(clearError());
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [error, dispatch]);
+
+  // Convert Redux members to component format
+  const teamMembers: TeamMember[] = members.map(member => ({
+    id: member.id,
+    name: member.name,
+    email: member.email,
+    role: member.role
+  }));
 
   // Handle opening overlay for new member
   const handleAddMember = useCallback(() => {
@@ -64,37 +112,84 @@ export default function Settings() {
 
   // Handle saving member (add or update)
   const handleSaveMember = useCallback(
-    (memberData: Omit<TeamMember, "id">) => {
-      if (editingMember) {
-        // Update existing member
-        setTeamMembers((prev) =>
-          prev.map((member) =>
-            member.id === editingMember.id
-              ? { ...memberData, id: editingMember.id }
-              : member
-          )
-        );
-      } else {
-        // Add new member with generated ID
-        const newMember: TeamMember = {
-          ...memberData,
-          id: Date.now().toString(), // Simple ID generation
-        };
-        setTeamMembers((prev) => [...prev, newMember]);
+    async (memberData: TeamMember) => {
+      if (!currentOrgId || !currentUser?.id) {
+        console.error("Missing organization ID or user ID");
+        return;
       }
-      setShowOverlay(false);
+
+      try {
+        setSavingChanges(true);
+        
+        if (editingMember) {
+          // Update existing member role - use email for the thunk
+          console.log("Updating member role:", {
+            memberEmailId: editingMember.email,
+            role: memberData.role,
+            organization_id: currentOrgId,
+            assigned_by: currentUser.id
+          });
+
+          await dispatch(addMemberRole({
+            memberEmailId: editingMember.email,
+            role: memberData.role,
+            organization_id: currentOrgId,
+            assigned_by: currentUser.id
+          })).unwrap();
+
+        } else {
+          // Add new member - use email from memberData
+          console.log("Adding new member:", {
+            memberEmailId: memberData.email,
+            role: memberData.role,
+            organization_id: currentOrgId,
+            assigned_by: currentUser.id
+          });
+
+          await dispatch(addMemberRole({
+            memberEmailId: memberData.email,
+            role: memberData.role,
+            organization_id: currentOrgId,
+            assigned_by: currentUser.id
+          })).unwrap();
+        }
+        
+        setShowOverlay(false);
+        
+        // Show success message
+        alert(editingMember ? "Member role updated successfully!" : "Member added successfully!");
+        
+      } catch (error) {
+        console.log("Error saving member:", error);
+        alert(`Error ${editingMember ? 'updating' : 'adding'} member: ${error}`);
+      } finally {
+        setSavingChanges(false);
+      }
     },
-    [editingMember]
+    [editingMember, currentOrgId, currentUser, dispatch]
   );
 
   // Handle role change in table
-  const handleRoleChange = useCallback((memberId: string, newRole: string) => {
-    setTeamMembers((prev) =>
-      prev.map((member) =>
-        member.id === memberId ? { ...member, role: newRole } : member
-      )
-    );
-  }, []);
+  const handleRoleChange = useCallback(async (member: TeamMember, newRole: string) => {
+    if (!currentOrgId || !currentUser?.id) {
+      console.error("Missing organization ID or user ID");
+      return;
+    }
+
+    try {
+      await dispatch(addMemberRole({
+        memberEmailId: member.email,
+        role: newRole,
+        organization_id: currentOrgId,
+        assigned_by: currentUser.id
+      })).unwrap();
+      
+      console.log(`Role updated for ${member.name}: ${newRole}`);
+    } catch (error) {
+      console.error("Error updating role:", error);
+      alert(`Error updating role: ${error}`);
+    }
+  }, [currentOrgId, currentUser, dispatch]);
 
   // Handle checkbox change for notifications
   const handleCheckboxChange = useCallback(
@@ -109,32 +204,30 @@ export default function Settings() {
 
   // Handle saving changes
   const handleSaveChanges = useCallback(async () => {
-    setIsLoading(true);
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
+      setSavingChanges(true);
+      
       if (step === 0) {
-        console.log("Saving team members:", teamMembers);
-        // Here you would typically send team data to your backend
+        // Team member changes are handled individually, so just show success
+        console.log("Team settings are managed individually per member");
+        alert("Team settings are saved automatically when you make changes!");
       } else {
+        // Save notification preferences
         console.log("Saving preferences:", preferences);
-        // Here you would typically send preferences to your backend
+        // Here you would dispatch an action to save notification preferences
+        // dispatch(updateNotificationPreferences(preferences));
+        
+        // Simulate API call for now
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        alert("Notification preferences saved successfully!");
       }
-
-      // Show success message
-      alert(
-        `${
-          step === 0 ? "Team settings" : "Notification preferences"
-        } saved successfully!`
-      );
     } catch (error) {
       console.error("Error saving settings:", error);
       alert("Error saving settings. Please try again.");
     } finally {
-      setIsLoading(false);
+      setSavingChanges(false);
     }
-  }, [step, teamMembers, preferences]);
+  }, [step, preferences]);
 
   // Custom checkbox component
   const CheckboxItem = React.memo(
@@ -173,10 +266,44 @@ export default function Settings() {
 
   CheckboxItem.displayName = "CheckboxItem";
 
+  // Handle user authentication error - moved to render section
+  if (userError) {
+    return (
+      <div
+        className={`transition-all duration-300 h-full px-3 md:px-0 ${
+          collapsed ? "md:ml-20" : "md:ml-64"
+        } pt-4`}
+      >
+        <div className="max-w-8xl mx-auto px-2 md:px-4 py-4">
+          <div className="bg-red-50 border border-red-200 rounded-md p-4">
+            <h3 className="text-red-800 font-medium">Authentication Error</h3>
+            <p className="text-red-700 mt-2">{userError}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show loading if user is still being fetched - moved to render section
+  if (isLoading) {
+    return (
+      <div
+        className={`transition-all duration-300 h-full px-3 md:px-0 ${
+          collapsed ? "md:ml-20" : "md:ml-64"
+        } pt-4`}
+      >
+        <div className="max-w-8xl mx-auto px-2 md:px-4 py-4 flex justify-center items-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <span className="ml-2 text-neutral-600">Loading...</span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       className={`transition-all duration-300 min-h-full md:pb-0 px-0 ${
-        collapsed ? "md:ml-20" : "md:ml-60"
+        collapsed ? "md:ml-20" : "md:ml-64"
       } md:pt-0 pt-4`}
     >
       <div className="mt-4 px-2 md:px-4 py-4">
@@ -189,19 +316,42 @@ export default function Settings() {
           />
         )}
 
+        {/* Error display */}
+        {error && (
+          <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md">
+            <div className="flex">
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-red-800">Error</h3>
+                <div className="mt-2 text-sm text-red-700">
+                  <p>{error}</p>
+                </div>
+                <div className="mt-4">
+                  <div className="-mx-2 -my-1.5 flex">
+                    <button
+                      type="button"
+                      className="bg-red-50 px-2 py-1.5 rounded-md text-sm font-medium text-red-800 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-red-50 focus:ring-red-600"
+                      onClick={() => dispatch(clearError())}
+                    >
+                      Dismiss
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Header section with back link and title */}
-        <div className="flex items-center gap-1 mb-4">
+        <div className="flex items-center gap-2 mb-4">
           <Link
             href="/dashboard"
-            className="flex items-center text-neutral-500 hover:text-neutral-700 font-medium text-base transition-colors"
+            className="flex items-center text-neutral-500 hover:text-neutral-700 font-semibold text-lg transition-colors"
           >
-            <HiOutlineArrowCircleLeft className="w-6 h-6 mr-1" />
+            <HiOutlineArrowCircleLeft className="w-8 h-8 mr-2" />
             <span>Back to Dashboard</span>
           </Link>
-          <span className="text-base text-neutral-500 font-light">/</span>
-          <span className="text-base font-medium text-neutral-900">
-            Settings
-          </span>
+          <span className="text-lg text-neutral-300">/</span>
+          <span className="text-lg font-bold text-neutral-900">Settings</span>
         </div>
 
         {/* Main content area with title and description */}
@@ -240,7 +390,7 @@ export default function Settings() {
         </div>
 
         {/* Content section */}
-        <div className="flex justify-center items-center w-full">
+        <div className="flex items-center w-full">
           <div className="max-w-5xl w-full pb-20">
             {step === 0 && (
               <div className="bg-white rounded-lg shadow-sm border border-neutral-200 p-6 mx-4">
@@ -254,111 +404,120 @@ export default function Settings() {
                     <span className="text-neutral-800 font-medium">
                       Recrivio
                     </span>
-                    . Simply add team members below and click &apos;Save
-                    Changes&apos;. We&apos;ll send an invitation email to any
-                    new users you add.
+                    . Simply add team members below and click &apos;Save Changes&apos;.
+                    We&apos;ll send an invitation email to any new users you add.
                   </p>
                 </div>
 
                 <div className="flex justify-end items-center mb-6">
                   <button
-                    className="flex items-center border border-blue-600 justify-center gap-2 px-4 py-2 text-blue-600 rounded-lg hover:bg-blue-50 hover:text-blue-700 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                    className="flex items-center border border-blue-600 justify-center gap-2 px-4 py-2 text-blue-600 rounded-lg hover:bg-blue-50 hover:text-blue-700 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     onClick={handleAddMember}
                     type="button"
+                    disabled={loading || savingChanges}
                   >
                     <FaPlus className="w-4 h-4" />
                     <span>Add Team Member</span>
                   </button>
                 </div>
 
-                <div className="overflow-x-auto rounded-lg border border-neutral-200">
-                  <table className="min-w-full text-left">
-                    <thead className="bg-neutral-50 border-b border-neutral-200">
-                      <tr>
-                        <th className="px-4 py-4 text-sm font-medium text-neutral-900">
-                          <input
-                            type="checkbox"
-                            className="rounded border-neutral-300 text-blue-600 focus:ring-blue-500"
-                            aria-label="Select all team members"
-                          />
-                        </th>
-                        <th className="px-4 py-4 text-sm font-medium text-neutral-900">
-                          Name
-                        </th>
-                        <th className="px-4 py-4 text-sm font-medium text-neutral-900">
-                          Email
-                        </th>
-                        <th className="px-4 py-4 text-sm font-medium text-neutral-900">
-                          Role
-                        </th>
-                        <th className="px-4 py-4 text-sm font-medium text-neutral-900 text-right">
-                          Actions
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-neutral-200 bg-white">
-                      {teamMembers.map((member) => (
-                        <tr
-                          key={member.id}
-                          className="hover:bg-neutral-50 transition-colors"
-                        >
-                          <td className="px-4 py-4">
+                {loading ? (
+                  <div className="flex justify-center items-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                    <span className="ml-2 text-neutral-600">Loading team members...</span>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto rounded-lg border border-neutral-200">
+                    <table className="min-w-full text-left">
+                      <thead className="bg-neutral-50 border-b border-neutral-200">
+                        <tr>
+                          <th className="px-4 py-4 text-sm font-medium text-neutral-900">
                             <input
                               type="checkbox"
                               className="rounded border-neutral-300 text-blue-600 focus:ring-blue-500"
-                              aria-label={`Select ${member.name}`}
+                              aria-label="Select all team members"
                             />
-                          </td>
-                          <td className="px-4 py-4 font-medium text-neutral-900">
-                            {member.name}
-                          </td>
-                          <td className="px-4 py-4 text-neutral-700">
-                            {member.email}
-                          </td>
-                          <td className="px-4 py-4 text-neutral-700">
-                            <div className="relative inline-block w-full max-w-xs">
-                              <select
-                                value={member.role}
-                                onChange={(e) =>
-                                  handleRoleChange(member.id, e.target.value)
-                                }
-                                className="w-full border border-neutral-300 px-3 pr-8 rounded-md py-2 text-sm text-neutral-700 bg-white appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 cursor-pointer hover:border-neutral-400 transition-colors"
-                              >
-                                <option value="admin">Admin</option>
-                                <option value="ta">
-                                  TCL (Talent Acquisition) Lead
-                                </option>
-                                <option value="hr">HR Manager</option>
-                              </select>
-                              <FaCaretDown
-                                className="absolute top-1/2 right-3 transform -translate-y-1/2 pointer-events-none text-neutral-400"
-                                size={12}
-                              />
-                            </div>
-                          </td>
-                          <td className="px-4 py-4 text-right">
-                            <button
-                              type="button"
-                              onClick={() => handleEditMember(member)}
-                              className="p-2 text-neutral-600 hover:text-neutral-800 hover:bg-neutral-100 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-md cursor-pointer transition-colors"
-                              aria-label={`Edit ${member.name}`}
-                            >
-                              <FaRegEdit className="h-4 w-4" />
-                            </button>
-                          </td>
+                          </th>
+                          <th className="px-4 py-4 text-sm font-medium text-neutral-900">
+                            Name
+                          </th>
+                          <th className="px-4 py-4 text-sm font-medium text-neutral-900">
+                            Email
+                          </th>
+                          <th className="px-4 py-4 text-sm font-medium text-neutral-900">
+                            Role
+                          </th>
+                          <th className="px-4 py-4 text-sm font-medium text-neutral-900 text-right">
+                            Actions
+                          </th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                      </thead>
+                      <tbody className="divide-y divide-neutral-200 bg-white">
+                        {teamMembers.map((member) => (
+                          <tr
+                            key={member.id}
+                            className="hover:bg-neutral-50 transition-colors"
+                          >
+                            <td className="px-4 py-4">
+                              <input
+                                type="checkbox"
+                                className="rounded border-neutral-300 text-blue-600 focus:ring-blue-500"
+                                aria-label={`Select ${member.name}`}
+                              />
+                            </td>
+                            <td className="px-4 py-4 font-medium text-neutral-900">
+                              {member.name}
+                            </td>
+                            <td className="px-4 py-4 text-neutral-700">
+                              {member.email}
+                            </td>
+                            <td className="px-4 py-4 text-neutral-700">
+                              <div className="relative inline-block w-full max-w-xs">
+                                <select
+                                  value={member.role}
+                                  onChange={(e) =>
+                                    handleRoleChange(member, e.target.value)
+                                  }
+                                  disabled={loading || savingChanges}
+                                  className="w-full border border-neutral-300 px-3 pr-8 rounded-md py-2 text-sm text-neutral-700 bg-white appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 cursor-pointer hover:border-neutral-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                  <option value="admin">Admin</option>
+                                  <option value="ta">
+                                    TCL (Talent Acquisition) Lead
+                                  </option>
+                                  <option value="hr">HR Manager</option>
+                                </select>
+                                <FaCaretDown
+                                  className="absolute top-1/2 right-3 transform -translate-y-1/2 pointer-events-none text-neutral-400"
+                                  size={12}
+                                />
+                              </div>
+                            </td>
+                            <td className="px-4 py-4 text-right">
+                              <button
+                                type="button"
+                                onClick={() => handleEditMember(member)}
+                                disabled={loading || savingChanges}
+                                className="p-2 text-neutral-600 hover:text-neutral-800 hover:bg-neutral-100 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-md cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                aria-label={`Edit ${member.name}`}
+                              >
+                                <FaRegEdit className="h-4 w-4" />
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
 
                 <div className="flex justify-end mt-6">
                   <button
                     onClick={handleSaveChanges}
-                    disabled={isLoading}
+                    disabled={loading || savingChanges}
                     className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed text-white text-sm px-6 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
                   >
-                    {isLoading ? "Saving..." : "Save Changes"}
+                    {savingChanges ? "Saving..." : "Save Changes"}
                   </button>
                 </div>
               </div>
@@ -421,10 +580,10 @@ export default function Settings() {
                 <div className="flex justify-center mt-8">
                   <button
                     onClick={handleSaveChanges}
-                    disabled={isLoading}
+                    disabled={loading || savingChanges}
                     className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed text-white font-medium px-8 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
                   >
-                    {isLoading ? "Saving..." : "Save Changes"}
+                    {savingChanges ? "Saving..." : "Save Changes"}
                   </button>
                 </div>
               </>

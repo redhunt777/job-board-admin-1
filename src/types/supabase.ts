@@ -518,7 +518,7 @@ export type Database = {
     Functions: {
       assign_user_role: {
         Args: {
-          target_user_id: string
+          target_email_id: string
           target_organization_id: string
           target_role_name: string
           assigner_user_id: string
