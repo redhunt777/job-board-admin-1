@@ -3,6 +3,7 @@
 import { useMemo, useEffect, useRef } from "react";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { CiFilter } from "react-icons/ci";
+import { useRouter } from "next/navigation";
 // import { CiLocationOn, CiMail, CiPhone } from "react-icons/ci";
 // import { HiOutlineDownload, HiOutlineEye, HiOutlineBriefcase, HiOutlineAcademicCap } from "react-icons/hi";
 // import { BsCurrencyDollar, BsCalendar3, BsPersonCheck } from "react-icons/bs";
@@ -129,6 +130,7 @@ export default function CandidatesList({
   onCandidateClick,
 }: CandidatesListProps) {
   const dispatch = useAppDispatch();
+  const router = useRouter();
 
   // Redux selectors
   // const paginatedCandidates = useAppSelector(
@@ -199,8 +201,10 @@ export default function CandidatesList({
   // };
 
   const handleViewCandidate = (candidate: CandidateWithApplication) => {
-    // setSelectedCandidate(candidate);
-    // setShowDetailsModal(true);
+    // Extract a shorter ID from the application_id for cleaner URLs
+    const shortId = generateShortId(candidate.application_id);
+    router.push(`/candidates/${shortId}`);
+    
     if (onCandidateClick) {
       onCandidateClick(candidate);
     }
