@@ -106,7 +106,7 @@ export default function Settings() {
     console.log("Initializing auth for the first time...");
     authInitialized.current = true;
     dispatch(initializeAuth());
-  }, []); // Empty dependency array - only run once on mount
+  }, [dispatch, currentUser, isLoading, userError]); // Fixed: Added missing dependencies
 
   // Reset auth initialization flag when user logs out
   useEffect(() => {
@@ -474,7 +474,7 @@ export default function Settings() {
               <div className="ml-3">
                 <h3 className="text-sm font-medium text-yellow-800">Unsaved Changes</h3>
                 <div className="mt-2 text-sm text-yellow-700">
-                  <p>You have {pendingRoleChanges.length} pending role change{pendingRoleChanges.length > 1 ? 's' : ''}. Click "Save Changes" to apply them.</p>
+                  <p>You have {pendingRoleChanges.length} pending role change{pendingRoleChanges.length > 1 ? 's' : ''}. Click &quot;Save Changes&quot; to apply them.</p>
                 </div>
               </div>
             </div>
@@ -547,7 +547,7 @@ export default function Settings() {
                     <span className="text-neutral-800 font-medium">
                       Recrivio
                     </span>
-                    . Simply add team members below and click &apos;Save Changes&apos;.
+                    . Simply add team members below and click &quot;Save Changes&quot;.
                     We&apos;ll send an invitation email to any new users you add.
                   </p>
                 </div>
