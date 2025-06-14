@@ -36,6 +36,14 @@ interface NotificationPreferences {
   otherNotifications: boolean;
 }
 
+// New interface for tracking role changes
+interface RoleChange {
+  memberId: string;
+  memberEmail: string;
+  oldRole: string;
+  newRole: string;
+}
+
 const steps = ["Roles", "Notifications"];
 
 export default function Settings() {
@@ -63,6 +71,10 @@ export default function Settings() {
   const [showOverlay, setShowOverlay] = useState(false);
   const [savingChanges, setSavingChanges] = useState(false);
 
+  // New state for tracking pending role changes
+  const [pendingRoleChanges, setPendingRoleChanges] = useState<RoleChange[]>([]);
+  const [localTeamMembers, setLocalTeamMembers] = useState<TeamMember[]>([]);
+
   const [preferences, setPreferences] = useState<NotificationPreferences>({
     applications: true,
     weeklySummary: true,
@@ -81,12 +93,6 @@ export default function Settings() {
 
   // Initialize auth only once and only if user is truly not authenticated
   useEffect(() => {
-    // Don't initialize if:
-    // 1. Already initialized
-    // 2. Currently loading
-    // 3. User exists (authenticated)
-    // 4. There's a user error (indicates logout or auth failure)
-    // 5. Component is unmounted
     if (
       authInitialized.current || 
       isLoading || 
@@ -117,6 +123,19 @@ export default function Settings() {
     }
   }, [dispatch, currentOrgId, currentUser]);
 
+  // Update local team members when Redux members change
+  useEffect(() => {
+    const teamMembers: TeamMember[] = members.map(member => ({
+      id: member.id,
+      name: member.name,
+      email: member.email,
+      role: member.role
+    }));
+    setLocalTeamMembers(teamMembers);
+    // Clear pending changes when fresh data is loaded
+    setPendingRoleChanges([]);
+  }, [members]);
+
   // Clear error after timeout
   useEffect(() => {
     if (error) {
@@ -128,14 +147,6 @@ export default function Settings() {
       return () => clearTimeout(timer);
     }
   }, [error, dispatch]);
-
-  // Convert Redux members to component format
-  const teamMembers: TeamMember[] = members.map(member => ({
-    id: member.id,
-    name: member.name,
-    email: member.email,
-    role: member.role
-  }));
 
   // Handle opening overlay for new member
   const handleAddMember = useCallback(() => {
@@ -207,27 +218,33 @@ export default function Settings() {
     [editingMember, currentOrgId, currentUser, dispatch]
   );
 
-  // Handle role change in table
-  const handleRoleChange = useCallback(async (member: TeamMember, newRole: string) => {
-    if (!currentOrgId || !currentUser?.id) {
-      console.error("Missing organization ID or user ID");
-      return;
+  // Handle role change in table (now only updates local state)
+  const handleRoleChange = useCallback((member: TeamMember, newRole: string) => {
+    if (member.role === newRole) {
+      return; // No change needed
     }
 
-    try {
-      await dispatch(addMemberRole({
-        memberEmailId: member.email,
-        role: newRole,
-        organization_id: currentOrgId,
-        assigned_by: currentUser.id
-      })).unwrap();
+    // Update local team members immediately for UI feedback
+    setLocalTeamMembers(prev => 
+      prev.map(m => 
+        m.id === member.id ? { ...m, role: newRole } : m
+      )
+    );
+
+    // Track the change for batch update
+    setPendingRoleChanges(prev => {
+      // Remove any existing change for this member
+      const filtered = prev.filter(change => change.memberId !== member.id);
       
-      console.log(`Role updated for ${member.name}: ${newRole}`);
-    } catch (error) {
-      console.error("Error updating role:", error);
-      alert(`Error updating role: ${error}`);
-    }
-  }, [currentOrgId, currentUser, dispatch]);
+      // Add the new change
+      return [...filtered, {
+        memberId: member.id,
+        memberEmail: member.email,
+        oldRole: member.role,
+        newRole: newRole
+      }];
+    });
+  }, []);
 
   // Handle checkbox change for notifications
   const handleCheckboxChange = useCallback(
@@ -242,13 +259,47 @@ export default function Settings() {
 
   // Handle saving changes
   const handleSaveChanges = useCallback(async () => {
+    if (!currentOrgId || !currentUser?.id) {
+      console.error("Missing organization ID or user ID");
+      return;
+    }
+
     try {
       setSavingChanges(true);
       
       if (step === 0) {
-        // Team member changes are handled individually, so just show success
-        console.log("Team settings are managed individually per member");
-        alert("Team settings are saved automatically when you make changes!");
+        // Save role changes
+        if (pendingRoleChanges.length > 0) {
+          console.log("Applying role changes:", pendingRoleChanges);
+          
+          // Process each role change
+          for (const change of pendingRoleChanges) {
+            try {
+              await dispatch(updateMemberRole({
+                memberEmailId: change.memberEmail,
+                newRole: change.newRole,
+                updated_by: currentUser.id
+              })).unwrap();
+              
+              console.log(`Role updated for member ${change.memberEmail}: ${change.oldRole} -> ${change.newRole}`);
+            } catch (error) {
+              console.error(`Error updating role for ${change.memberEmail}:`, error);
+              // Revert the local change for this member
+              setLocalTeamMembers(prev => 
+                prev.map(m => 
+                  m.email === change.memberEmail ? { ...m, role: change.oldRole } : m
+                )
+              );
+              throw error; // Re-throw to stop processing other changes
+            }
+          }
+          
+          // Clear pending changes after successful update
+          setPendingRoleChanges([]);
+          alert("Team member roles updated successfully!");
+        } else {
+          alert("No changes to save.");
+        }
       } else {
         // Save notification preferences
         console.log("Saving preferences:", preferences);
@@ -260,12 +311,15 @@ export default function Settings() {
         alert("Notification preferences saved successfully!");
       }
     } catch (error) {
-      console.error("Error saving settings:", error);
+      console.log("Error saving settings:", error);
       alert("Error saving settings. Please try again.");
     } finally {
       setSavingChanges(false);
     }
-  }, [step, preferences]);
+  }, [step, preferences, pendingRoleChanges, currentOrgId, currentUser, dispatch]);
+
+  // Check if there are unsaved changes
+  const hasUnsavedChanges = pendingRoleChanges.length > 0;
 
   // Custom checkbox component
   const CheckboxItem = React.memo(
@@ -413,6 +467,20 @@ export default function Settings() {
           </div>
         )}
 
+        {/* Unsaved changes notification */}
+        {hasUnsavedChanges && step === 0 && (
+          <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-md">
+            <div className="flex">
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-yellow-800">Unsaved Changes</h3>
+                <div className="mt-2 text-sm text-yellow-700">
+                  <p>You have {pendingRoleChanges.length} pending role change{pendingRoleChanges.length > 1 ? 's' : ''}. Click "Save Changes" to apply them.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Header section with back link and title */}
         <div className="flex items-center gap-2 mb-4">
           <Link
@@ -456,6 +524,9 @@ export default function Settings() {
                 role="tab"
               >
                 {stepName}
+                {index === 0 && hasUnsavedChanges && (
+                  <span className="ml-2 w-2 h-2 bg-yellow-500 rounded-full inline-block"></span>
+                )}
               </button>
             ))}
           </div>
@@ -531,23 +602,35 @@ export default function Settings() {
                       {
                         key: "role",
                         header: "Role",
-                        render: (member) => (
+                        render: (member) => {
+                          const hasChange = pendingRoleChanges.some(change => change.memberId === member.id);
+                          return (
                             <div className="relative inline-block w-full max-w-xs">
                               <select
                                 value={member.role}
-                              onChange={(e) => handleRoleChange(member, e.target.value)}
-                                className="w-full border border-neutral-300 px-3 pr-8 rounded-md py-2 text-sm text-neutral-700 bg-white appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 cursor-pointer hover:border-neutral-400 transition-colors"
+                                onChange={(e) => handleRoleChange(member, e.target.value)}
+                                className={`w-full border px-3 pr-8 rounded-md py-2 text-sm bg-white appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 cursor-pointer hover:border-neutral-400 transition-colors ${
+                                  hasChange 
+                                    ? 'border-yellow-400 bg-yellow-50 text-yellow-800' 
+                                    : 'border-neutral-300 text-neutral-700'
+                                }`}
                               >
                                 <option value="admin">Admin</option>
-                              <option value="ta">TCL (Talent Acquisition) Lead</option>
+                                <option value="ta">TCL (Talent Acquisition) Lead</option>
                                 <option value="hr">HR Manager</option>
                               </select>
                               <FaCaretDown
-                                className="absolute top-1/2 right-3 transform -translate-y-1/2 pointer-events-none text-neutral-400"
+                                className={`absolute top-1/2 right-3 transform -translate-y-1/2 pointer-events-none ${
+                                  hasChange ? 'text-yellow-600' : 'text-neutral-400'
+                                }`}
                                 size={12}
                               />
+                              {hasChange && (
+                                <div className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-500 rounded-full"></div>
+                              )}
                             </div>
-                        ),
+                          );
+                        },
                       },
                       {
                         key: "actions",
@@ -566,7 +649,7 @@ export default function Settings() {
                         className: "text-right",
                       },
                     ]}
-                    data={teamMembers}
+                    data={localTeamMembers}
                     stickyFirst
                     stickyLastTwo
                   />
@@ -576,9 +659,18 @@ export default function Settings() {
                   <button
                     onClick={handleSaveChanges}
                     disabled={loading || savingChanges}
-                    className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed text-white text-sm px-6 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+                    className={`text-white text-sm px-6 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors ${
+                      hasUnsavedChanges
+                        ? 'bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400'
+                        : 'bg-blue-400 cursor-not-allowed'
+                    } disabled:cursor-not-allowed`}
                   >
                     {savingChanges ? "Saving..." : "Save Changes"}
+                    {hasUnsavedChanges && !savingChanges && (
+                      <span className="ml-2 px-2 py-1 bg-blue-800 text-xs rounded-full">
+                        {pendingRoleChanges.length}
+                      </span>
+                    )}
                   </button>
                 </div>
               </div>

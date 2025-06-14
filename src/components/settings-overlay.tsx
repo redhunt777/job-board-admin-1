@@ -29,6 +29,76 @@ const ROLE_OPTIONS = [
   { value: "hr", label: "HR Manager" },
 ] as const;
 
+// Move InputField component outside to prevent recreation on every render
+const InputField = ({ 
+  id, 
+  label, 
+  type = "text", 
+  value, 
+  field, 
+  placeholder, 
+  disabled = false,
+  required = true,
+  onChange,
+  onBlur,
+  errors,
+  isSubmitting,
+  inputRef
+}: {
+  id: string;
+  label: string;
+  type?: string;
+  value: string;
+  field: keyof TeamMember;
+  placeholder: string;
+  disabled?: boolean;
+  required?: boolean;
+  onChange: (field: keyof TeamMember, value: string) => void;
+  onBlur: (field: keyof TeamMember) => void;
+  errors: FormErrors;
+  isSubmitting: boolean;
+  inputRef?: React.RefObject<HTMLInputElement | null>;
+}) => (
+  <div>
+    <label htmlFor={id} className="block text-sm font-medium text-neutral-800 mb-2">
+      {label}
+      {required && <span className="text-red-500 ml-1" aria-label="required">*</span>}
+    </label>
+    <input
+      ref={inputRef}
+      id={id}
+      type={type}
+      value={value}
+      onChange={(e) => onChange(field, e.target.value)}
+      onBlur={() => onBlur(field)}
+      className={`w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 transition-all duration-200 ${
+        errors[field as keyof FormErrors]
+          ? "border-red-400 focus:ring-red-500 bg-red-50"
+          : "border-neutral-300 focus:ring-blue-500 hover:border-neutral-400"
+      } ${
+        disabled 
+          ? "bg-neutral-100 cursor-not-allowed text-neutral-500" 
+          : "bg-white"
+      }`}
+      placeholder={placeholder}
+      aria-describedby={errors[field as keyof FormErrors] ? `${id}-error` : undefined}
+      aria-invalid={errors[field as keyof FormErrors] ? "true" : "false"}
+      disabled={disabled || isSubmitting}
+      maxLength={field === 'name' ? 50 : field === 'email' ? 100 : undefined}
+    />
+    {errors[field as keyof FormErrors] && (
+      <div
+        id={`${id}-error`}
+        className="flex items-center gap-1 text-red-600 text-sm mt-1"
+        role="alert"
+      >
+        <FaExclamationCircle className="w-3 h-3 flex-shrink-0" />
+        <span>{errors[field as keyof FormErrors]}</span>
+      </div>
+    )}
+  </div>
+);
+
 export const Overlay = ({ setShowOverlay, member, onSave }: OverlayProps) => {
   // Form state
   const [formData, setFormData] = useState<TeamMember>({
@@ -202,7 +272,7 @@ export const Overlay = ({ setShowOverlay, member, onSave }: OverlayProps) => {
     };
   }, [handleEscapeKey, showExitConfirmation]);
 
-  // Handle input changes with real-time feedback
+  // Handle input changes with real-time feedback - made stable with useCallback
   const handleInputChange = useCallback((field: keyof TeamMember, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
 
@@ -276,66 +346,6 @@ export const Overlay = ({ setShowOverlay, member, onSave }: OverlayProps) => {
     }
   };
 
-  // Input component with better styling and accessibility
-  const InputField = ({ 
-    id, 
-    label, 
-    type = "text", 
-    value, 
-    field, 
-    placeholder, 
-    disabled = false,
-    required = true 
-  }: {
-    id: string;
-    label: string;
-    type?: string;
-    value: string;
-    field: keyof TeamMember;
-    placeholder: string;
-    disabled?: boolean;
-    required?: boolean;
-  }) => (
-    <div>
-      <label htmlFor={id} className="block text-sm font-medium text-neutral-800 mb-2">
-        {label}
-        {required && <span className="text-red-500 ml-1" aria-label="required">*</span>}
-      </label>
-      <input
-        ref={field === 'name' ? firstFocusableRef : undefined}
-        id={id}
-        type={type}
-        value={value}
-        onChange={(e) => handleInputChange(field, e.target.value)}
-        onBlur={() => validateField(field)}
-        className={`w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 transition-all duration-200 ${
-          errors[field as keyof FormErrors]
-            ? "border-red-400 focus:ring-red-500 bg-red-50"
-            : "border-neutral-300 focus:ring-blue-500 hover:border-neutral-400"
-        } ${
-          disabled 
-            ? "bg-neutral-100 cursor-not-allowed text-neutral-500" 
-            : "bg-white"
-        }`}
-        placeholder={placeholder}
-        aria-describedby={errors[field as keyof FormErrors] ? `${id}-error` : undefined}
-        aria-invalid={errors[field as keyof FormErrors] ? "true" : "false"}
-        disabled={disabled || isSubmitting}
-        maxLength={field === 'name' ? 50 : field === 'email' ? 100 : undefined}
-      />
-      {errors[field as keyof FormErrors] && (
-        <div
-          id={`${id}-error`}
-          className="flex items-center gap-1 text-red-600 text-sm mt-1"
-          role="alert"
-        >
-          <FaExclamationCircle className="w-3 h-3 flex-shrink-0" />
-          <span>{errors[field as keyof FormErrors]}</span>
-        </div>
-      )}
-    </div>
-  );
-
   return (
     <>
       <div
@@ -396,6 +406,11 @@ export const Overlay = ({ setShowOverlay, member, onSave }: OverlayProps) => {
                     field="name"
                     placeholder="Enter member's full name"
                     disabled={isEditing}
+                    onChange={handleInputChange}
+                    onBlur={validateField}
+                    errors={errors}
+                    isSubmitting={isSubmitting}
+                    inputRef={firstFocusableRef}
                   />
 
                   <InputField
@@ -406,6 +421,10 @@ export const Overlay = ({ setShowOverlay, member, onSave }: OverlayProps) => {
                     field="email"
                     placeholder="Enter member's email"
                     disabled={isEditing}
+                    onChange={handleInputChange}
+                    onBlur={validateField}
+                    errors={errors}
+                    isSubmitting={isSubmitting}
                   />
                 </div>
 
