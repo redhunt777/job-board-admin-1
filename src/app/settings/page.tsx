@@ -286,11 +286,11 @@ export default function Settings() {
                         ),
                         width: "48px",
                         render: (member) => (
-                          <input
-                            type="checkbox"
-                            className="rounded border-neutral-300 text-blue-600 focus:ring-blue-500"
-                            aria-label={`Select ${member.name}`}
-                          />
+                            <input
+                              type="checkbox"
+                              className="rounded border-neutral-300 text-blue-600 focus:ring-blue-500"
+                              aria-label={`Select ${member.name}`}
+                            />
                         ),
                       },
                       {
@@ -311,21 +311,21 @@ export default function Settings() {
                         key: "role",
                         header: "Role",
                         render: (member) => (
-                          <div className="relative inline-block w-full max-w-xs">
-                            <select
-                              value={member.role}
+                            <div className="relative inline-block w-full max-w-xs">
+                              <select
+                                value={member.role}
                               onChange={(e) => handleRoleChange(member.id, e.target.value)}
-                              className="w-full border border-neutral-300 px-3 pr-8 rounded-md py-2 text-sm text-neutral-700 bg-white appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 cursor-pointer hover:border-neutral-400 transition-colors"
-                            >
-                              <option value="admin">Admin</option>
+                                className="w-full border border-neutral-300 px-3 pr-8 rounded-md py-2 text-sm text-neutral-700 bg-white appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 cursor-pointer hover:border-neutral-400 transition-colors"
+                              >
+                                <option value="admin">Admin</option>
                               <option value="ta">TCL (Talent Acquisition) Lead</option>
-                              <option value="hr">HR Manager</option>
-                            </select>
-                            <FaCaretDown
-                              className="absolute top-1/2 right-3 transform -translate-y-1/2 pointer-events-none text-neutral-400"
-                              size={12}
-                            />
-                          </div>
+                                <option value="hr">HR Manager</option>
+                              </select>
+                              <FaCaretDown
+                                className="absolute top-1/2 right-3 transform -translate-y-1/2 pointer-events-none text-neutral-400"
+                                size={12}
+                              />
+                            </div>
                         ),
                       },
                       {
@@ -333,14 +333,14 @@ export default function Settings() {
                         header: <span className="text-right">Actions</span>,
                         width: "80px",
                         render: (member) => (
-                          <button
-                            type="button"
-                            onClick={() => handleEditMember(member)}
-                            className="p-2 text-neutral-600 hover:text-neutral-800 hover:bg-neutral-100 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-md cursor-pointer transition-colors"
-                            aria-label={`Edit ${member.name}`}
-                          >
-                            <FaRegEdit className="h-4 w-4" />
-                          </button>
+                            <button
+                              type="button"
+                              onClick={() => handleEditMember(member)}
+                              className="p-2 text-neutral-600 hover:text-neutral-800 hover:bg-neutral-100 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-md cursor-pointer transition-colors"
+                              aria-label={`Edit ${member.name}`}
+                            >
+                              <FaRegEdit className="h-4 w-4" />
+                            </button>
                         ),
                         className: "text-right",
                       },
