@@ -56,6 +56,7 @@ const UserButton = memo(() => {
 
   const handleSignOut = useCallback(async () => {
     try {
+      console.log("Logging out user...");
       await dispatch(logoutUser());
       router.push("/login");
     } catch (error) {

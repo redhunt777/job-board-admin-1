@@ -95,11 +95,11 @@ const AdminLogin = () => {
     // Clear validation error for this field
     if (validationErrors[field]) {
       setValidationErrors(prev => {
-      const newErrors = { ...prev };
-      delete newErrors[field];
-      return newErrors;
-    });
-  }
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      });
+    }
     
     // Clear Redux error when user starts typing
     if (error) {

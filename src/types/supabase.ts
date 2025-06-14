@@ -518,7 +518,7 @@ export type Database = {
     Functions: {
       assign_user_role: {
         Args: {
-          target_user_id: string
+          target_email_id: string
           target_organization_id: string
           target_role_name: string
           assigner_user_id: string
@@ -528,6 +528,14 @@ export type Database = {
       get_current_user_with_profile: {
         Args: Record<PropertyKey, never>
         Returns: Json
+      }
+      update_user_role: {
+        Args: {
+          target_email_id: string
+          new_role_name: string
+          updater_user_id: string
+        }
+        Returns: boolean
       }
       user_has_role: {
         Args: {

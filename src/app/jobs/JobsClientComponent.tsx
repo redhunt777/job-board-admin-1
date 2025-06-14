@@ -172,7 +172,7 @@ export default function JobsClientComponent({
           isOpen: false,
         }));
       } catch (err) {
-        console.error("Failed to apply filter:", err);
+        console.log("Failed to apply filter:", err);
       }
     },
     [dispatch, filters]
@@ -195,7 +195,7 @@ export default function JobsClientComponent({
         })
       ).unwrap();
     } catch (err) {
-      console.error("Retry failed:", err);
+      console.log("Retry failed:", err);
     }
   }, [dispatch, userRole, userId, organizationId, isValidProps]);
 
@@ -219,7 +219,7 @@ export default function JobsClientComponent({
         isOpen: false,
       });
     } catch (err) {
-      console.error("Failed to clear filters:", err);
+      console.log("Failed to clear filters:", err);
     }
   }, [dispatch]);
 
