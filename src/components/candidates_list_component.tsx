@@ -219,27 +219,27 @@ export default function CandidatesList({
     }
   };
 
-  const handleDeleteCandidate = async (applicationId: string) => {
-    if (!userContext) {
-      console.log("User context not available");
-      return;
-    }
+  // const handleDeleteCandidate = async (applicationId: string) => {
+  //   if (!userContext) {
+  //     console.log("User context not available");
+  //     return;
+  //   }
 
-    try {
-      // TODO: Implement delete functionality in the slice
-      console.log("Delete candidate with application ID:", applicationId);
+  //   try {
+  //     // TODO: Implement delete functionality in the slice
+  //     console.log("Delete candidate with application ID:", applicationId);
       
-      // Close overlay if the deleted candidate is currently shown
-      if (candidatesDetailsOverlay.candidate?.application_id === applicationId) {
-        setCandidatesDetailsOverlay({
-          candidate: null,
-          show: false,
-        });
-      }
-    } catch (error) {
-      console.log("Failed to delete candidate:", error);
-    }
-  };
+  //     // Close overlay if the deleted candidate is currently shown
+  //     if (candidatesDetailsOverlay.candidate?.application_id === applicationId) {
+  //       setCandidatesDetailsOverlay({
+  //         candidate: null,
+  //         show: false,
+  //       });
+  //     }
+  //   } catch (error) {
+  //     console.log("Failed to delete candidate:", error);
+  //   }
+  // };
 
   // const handleRowClick = (candidate: CandidateWithApplication) => {
   //   // Allow clicking anywhere on the row to open overlay
@@ -570,7 +570,7 @@ export default function CandidatesList({
         candidatesDetailsOverlay={candidatesDetailsOverlay}
         setCandidatesDetailsOverlay={setCandidatesDetailsOverlay}
         onStatusUpdate={handleStatusUpdate}
-        onDelete={handleDeleteCandidate}
+        // onDelete={handleDeleteCandidate}
         calculateExperience={calculateExperience}
       />
     </>

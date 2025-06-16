@@ -509,7 +509,7 @@ const CandidatesDetailsOverlay = memo(
     candidatesDetailsOverlay,
     setCandidatesDetailsOverlay,
     onStatusUpdate,
-    onDelete,
+    // onDelete,
     calculateExperience,
   }: {
     candidatesDetailsOverlay: {
@@ -523,7 +523,7 @@ const CandidatesDetailsOverlay = memo(
       }>
     >;
     onStatusUpdate?: (applicationId: string, status: string) => void;
-    onDelete?: (applicationId: string) => void;
+    // onDelete?: (applicationId: string) => void;
     calculateExperience?: (candidate: CandidateWithApplication) => string;
   }) => {
     const handleClose = useCallback(() => {
