@@ -16,7 +16,7 @@ import { useRouter } from "next/navigation";
 import { useAppSelector } from "@/store/hooks";
 import { selectIsAuthenticated } from "@/store/features/userSlice";
 import { FormState } from "@/types/custom";
-import { useForm } from "react-hook-form";
+import { useForm, UseFormRegister, FieldErrors } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 
@@ -82,8 +82,8 @@ const FormFields = React.memo(
     showPassword,
     handleShowPassword,
   }: {
-    register: any;
-    errors: any;
+    register: UseFormRegister<RegisterFormData>;
+    errors: FieldErrors<RegisterFormData>;
     isSubmitting: boolean;
     phone: string;
     handlePhoneChange: (value: string | undefined) => void;
@@ -196,6 +196,7 @@ const FormFields = React.memo(
     </div>
   )
 );
+FormFields.displayName = 'FormFields';
 
 // Separate form messages component
 const FormMessages = React.memo(
@@ -227,6 +228,7 @@ const FormMessages = React.memo(
     </>
   )
 );
+FormMessages.displayName = 'FormMessages';
 
 const AdminRegister = () => {
   const searchParams = useSearchParams();

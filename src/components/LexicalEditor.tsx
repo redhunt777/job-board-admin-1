@@ -123,11 +123,9 @@ const theme = {
 
 // Memoize the editor content component
 const EditorContent = memo(({
-  isLoadingContent,
-  isEditorReady
+  isLoadingContent
 }: {
   isLoadingContent: boolean;
-  isEditorReady: boolean;
 }) => (
   <div className="space-y-2">
     {isLoadingContent && (
@@ -159,7 +157,6 @@ const EditorContent = memo(({
       <ClearEditorPlugin />
       <MarkdownShortcutPlugin transformers={TRANSFORMERS} />
       <FontSizePlugin />
-      <OnChangePlugin onChange={handleChange} />
     </div>
     
     {/* Help text */}
@@ -321,9 +318,9 @@ export default function LexicalEditor({ value, onChange }: LexicalEditorProps) {
   return (
     <LexicalComposer initialConfig={initialConfig}>
       <EditorRefPlugin editorRef={editorRef} setIsReady={setIsEditorReady} />
+      <OnChangePlugin onChange={handleChange} />
       <EditorContent
         isLoadingContent={isLoadingContent}
-        isEditorReady={isEditorReady}
       />
     </LexicalComposer>
   );

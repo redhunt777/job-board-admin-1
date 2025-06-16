@@ -16,7 +16,9 @@ import {
   selectFilteredCandidatesWithAccess,
   CandidateWithApplication,
   SortOption,
+  CandidateFilters,
 } from "@/store/features/candidatesSlice";
+import type { AppDispatch } from "@/store/store";
 import { TiArrowSortedDown } from "react-icons/ti";
 import GlobalStickyTable from "@/components/GlobalStickyTable";
 import CandidatesDetailsOverlay from "./candidates-details-overlay"; // Import the overlay component
@@ -151,9 +153,9 @@ const FiltersSection = memo(
     filteredCandidates,
     dispatch,
   }: {
-    filters: any;
+    filters: CandidateFilters;
     filteredCandidates: CandidateWithApplication[];
-    dispatch: any;
+    dispatch: AppDispatch;
   }) => {
     const companyOptions = useMemo(
       () =>

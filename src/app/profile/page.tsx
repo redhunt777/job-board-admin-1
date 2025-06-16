@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, memo } from "react";
 import { HiOutlineArrowCircleLeft } from "react-icons/hi";
 import Link from "next/link";
 import Image from "next/image";
@@ -62,7 +62,6 @@ export default function Profile() {
   const collapsed = useAppSelector((state: RootState) => state.ui.sidebar.collapsed);
   const { profile, user, loading: userLoading } = useAppSelector((state) => state.user);
   
-  const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
@@ -73,7 +72,6 @@ export default function Profile() {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-    setError,
     setValue,
     watch,
     reset
@@ -81,10 +79,6 @@ export default function Profile() {
     resolver: zodResolver(profileSchema),
     mode: "onBlur"
   });
-
-  // Watch form values
-  const currentPassword = watch("currentPassword");
-  const newPassword = watch("newPassword");
 
   // Helper function to normalize phone number to E.164 format
   const normalizePhoneNumber = (phoneNumber: string | null | undefined): string | undefined => {
@@ -150,7 +144,6 @@ export default function Profile() {
   }, [updateSuccess, reset, watch]);
 
   const onSubmit = async (data: ProfileFormData) => {
-    setLoading(true);
     setUpdateError(null);
     setUpdateSuccess(null);
 
@@ -168,7 +161,6 @@ export default function Profile() {
 
         if (!profileResult.success) {
           setUpdateError(profileResult.error || "Failed to update profile");
-          setLoading(false);
           return;
         }
 
@@ -184,7 +176,6 @@ export default function Profile() {
 
         if (passwordError) {
           setUpdateError(`Password update failed: ${passwordError.message}`);
-          setLoading(false);
           return;
         }
       }
@@ -194,8 +185,6 @@ export default function Profile() {
     } catch (error) {
       console.error("Profile update error:", error);
       setUpdateError("An unexpected error occurred. Please try again.");
-    } finally {
-      setLoading(false);
     }
   };
 

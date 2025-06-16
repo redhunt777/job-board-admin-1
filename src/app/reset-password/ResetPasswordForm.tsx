@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { IoMdEye, IoMdEyeOff, IoMdCheckmark } from "react-icons/io";
+import { IoMdEye, IoMdEyeOff } from "react-icons/io";
 import { IoAlertCircleOutline } from "react-icons/io5";
 import { motion } from "framer-motion";
 import { createClient } from "@/utils/supabase/client";
@@ -53,7 +53,6 @@ const ResetPasswordForm = () => {
     formState: { errors, isSubmitting },
     setError,
     watch,
-    trigger,
   } = useForm<ResetPasswordFormData>({
     resolver: zodResolver(resetPasswordSchema),
     mode: "onBlur",
