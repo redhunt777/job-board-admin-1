@@ -115,9 +115,11 @@ export const logoutUser = createAsyncThunk(
         return rejectWithValue(result.error || "Logout failed");
       }
 
-      return null; // No user data on logout
-    } catch {
-      return rejectWithValue("Logout failed");
+      return null;
+    } catch (error) {
+      // Consider clearing local state even if server logout fails
+      console.warn("Logout failed, but clearing local state:", error);
+      return null; // Or you could still reject based on your needs
     }
   }
 );
@@ -291,12 +293,17 @@ const userSlice = createSlice({
         state.isAuthenticated = false;
         state.error = null;
       })
+      // Improved extraReducers for logout
       .addCase(logoutUser.rejected, (state, action) => {
         state.loading = false;
-        state.error =
-          typeof action.payload === "string"
-            ? action.payload
-            : String(action.payload);
+        state.error = typeof action.payload === "string" ? action.payload : String(action.payload);
+        // Clear local state regardless (more secure)
+        state.user = null;
+        state.profile = null;
+        state.organization = null;
+        state.roles = [];
+        state.completeUserData = null;
+        state.isAuthenticated = false;
       })
 
       // Refresh User Data
@@ -396,7 +403,7 @@ export const selectHasPermission =
       let currentValue:
         | boolean
         | Record<string, boolean | Record<string, boolean>> = userRole.role
-        .permissions as Record<string, boolean | Record<string, boolean>>;
+          .permissions as Record<string, boolean | Record<string, boolean>>;
       for (const path of permissionPath) {
         if (typeof currentValue !== "object" || currentValue === null)
           return false;
