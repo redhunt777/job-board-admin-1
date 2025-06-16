@@ -378,7 +378,13 @@ EducationDetails.displayName = "EducationDetails";
 
 // Memoized additional information component
 const AdditionalInformation = memo(
-  ({ candidate, calculateExperience }: { candidate: CandidateWithApplication | null, calculateExperience?: (candidate: CandidateWithApplication) => string }) => (
+  ({
+    candidate,
+    calculateExperience,
+  }: {
+    candidate: CandidateWithApplication | null;
+    calculateExperience?: (candidate: CandidateWithApplication) => string;
+  }) => (
     <div className="mb-6">
       <div className="font-semibold text-lg text-blue-700 mb-3">
         Additional Information
@@ -446,7 +452,9 @@ const AdditionalInformation = memo(
                 Total Experience
               </div>
               <div className="text-sm text-neutral-600">
-                {candidate?.experience && candidate.experience.length > 0 && calculateExperience
+                {candidate?.experience &&
+                candidate.experience.length > 0 &&
+                calculateExperience
                   ? calculateExperience(candidate)
                   : "N/A"}
               </div>
@@ -482,9 +490,9 @@ const AdditionalInformation = memo(
               </div>
               <div className="text-sm text-neutral-600">
                 {candidate?.portfolio_url ? (
-                  <a 
-                    href={candidate.portfolio_url} 
-                    target="_blank" 
+                  <a
+                    href={candidate.portfolio_url}
+                    target="_blank"
                     rel="noopener noreferrer"
                     className="text-blue-600 hover:text-blue-800 underline"
                   >
@@ -568,7 +576,10 @@ const CandidatesDetailsOverlay = memo(
               <PersonalDetails candidate={candidate} />
               <ExperienceDetails candidate={candidate} />
               <EducationDetails candidate={candidate} />
-              <AdditionalInformation candidate={candidate} calculateExperience={calculateExperience} />
+              <AdditionalInformation
+                candidate={candidate}
+                calculateExperience={calculateExperience}
+              />
             </div>
           </div>
         </div>

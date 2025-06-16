@@ -269,7 +269,9 @@ export default function CandidatesList({
     }
 
     //confirm status change
-    const confirmed = window.confirm(`Are you sure you want to change the status to "${status}"?`);
+    const confirmed = window.confirm(
+      `Are you sure you want to change the status to "${status}"?`
+    );
     if (!confirmed) {
       return;
     }
@@ -282,15 +284,19 @@ export default function CandidatesList({
           userContext,
         })
       ).unwrap();
-      
+
       // Update the overlay candidate status if it's the same candidate
-      if (candidatesDetailsOverlay.candidate?.application_id === applicationId) {
-        setCandidatesDetailsOverlay(prev => ({
+      if (
+        candidatesDetailsOverlay.candidate?.application_id === applicationId
+      ) {
+        setCandidatesDetailsOverlay((prev) => ({
           ...prev,
-          candidate: prev.candidate ? {
-            ...prev.candidate,
-            application_status: status
-          } : null
+          candidate: prev.candidate
+            ? {
+                ...prev.candidate,
+                application_status: status,
+              }
+            : null,
         }));
       }
     } catch (error) {
@@ -304,7 +310,7 @@ export default function CandidatesList({
       candidate,
       show: true,
     });
-    
+
     if (onCandidateClick) {
       onCandidateClick(candidate);
     }
@@ -319,7 +325,7 @@ export default function CandidatesList({
   //   try {
   //     // TODO: Implement delete functionality in the slice
   //     console.log("Delete candidate with application ID:", applicationId);
-      
+
   //     // Close overlay if the deleted candidate is currently shown
   //     if (candidatesDetailsOverlay.candidate?.application_id === applicationId) {
   //       setCandidatesDetailsOverlay({
@@ -554,10 +560,16 @@ export default function CandidatesList({
                       >
                         Newest First
                       </option>
-                      <option value="date_asc" className="bg-white text-gray-900">
+                      <option
+                        value="date_asc"
+                        className="bg-white text-gray-900"
+                      >
                         Oldest First
                       </option>
-                      <option value="name_asc" className="bg-white text-gray-900">
+                      <option
+                        value="name_asc"
+                        className="bg-white text-gray-900"
+                      >
                         Name (A-Z)
                       </option>
                       <option

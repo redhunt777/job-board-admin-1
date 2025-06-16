@@ -25,10 +25,10 @@ export default function GlobalStickyTable<T>({
   className = "",
 }: GlobalStickyTableProps<T>) {
   const colCount = columns.length;
-  
+
   // Calculate the total width of sticky columns
   const lastColumnWidth = columns[colCount - 1]?.width || "120px";
-  
+
   return (
     <div className={`overflow-x-auto ${className}`}>
       <table className="min-w-full divide-y divide-gray-200">
@@ -37,34 +37,39 @@ export default function GlobalStickyTable<T>({
             {columns.map((col, idx) => {
               let stickyClass = "";
               let stickyStyle: React.CSSProperties = {};
-              
+
               if (stickyFirst && idx === 0) {
-                stickyClass = "sticky left-0 z-20 bg-white shadow-[1px_0_0_0_#e5e7eb]";
+                stickyClass =
+                  "sticky left-0 z-20 bg-white shadow-[1px_0_0_0_#e5e7eb]";
               }
               if (stickyLastTwo && idx === colCount - 2) {
-                stickyClass = "sticky z-20 bg-white shadow-[-1px_0_0_0_#e5e7eb]";
+                stickyClass =
+                  "sticky z-20 bg-white shadow-[-1px_0_0_0_#e5e7eb]";
                 stickyStyle = { right: lastColumnWidth };
               }
               if (stickyLastTwo && idx === colCount - 1) {
-                stickyClass = "sticky right-0 z-20 bg-white shadow-[-1px_0_0_0_#e5e7eb]";
+                stickyClass =
+                  "sticky right-0 z-20 bg-white shadow-[-1px_0_0_0_#e5e7eb]";
               }
-              
+
               // Ensure width is applied consistently
-              const widthStyle: React.CSSProperties = col.width 
-                ? { 
-                    width: col.width, 
-                    minWidth: col.width, 
-                    maxWidth: col.fixedWidth ? col.width : undefined 
-                  } 
+              const widthStyle: React.CSSProperties = col.width
+                ? {
+                    width: col.width,
+                    minWidth: col.width,
+                    maxWidth: col.fixedWidth ? col.width : undefined,
+                  }
                 : {};
-              
+
               return (
                 <th
                   key={col.key}
-                  className={`px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${stickyClass} ${col.className || ""}`}
+                  className={`px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${stickyClass} ${
+                    col.className || ""
+                  }`}
                   style={{
                     ...widthStyle,
-                    ...stickyStyle
+                    ...stickyStyle,
                   }}
                 >
                   {col.header}
@@ -76,7 +81,10 @@ export default function GlobalStickyTable<T>({
         <tbody className="bg-white divide-y divide-gray-200">
           {data.length === 0 ? (
             <tr>
-              <td colSpan={colCount} className="px-6 py-12 text-center text-gray-500">
+              <td
+                colSpan={colCount}
+                className="px-6 py-12 text-center text-gray-500"
+              >
                 <p className="text-lg font-medium">No data found</p>
               </td>
             </tr>
@@ -86,34 +94,39 @@ export default function GlobalStickyTable<T>({
                 {columns.map((col, idx) => {
                   let stickyClass = "";
                   let stickyStyle: React.CSSProperties = {};
-                  
+
                   if (stickyFirst && idx === 0) {
-                    stickyClass = "sticky left-0 z-10 bg-white shadow-[1px_0_0_0_#e5e7eb]";
+                    stickyClass =
+                      "sticky left-0 z-10 bg-white shadow-[1px_0_0_0_#e5e7eb]";
                   }
                   if (stickyLastTwo && idx === colCount - 2) {
-                    stickyClass = "sticky z-10 bg-white shadow-[-1px_0_0_0_#e5e7eb]";
+                    stickyClass =
+                      "sticky z-10 bg-white shadow-[-1px_0_0_0_#e5e7eb]";
                     stickyStyle = { right: lastColumnWidth };
                   }
                   if (stickyLastTwo && idx === colCount - 1) {
-                    stickyClass = "sticky right-0 z-10 bg-white shadow-[-1px_0_0_0_#e5e7eb]";
+                    stickyClass =
+                      "sticky right-0 z-10 bg-white shadow-[-1px_0_0_0_#e5e7eb]";
                   }
-                  
+
                   // Ensure width is applied consistently
-                  const widthStyle: React.CSSProperties = col.width 
-                    ? { 
-                        width: col.width, 
-                        minWidth: col.width, 
-                        maxWidth: col.fixedWidth ? col.width : undefined 
-                      } 
+                  const widthStyle: React.CSSProperties = col.width
+                    ? {
+                        width: col.width,
+                        minWidth: col.width,
+                        maxWidth: col.fixedWidth ? col.width : undefined,
+                      }
                     : {};
-                  
+
                   return (
                     <td
                       key={col.key}
-                      className={`px-6 py-4 whitespace-nowrap ${stickyClass} ${col.className || ""}`}
+                      className={`px-6 py-4 whitespace-nowrap ${stickyClass} ${
+                        col.className || ""
+                      }`}
                       style={{
                         ...widthStyle,
-                        ...stickyStyle
+                        ...stickyStyle,
                       }}
                     >
                       {col.render(row)}
@@ -127,4 +140,4 @@ export default function GlobalStickyTable<T>({
       </table>
     </div>
   );
-} 
+}
