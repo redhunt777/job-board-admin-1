@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, memo } from "react";
+import { useState, useEffect } from "react";
 import { HiOutlineArrowCircleLeft } from "react-icons/hi";
 import Link from "next/link";
 import Image from "next/image";
