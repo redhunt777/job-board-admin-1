@@ -39,7 +39,7 @@ const CandidateHeader = memo(
     };
 
     return (
-      <div className="p-6 border-b border-neutral-200">
+      <div className="p-6 border-b border-neutral-200 bg-white">
         <div className="flex items-center gap-4 mb-4">
           <IoPersonCircleSharp className="w-16 h-16 text-neutral-500" />
           <div className="flex-1">
@@ -376,11 +376,141 @@ const EducationDetails = memo(
 
 EducationDetails.displayName = "EducationDetails";
 
+// Memoized additional information component
+const AdditionalInformation = memo(
+  ({ candidate, calculateExperience }: { candidate: CandidateWithApplication | null, calculateExperience?: (candidate: CandidateWithApplication) => string }) => (
+    <div className="mb-6">
+      <div className="font-semibold text-lg text-blue-700 mb-3">
+        Additional Information
+      </div>
+      <div className="bg-neutral-50 rounded-lg p-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="flex items-start gap-3">
+            <div>
+              <div className="font-medium text-sm text-neutral-800 mb-1">
+                Notice Period
+              </div>
+              <div className="text-sm text-neutral-600">
+                {candidate?.notice_period || "N/A"}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-start gap-3">
+            <div>
+              <div className="font-medium text-sm text-neutral-800 mb-1">
+                Current CTC
+              </div>
+              <div className="text-sm text-neutral-600">
+                {candidate?.current_ctc ? `₹${candidate.current_ctc}` : "N/A"}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-start gap-3">
+            <div>
+              <div className="font-medium text-sm text-neutral-800 mb-1">
+                Expected CTC
+              </div>
+              <div className="text-sm text-neutral-600">
+                {candidate?.expected_ctc ? `₹${candidate.expected_ctc}` : "N/A"}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-start gap-3">
+            <div>
+              <div className="font-medium text-sm text-neutral-800 mb-1">
+                LinkedIn Profile
+              </div>
+              <div className="text-sm text-neutral-600">
+                {candidate?.linkedin_url ? (
+                  <a
+                    href={candidate.linkedin_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:text-blue-800 underline"
+                  >
+                    View Profile
+                  </a>
+                ) : (
+                  "N/A"
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-start gap-3">
+            <div>
+              <div className="font-medium text-sm text-neutral-800 mb-1">
+                Total Experience
+              </div>
+              <div className="text-sm text-neutral-600">
+                {candidate?.experience && candidate.experience.length > 0 && calculateExperience
+                  ? calculateExperience(candidate)
+                  : "N/A"}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-start gap-3">
+            <div>
+              <div className="font-medium text-sm text-neutral-800 mb-1">
+                Portfolio/Website
+              </div>
+              <div className="text-sm text-neutral-600">
+                {candidate?.portfolio_url ? (
+                  <a
+                    href={candidate.portfolio_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:text-blue-800 underline"
+                  >
+                    View Portfolio
+                  </a>
+                ) : (
+                  "N/A"
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-start gap-3">
+            <div>
+              <div className="font-medium text-sm text-neutral-800 mb-1">
+                Portfolio/Website
+              </div>
+              <div className="text-sm text-neutral-600">
+                {candidate?.portfolio_url ? (
+                  <a 
+                    href={candidate.portfolio_url} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:text-blue-800 underline"
+                  >
+                    View Portfolio
+                  </a>
+                ) : (
+                  "N/A"
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+);
+
+AdditionalInformation.displayName = "AdditionalInformation";
+
 const CandidatesDetailsOverlay = memo(
   ({
     candidatesDetailsOverlay,
     setCandidatesDetailsOverlay,
     onStatusUpdate,
+    onDelete,
+    calculateExperience,
   }: {
     candidatesDetailsOverlay: {
       candidate: CandidateWithApplication | null;
@@ -393,6 +523,8 @@ const CandidatesDetailsOverlay = memo(
       }>
     >;
     onStatusUpdate?: (applicationId: string, status: string) => void;
+    onDelete?: (applicationId: string) => void;
+    calculateExperience?: (candidate: CandidateWithApplication) => string;
   }) => {
     const handleClose = useCallback(() => {
       setCandidatesDetailsOverlay({ candidate: null, show: false });
@@ -414,7 +546,7 @@ const CandidatesDetailsOverlay = memo(
 
     return (
       <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4">
-        <div className="bg-white rounded-2xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden relative">
+        <div className="bg-white rounded-2xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden relative flex flex-col">
           <button
             className="absolute top-4 right-4 text-neutral-500 hover:text-neutral-700 cursor-pointer z-10 bg-white rounded-full p-1 shadow-sm"
             onClick={handleClose}
@@ -422,28 +554,21 @@ const CandidatesDetailsOverlay = memo(
             <IoCloseSharp className="w-6 h-6 text-neutral-800" />
           </button>
 
-          <div className="overflow-y-auto max-h-[90vh]">
-            <CandidateHeader
-              candidate={candidate}
-              onClose={handleClose}
-              onStatusUpdate={handleStatusUpdate}
-            />
+          {/* Static Header */}
+          <CandidateHeader
+            candidate={candidate}
+            onClose={handleClose}
+            onStatusUpdate={handleStatusUpdate}
+          />
 
+          {/* Scrollable Content */}
+          <div className="flex-1 overflow-y-auto">
             <div className="p-6 space-y-6">
               <ResumeSection candidate={candidate} />
               <PersonalDetails candidate={candidate} />
               <ExperienceDetails candidate={candidate} />
               <EducationDetails candidate={candidate} />
-              <div>
-                <div className="font-semibold text-lg text-blue-700 mb-3">
-                  Additional Information
-                </div>
-                <div className="bg-neutral-50 rounded-lg">
-                  <p className="text-sm text-neutral-600">
-                    {"No additional information provided."}
-                  </p>
-                </div>
-              </div>
+              <AdditionalInformation candidate={candidate} calculateExperience={calculateExperience} />
             </div>
           </div>
         </div>
