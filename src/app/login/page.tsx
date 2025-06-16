@@ -264,7 +264,7 @@ const LoginForm = () => {
   );
 };
 
-const AdminLogin = memo(LoginForm, (_prevProps, _nextProps) => {
+const AdminLogin = memo(LoginForm, () => {
   // Custom comparison function to prevent unnecessary re-renders
   return true; // Since we have no props, always return true to prevent re-renders
 });
