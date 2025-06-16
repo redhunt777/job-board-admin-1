@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, memo } from "react";
 import { LexicalComposer } from "@lexical/react/LexicalComposer";
 import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
 import { ContentEditable } from "@lexical/react/LexicalContentEditable";
@@ -120,6 +120,56 @@ const theme = {
     underlineStrikethrough: "underline line-through",
   },
 };
+
+// Memoize the editor content component
+const EditorContent = memo(({
+  isLoadingContent,
+  isEditorReady
+}: {
+  isLoadingContent: boolean;
+  isEditorReady: boolean;
+}) => (
+  <div className="space-y-2">
+    {isLoadingContent && (
+      <div className="text-sm text-blue-600 flex items-center gap-2">
+        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+        Loading existing content...
+      </div>
+    )}
+    
+    <div className="bg-neutral-50 rounded-lg border border-neutral-200">
+      <ToolbarPlugin />
+      <RichTextPlugin
+        contentEditable={
+          <ContentEditable 
+            className="min-h-60 px-3 py-2 outline-none bg-neutral-50 text-neutral-500 focus:bg-white focus:text-neutral-900 transition-colors" 
+          />
+        }
+        placeholder={
+          <div className="absolute top-2 left-3 text-neutral-400 pointer-events-none">
+            Enter job description here...
+          </div>
+        }
+        ErrorBoundary={({ children }) => <div className="text-red-500 p-4">{children}</div>}
+      />
+      <HistoryPlugin />
+      <ListPlugin />
+      <LinkPlugin />
+      <AutoFocusPlugin />
+      <ClearEditorPlugin />
+      <MarkdownShortcutPlugin transformers={TRANSFORMERS} />
+      <FontSizePlugin />
+      <OnChangePlugin onChange={handleChange} />
+    </div>
+    
+    {/* Help text */}
+    <div className="text-xs text-gray-500 mt-2">
+      💡 <strong>Tip:</strong> Select text and use the toolbar above to format it. Try making text <strong>bold</strong>, <em>italic</em>, or creating lists!
+    </div>
+  </div>
+));
+
+EditorContent.displayName = "EditorContent";
 
 export default function LexicalEditor({ value, onChange }: LexicalEditorProps) {
   const editorRef = useRef<LexicalEditorType | null>(null);
@@ -269,48 +319,13 @@ export default function LexicalEditor({ value, onChange }: LexicalEditorProps) {
   );
 
   return (
-    <div className="space-y-2">
-      {/* Loading indicator */}
-      {isLoadingContent && (
-        <div className="text-sm text-blue-600 flex items-center gap-2">
-          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-          Loading existing content...
-        </div>
-      )}
-      
-      <LexicalComposer initialConfig={initialConfig}>
-        <EditorRefPlugin editorRef={editorRef} setIsReady={setIsEditorReady} />
-        <div className="bg-neutral-50 rounded-lg border border-neutral-200">
-          <ToolbarPlugin />
-          <RichTextPlugin
-            contentEditable={
-              <ContentEditable 
-                className="min-h-60 px-3 py-2 outline-none bg-neutral-50 text-neutral-500 focus:bg-white focus:text-neutral-900 transition-colors" 
-              />
-            }
-            placeholder={
-              <div className="absolute top-2 left-3 text-neutral-400 pointer-events-none">
-                Enter job description here...
-              </div>
-            }
-            ErrorBoundary={({ children }) => <div className="text-red-500 p-4">{children}</div>}
-          />
-          <HistoryPlugin />
-          <ListPlugin />
-          <LinkPlugin />
-          <AutoFocusPlugin />
-          <ClearEditorPlugin />
-          <MarkdownShortcutPlugin transformers={TRANSFORMERS} />
-          <FontSizePlugin />
-          <OnChangePlugin onChange={handleChange} />
-        </div>
-        
-        {/* Help text */}
-        <div className="text-xs text-gray-500 mt-2">
-          💡 <strong>Tip:</strong> Select text and use the toolbar above to format it. Try making text <strong>bold</strong>, <em>italic</em>, or creating lists!
-        </div>
-      </LexicalComposer>
-    </div>
+    <LexicalComposer initialConfig={initialConfig}>
+      <EditorRefPlugin editorRef={editorRef} setIsReady={setIsEditorReady} />
+      <EditorContent
+        isLoadingContent={isLoadingContent}
+        isEditorReady={isEditorReady}
+      />
+    </LexicalComposer>
   );
 }
 

@@ -13,23 +13,78 @@ import { FiEdit3 } from "react-icons/fi";
 import { IoMdEye, IoMdEyeOff } from "react-icons/io";
 import { refreshUserData, updateProfile } from "@/store/features/userSlice";
 import { updateUserProfileAction } from "@/app/login/actions";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+
+// Define the form schema using zod
+const profileSchema = z.object({
+  name: z.string()
+    .min(1, "Name is required")
+    .min(2, "Name must be at least 2 characters"),
+  phone: z.string()
+    .optional()
+    .refine((val) => {
+      if (!val) return true; // Optional field
+      try {
+        const parsed = parsePhoneNumber(val);
+        return parsed?.isValid() || false;
+      } catch {
+        return false;
+      }
+    }, "Please enter a valid phone number"),
+  currentPassword: z.string()
+    .optional()
+    .refine((val) => {
+      if (!val) return true; // Optional field
+      return val.length >= 6;
+    }, "Current password must be at least 6 characters long"),
+  newPassword: z.string()
+    .optional()
+    .refine((val) => {
+      if (!val) return true; // Optional field
+      return val.length >= 6;
+    }, "New password must be at least 6 characters long")
+}).refine((data) => {
+  // If one password is provided, both must be provided
+  if (data.currentPassword && !data.newPassword) return false;
+  if (!data.currentPassword && data.newPassword) return false;
+  return true;
+}, {
+  message: "Both current and new passwords are required to change password",
+  path: ["newPassword"] // This will show the error on the new password field
+});
+
+type ProfileFormData = z.infer<typeof profileSchema>;
 
 export default function Profile() {
   const dispatch = useAppDispatch();
   const collapsed = useAppSelector((state: RootState) => state.ui.sidebar.collapsed);
   const { profile, user, loading: userLoading } = useAppSelector((state) => state.user);
   
-  // Local state for form inputs
   const [loading, setLoading] = useState(false);
-  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState<string | undefined>("");
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [updateError, setUpdateError] = useState<string | null>(null);
   const [updateSuccess, setUpdateSuccess] = useState<string | null>(null);
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    setError,
+    setValue,
+    watch,
+    reset
+  } = useForm<ProfileFormData>({
+    resolver: zodResolver(profileSchema),
+    mode: "onBlur"
+  });
+
+  // Watch form values
+  const currentPassword = watch("currentPassword");
+  const newPassword = watch("newPassword");
 
   // Helper function to normalize phone number to E.164 format
   const normalizePhoneNumber = (phoneNumber: string | null | undefined): string | undefined => {
@@ -56,13 +111,13 @@ export default function Profile() {
   // Initialize form with user data
   useEffect(() => {
     if (profile) {
-      setName(profile.full_name || "");
+      setValue("name", profile.full_name || "");
+      setValue("phone", normalizePhoneNumber(profile.phone) || "");
       setEmail(profile.email || "");
-      setPhone(normalizePhoneNumber(profile.phone));
     } else if (user) {
       // Fallback to user email if no profile
     }
-  }, [profile, user]);
+  }, [profile, user, setValue]);
 
   // Load user data on component mount if not already loaded
   useEffect(() => {
@@ -82,8 +137,19 @@ export default function Profile() {
     }
   }, [updateError, updateSuccess]);
 
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // Clear password fields when form is submitted successfully
+  useEffect(() => {
+    if (updateSuccess) {
+      reset({
+        name: watch("name"),
+        phone: watch("phone"),
+        currentPassword: "",
+        newPassword: ""
+      });
+    }
+  }, [updateSuccess, reset, watch]);
+
+  const onSubmit = async (data: ProfileFormData) => {
     setLoading(true);
     setUpdateError(null);
     setUpdateSuccess(null);
@@ -91,37 +157,11 @@ export default function Profile() {
     try {
       const supabase = createClient();
 
-      // Validate required fields
-      if (!name.trim()) {
-        setUpdateError("Name is required");
-        setLoading(false);
-        return;
-      }
-
-      // Validate password fields if provided
-      if (currentPassword && !newPassword) {
-        setUpdateError("Please enter a new password");
-        setLoading(false);
-        return;
-      }
-
-      if (!currentPassword && newPassword) {
-        setUpdateError("Please enter your current password");
-        setLoading(false);
-        return;
-      }
-
-      if (newPassword && newPassword.length < 6) {
-        setUpdateError("New password must be at least 6 characters long");
-        setLoading(false);
-        return;
-      }
-
       // Update profile data
       if (profile) {
         const profileUpdateData = {
-          full_name: name.trim(),
-          phone: phone || null, // This will be in E.164 format from react-phone-number-input
+          full_name: data.name.trim(),
+          phone: data.phone || null, // This will be in E.164 format from react-phone-number-input
         };
 
         const profileResult = await updateUserProfileAction(profileUpdateData);
@@ -137,9 +177,9 @@ export default function Profile() {
       }
 
       // Update password if provided
-      if (currentPassword && newPassword) {
+      if (data.currentPassword && data.newPassword) {
         const { error: passwordError } = await supabase.auth.updateUser({
-          password: newPassword
+          password: data.newPassword
         });
 
         if (passwordError) {
@@ -149,9 +189,6 @@ export default function Profile() {
         }
       }
 
-      // Clear password fields on success
-      setCurrentPassword("");
-      setNewPassword("");
       setUpdateSuccess("Profile updated successfully!");
 
     } catch (error) {
@@ -228,7 +265,7 @@ export default function Profile() {
         {/* Profile Form */}
         <form
           className="max-w-6xl p-4 flex flex-col gap-8"
-          onSubmit={handleSave}
+          onSubmit={handleSubmit(onSubmit)}
         >
           {/* Profile Picture */}
           <div className="flex justify-center md:justify-start">
@@ -248,7 +285,7 @@ export default function Profile() {
                     src={"/logomark-white.svg"}
                     alt="Profile Avatar"
                     fill
-                    className="object-contain bg-gradient-to-b from-blue-800 to-blue-900 rounded-full p-5"
+                    className="object-cover rounded-full"
                     sizes="9rem"
                     draggable={false}
                   />
@@ -271,19 +308,24 @@ export default function Profile() {
               <label className="text-neutral-700 font-medium">Name</label>
               <input
                 type="text"
-                className="rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3 text-base focus:outline-none focus:ring-1 focus:ring-neutral-200"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-                disabled={loading}
+                {...register("name")}
+                className={`rounded-lg border px-4 py-3 text-base focus:outline-none focus:ring-1 ${
+                  errors.name
+                    ? 'border-red-300 focus:border-red-500 focus:ring-red-500 bg-red-50'
+                    : 'border-neutral-200 focus:border-neutral-300 focus:ring-neutral-300 bg-neutral-50'
+                }`}
+                disabled={isSubmitting}
               />
+              {errors.name && (
+                <span className="text-red-500 text-sm">{errors.name.message}</span>
+              )}
             </div>
             <div className="flex-1 flex flex-col gap-2">
               <label className="text-neutral-700 font-medium">Email</label>
               <input
                 type="email"
-                className="rounded-lg border border-neutral-200 bg-neutral-100 px-4 py-3 text-base focus:outline-none cursor-not-allowed"
                 value={email}
+                className="rounded-lg border border-neutral-200 bg-neutral-100 px-4 py-3 text-base focus:outline-none cursor-not-allowed"
                 readOnly
                 title="Email cannot be changed"
               />
@@ -294,86 +336,107 @@ export default function Profile() {
           <div className="flex flex-col md:flex-row gap-6 w-full">
             <div className="md:w-1/2 flex flex-col gap-2 pr-3">
               <label className="text-neutral-700 font-medium">Phone</label>
-              <PhoneInput
-                international
-                defaultCountry="IN"
-                value={phone}
-                onChange={setPhone}
-                className="rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3 text-base focus:outline-none focus:ring-1 focus:ring-neutral-200"
-                placeholder="Enter phone number"
-                disabled={loading}
-              />
+              <div className={`rounded-lg border ${
+                errors.phone
+                  ? 'border-red-300 focus-within:border-red-500 focus-within:ring-1 focus-within:ring-red-500 bg-red-50'
+                  : 'border-neutral-200 focus-within:border-neutral-300 focus-within:ring-1 focus-within:ring-neutral-300 bg-neutral-50'
+              }`}>
+                <PhoneInput
+                  international
+                  defaultCountry="IN"
+                  value={watch("phone")}
+                  onChange={(value) => setValue("phone", value || "")}
+                  className="w-full px-4 py-3 text-base focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+                  placeholder="Enter phone number"
+                  disabled={isSubmitting}
+                />
+              </div>
+              {errors.phone && (
+                <span className="text-red-500 text-sm">{errors.phone.message}</span>
+              )}
             </div>
           </div>
           
           {/* Password Section */}
-          <div className="flex flex-col md:flex-row gap-6 w-full">
-            <div className="flex-1 flex flex-col gap-2">
-              <label className="text-neutral-700 font-medium">
-                Current Password
-              </label>
-              <div className="relative">
-                <input
-                  type={showCurrentPassword ? "text" : "password"}
-                  className="rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3 text-base w-full focus:outline-none focus:ring-1 focus:ring-neutral-200 pr-12"
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
-                  placeholder="Enter your current password"
-                  disabled={loading}
-                />
-                <button
-                  type="button"
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-700 disabled:cursor-not-allowed"
-                  onClick={() => setShowCurrentPassword((v) => !v)}
-                  tabIndex={-1}
-                  disabled={loading}
-                >
-                  {showCurrentPassword ? (
-                    <IoMdEye className="w-6 h-6" />
-                  ) : (
-                    <IoMdEyeOff className="w-6 h-6" />
-                  )}
-                </button>
+          <div className="flex flex-col gap-4">
+            <h2 className="text-xl font-semibold text-neutral-900">Change Password</h2>
+            <p className="text-neutral-600 text-base">
+              Leave these fields empty if you don&apos;t want to change your password.
+            </p>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Current Password */}
+              <div className="flex flex-col gap-2">
+                <label className="text-neutral-700 font-medium">Current Password</label>
+                <div className="relative">
+                  <input
+                    type={showCurrentPassword ? "text" : "password"}
+                    {...register("currentPassword")}
+                    className={`w-full rounded-lg border px-4 py-3 text-base focus:outline-none focus:ring-1 ${
+                      errors.currentPassword
+                        ? 'border-red-300 focus:border-red-500 focus:ring-red-500 bg-red-50'
+                        : 'border-neutral-200 focus:border-neutral-300 focus:ring-neutral-300 bg-neutral-50'
+                    }`}
+                    placeholder="Enter current password"
+                    disabled={isSubmitting}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                    className="absolute right-4 text-neutral-500 hover:text-neutral-700"
+                    tabIndex={-1}
+                  >
+                    {showCurrentPassword ? <IoMdEyeOff size={20} /> : <IoMdEye size={20} />}
+                  </button>
+                </div>
+                {errors.currentPassword && (
+                  <span className="text-red-500 text-sm">{errors.currentPassword.message}</span>
+                )}
               </div>
-            </div>
-            <div className="flex-1 flex flex-col gap-2">
-              <label className="text-neutral-700 font-medium">
-                New Password
-              </label>
-              <div className="relative">
-                <input
-                  type={showNewPassword ? "text" : "password"}
-                  className="rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3 text-base w-full focus:outline-none focus:ring-1 focus:ring-neutral-200 pr-12"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder="Enter your new password"
-                  disabled={loading}
-                />
-                <button
-                  type="button"
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-700 disabled:cursor-not-allowed"
-                  onClick={() => setShowNewPassword((v) => !v)}
-                  tabIndex={-1}
-                  disabled={loading}
-                >
-                  {showNewPassword ? (
-                    <IoMdEye className="w-6 h-6" />
-                  ) : (
-                    <IoMdEyeOff className="w-6 h-6" />
-                  )}
-                </button>
+
+              {/* New Password */}
+              <div className="flex flex-col gap-2">
+                <label className="text-neutral-700 font-medium">New Password</label>
+                <div className="relative">
+                  <input
+                    type={showNewPassword ? "text" : "password"}
+                    {...register("newPassword")}
+                    className={`w-full rounded-lg border px-4 py-3 text-base focus:outline-none focus:ring-1 ${
+                      errors.newPassword
+                        ? 'border-red-300 focus:border-red-500 focus:ring-red-500 bg-red-50'
+                        : 'border-neutral-200 focus:border-neutral-300 focus:ring-neutral-300 bg-neutral-50'
+                    }`}
+                    placeholder="Enter new password"
+                    disabled={isSubmitting}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                    className="absolute right-4 text-neutral-500 hover:text-neutral-700"
+                    tabIndex={-1}
+                  >
+                    {showNewPassword ? <IoMdEyeOff size={20} /> : <IoMdEye size={20} />}
+                  </button>
+                </div>
+                {errors.newPassword && (
+                  <span className="text-red-500 text-sm">{errors.newPassword.message}</span>
+                )}
               </div>
             </div>
           </div>
-          
-          {/* Save Button Row */}
-          <div className="flex justify-center md:justify-start mt-4">
+
+          {/* Submit Button */}
+          <div className="flex justify-end">
             <button
               type="submit"
-              className="bg-blue-700 hover:bg-blue-800 text-white font-medium rounded-lg px-6 py-3 text-lg shadow transition disabled:opacity-60 disabled:cursor-not-allowed"
-              disabled={loading}
+              disabled={isSubmitting}
+              className={`px-6 py-3 text-base font-medium text-white rounded-lg transition-colors ${
+                !isSubmitting
+                  ? 'bg-blue-600 hover:bg-blue-700'
+                  : 'bg-blue-400 cursor-not-allowed'
+              }`}
             >
-              {loading ? "Saving..." : "Save Changes"}
+              {isSubmitting ? 'Saving Changes...' : 'Save Changes'}
             </button>
           </div>
         </form>

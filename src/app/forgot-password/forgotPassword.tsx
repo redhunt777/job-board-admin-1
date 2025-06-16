@@ -1,64 +1,103 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createClient } from "../../utils/supabase/client";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import Link from "next/link";
+
+// Define the form schema using zod
+const forgotPasswordSchema = z.object({
+  email: z
+    .string()
+    .min(1, "Email is required")
+    .email("Please enter a valid email address"),
+});
+
+type ForgotPasswordFormData = z.infer<typeof forgotPasswordSchema>;
+
+interface CustomFormState {
+  success: boolean;
+  message?: string;
+  error?: string;
+}
 
 const ForgotPasswordForm = () => {
-  const [email, setEmail] = useState("");
-  const [step, setStep] = useState<"email" | "emailsent">("email");
-  const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false); // Added loading state
+  const [formState, setFormState] = useState<CustomFormState | null>(null);
 
-  const handleEmailsubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setIsLoading(true); // Start loading
-    setError(null); // Clear any previous errors
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    setError,
+    watch,
+  } = useForm<ForgotPasswordFormData>({
+    resolver: zodResolver(forgotPasswordSchema),
+    mode: "onBlur",
+  });
+
+  // Watch email for clearing form state
+  const email = watch("email");
+
+  // Clear form state when user starts typing
+  useEffect(() => {
+    if (formState) {
+      setFormState(null);
+    }
+  }, [email, formState]);
+
+  const onSubmit = async (data: ForgotPasswordFormData) => {
+    // Reset form state
+    setFormState(null);
 
     try {
       const supabase = createClient();
-      const { error: resetError } = await supabase.auth.resetPasswordForEmail(
-        email,
-        {
-          redirectTo: `${process.env.NEXT_PUBLIC_URL}reset-password`,
+      const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+
+      if (error) {
+        setFormState({
+          success: false,
+          error:
+            error.message || "Failed to send reset link. Please try again.",
+        });
+        if (error.message?.includes("email")) {
+          setError("email", { message: error.message });
         }
-      );
-
-      if (resetError) {
-        setError("Failed to send reset link. Please try again.");
-        console.log("Error sending reset link:", resetError);
-        return;
+      } else {
+        setFormState({
+          success: true,
+          message: "Password reset link has been sent to your email.",
+        });
       }
-
-      setStep("emailsent");
-    } catch (err) {
-      setError("An unexpected error occurred. Please try again.");
-      console.log("Unexpected error:", err);
-    } finally {
-      setIsLoading(false); // End loading
+    } catch (error) {
+      console.log("Form submission error:", error);
+      setFormState({
+        success: false,
+        error: "Something went wrong. Please try again.",
+      });
     }
   };
 
   return (
     <div className="container mx-auto px-4">
-      <div className="flex flex-col justify-center items-center bg-white rounded-xl shadow-sm max-w-xl mx-auto p-6 sm:p-10 my-10">
+      <div className="flex flex-col justify-center items-center bg-white rounded-xl shadow-sm max-w-xl mx-auto p-6 sm:py-12 sm:px-18 my-12">
         <div className="slide-container">
           {/* Email Step */}
-          <div
-            className={`slide${
-              step === "email" ? " active" : step === "emailsent" ? " left" : ""
-            }`}
-          >
-            <h1 className="text-center text-neutral-900 font-semibold text-2xl sm:text-4xl mb-4">
-              Forgot Password?
+          <div className="slide active">
+            <h1 className="text-center text-neutral-800 font-semibold text-2xl sm:text-3xl mb-4">
+              Forgot Password
             </h1>
-            <p className="text-center text-neutral-500 mb-8">
-              Please enter your registered email address below. We&apos;ll send
-              you a password reset link in the next step, so you can securely
-              create a new password and regain access to your account.
+            <p className="text-center text-neutral-500 mb-8 text-sm font-medium">
+              Enter your email address and we&apos;ll send you a link to reset
+              your password.
             </p>
+
             <form
-              onSubmit={handleEmailsubmit}
-              className="w-full flex flex-col items-center gap-4"
+              onSubmit={handleSubmit(onSubmit)}
+              className="w-full flex flex-col items-center gap-8"
             >
               <div className="w-full">
                 <label
@@ -70,109 +109,58 @@ const ForgotPasswordForm = () => {
                 <input
                   id="email"
                   type="email"
+                  {...register("email")}
                   placeholder="Enter your email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full border border-neutral-300 rounded-lg py-3 px-4 text-lg outline-hidden focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  required
-                  disabled={isLoading} // Disable input while loading
+                  className={`w-full border rounded-lg py-3 px-4 text-sm outline-hidden focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${
+                    errors.email
+                      ? "border-red-300 focus:border-red-500"
+                      : "border-neutral-300"
+                  }`}
+                  disabled={isSubmitting}
                 />
+                {errors.email && (
+                  <span className="text-red-500 text-sm mt-1">
+                    {errors.email.message}
+                  </span>
+                )}
               </div>
 
-              {/* Enhanced Button with Loading State */}
-              <button
-                type="submit"
-                disabled={isLoading || !email.trim()} // Disable if loading or empty email
-                className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed text-white font-medium text-2xl rounded-lg py-3 transition-colors mt-4 flex items-center justify-center"
-              >
-                {isLoading ? (
-                  <>
-                    {/* Loading Spinner */}
-                    <svg
-                      className="animate-spin -ml-1 mr-3 h-6 w-6 text-white"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      />
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      />
-                    </svg>
-                    Sending Reset Link...
-                  </>
-                ) : (
-                  "Send Reset Link"
-                )}
-              </button>
-
-              {/* Error Message */}
-              {error && (
-                <div className="w-full flex items-center space-x-2 text-red-600 bg-red-50 p-3 rounded-lg border border-red-200 mt-2">
-                  <svg
-                    className="h-5 w-5 flex-shrink-0"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                  <span className="text-sm font-medium">{error}</span>
+              {/* Form state messages */}
+              {formState && (
+                <div
+                  className={`w-full font-medium text-lg p-3 rounded-lg border ${
+                    formState.success
+                      ? "text-green-600 bg-green-50 border-green-200"
+                      : "text-red-500 bg-red-50 border-red-200"
+                  }`}
+                >
+                  {formState.success ? formState.message : formState.error}
                 </div>
               )}
-            </form>
-          </div>
 
-          {/* Email Sent Step */}
-          <div
-            className={`slide${
-              step === "emailsent"
-                ? " active"
-                : step === "email"
-                ? " right"
-                : ""
-            }`}
-          >
-            <h1 className="text-center text-neutral-900 font-semibold text-2xl sm:text-4xl my-4">
-              Check your E-mail
-            </h1>
-            <p className="text-center text-neutral-500 mb-8">
-              We&apos;ve sent a password reset link to <strong>{email}</strong>.
-              Please check your inbox and follow the instructions to reset your
-              password.
-            </p>
-            <button
-              onClick={() => window.open("https://mail.google.com", "_blank")}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium text-2xl rounded-lg py-3 transition-colors cursor-pointer mt-4"
-            >
-              Open MailBox
-            </button>
-
-            {/* Back to Login Link */}
-            <div className="text-center mt-6">
+              {/* Submit Button */}
               <button
-                onClick={() => {
-                  setStep("email");
-                  setEmail("");
-                  setError(null);
-                }}
-                className="text-blue-600 font-medium hover:text-blue-700 hover:underline transition-colors"
+                type="submit"
+                disabled={isSubmitting}
+                className={`w-full p-3 text-lg font-semibold text-white rounded-lg transition-colors cursor-pointer ${
+                  !isSubmitting
+                    ? "bg-blue-600 hover:bg-blue-700"
+                    : "bg-blue-400 cursor-not-allowed"
+                }`}
               >
-                ← Back to reset form
+                {isSubmitting ? "Sending..." : "Send Reset Link"}
               </button>
-            </div>
+
+              {/* Back to Login Link */}
+              <div className="text-center mt-4">
+                <Link
+                  href="/login"
+                  className="text-neutral-900 hover:underline text-lg font-semibold"
+                >
+                  Back to Login
+                </Link>
+              </div>
+            </form>
           </div>
         </div>
       </div>

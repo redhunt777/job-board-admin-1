@@ -109,6 +109,88 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
+// Memoize the filter select component
+const FilterSelect = memo(
+  ({
+    value,
+    onChange,
+    options,
+    placeholder,
+    className = "",
+  }: {
+    value: string;
+    onChange: (value: string) => void;
+    options: string[];
+    placeholder: string;
+    className?: string;
+  }) => (
+    <div className="relative">
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className={`bg-transparent text-gray-600 text-sm border border-gray-300 rounded-full px-4 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-300 hover:border-gray-400 transition-colors cursor-pointer appearance-none ${className}`}
+      >
+        <option value="">{placeholder}</option>
+        {options.map((option) => (
+          <option key={option} value={option}>
+            {option}
+          </option>
+        ))}
+      </select>
+      <TiArrowSortedDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" />
+    </div>
+  )
+);
+
+FilterSelect.displayName = "FilterSelect";
+
+// Memoize the filters section component
+const FiltersSection = memo(
+  ({
+    filters,
+    filteredCandidates,
+    dispatch,
+  }: {
+    filters: any;
+    filteredCandidates: CandidateWithApplication[];
+    dispatch: any;
+  }) => {
+    const companyOptions = useMemo(
+      () =>
+        Array.from(
+          new Set(filteredCandidates.map((c) => c.company_name).filter(Boolean))
+        ),
+      [filteredCandidates]
+    );
+
+    return (
+      <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2">
+          <FilterSelect
+            value={filters.company ?? ""}
+            onChange={(value) =>
+              dispatch(setFilters({ ...filters, company: value }))
+            }
+            options={companyOptions.filter(
+              (option): option is string => option !== null
+            )}
+            placeholder="Company"
+          />
+
+          <FilterSelect
+            value=""
+            onChange={() => {}}
+            options={["0-2", "3-5", "5+"]}
+            placeholder="Years of Exp."
+          />
+        </div>
+      </div>
+    );
+  }
+);
+
+FiltersSection.displayName = "FiltersSection";
+
 export default function CandidatesList({
   showHeader = true,
   showFilters = true,
@@ -141,7 +223,7 @@ export default function CandidatesList({
   const candidatesToDisplay = useMemo(() => {
     let candidatesSource = filteredCandidates;
     if (jobId) {
-      candidatesSource = candidatesSource.filter(c => c.job_id === jobId);
+      candidatesSource = candidatesSource.filter((c) => c.job_id === jobId);
     }
     if (maxItems && maxItems > 0) {
       return candidatesSource.slice(0, maxItems);
@@ -168,7 +250,14 @@ export default function CandidatesList({
         })
       );
     }
-  }, [userContext, loading, candidatesToDisplay.length, error, dispatch, filters]);
+  }, [
+    userContext,
+    loading,
+    candidatesToDisplay.length,
+    error,
+    dispatch,
+    filters,
+  ]);
 
   // Handlers
   const handleStatusUpdate = async (applicationId: string, status: string) => {
@@ -283,9 +372,7 @@ export default function CandidatesList({
   const columns = [
     {
       key: "checkbox",
-      header: (
-        <input type="checkbox" className="rounded border-gray-300" />
-      ),
+      header: <input type="checkbox" className="rounded border-gray-300" />,
       width: "48px",
       render: (candidate: CandidateWithApplication) => (
         <input
@@ -319,8 +406,12 @@ export default function CandidatesList({
       header: "Candidate Name",
       render: (candidate: CandidateWithApplication) => (
         <div>
-          <div className="text-sm font-medium text-gray-900">{candidate.name}</div>
-          <div className="text-sm text-gray-500">{candidate.candidate_email}</div>
+          <div className="text-sm font-medium text-gray-900">
+            {candidate.name}
+          </div>
+          <div className="text-sm text-gray-500">
+            {candidate.candidate_email}
+          </div>
         </div>
       ),
     },
@@ -335,21 +426,27 @@ export default function CandidatesList({
       key: "company_name",
       header: "Company",
       render: (candidate: CandidateWithApplication) => (
-        <span className="text-sm text-gray-900">{candidate.company_name || "—"}</span>
+        <span className="text-sm text-gray-900">
+          {candidate.company_name || "—"}
+        </span>
       ),
     },
     {
       key: "location",
       header: "Location",
       render: (candidate: CandidateWithApplication) => (
-        <span className="text-sm text-gray-900">{candidate.address || candidate.job_location || "—"}</span>
+        <span className="text-sm text-gray-900">
+          {candidate.address || candidate.job_location || "—"}
+        </span>
       ),
     },
     {
       key: "years_of_exp",
       header: "Years of Exp.",
       render: (candidate: CandidateWithApplication) => (
-        <span className="text-sm text-gray-900">{calculateExperience(candidate)}</span>
+        <span className="text-sm text-gray-900">
+          {calculateExperience(candidate)}
+        </span>
       ),
     },
     {
