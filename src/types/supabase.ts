@@ -525,9 +525,34 @@ export type Database = {
         }
         Returns: boolean
       }
+      get_applications_over_time: {
+        Args: { user_uuid: string; org_uuid: string; weeks_back?: number }
+        Returns: Json
+      }
+      get_complete_dashboard_data: {
+        Args: { user_uuid: string; org_uuid: string }
+        Returns: Json
+      }
       get_current_user_with_profile: {
         Args: Record<PropertyKey, never>
         Returns: Json
+      }
+      get_dashboard_stats: {
+        Args: { user_uuid: string; org_uuid: string }
+        Returns: Json
+      }
+      get_top_performers: {
+        Args: {
+          user_uuid: string
+          org_uuid: string
+          metric_type?: string
+          limit_count?: number
+        }
+        Returns: Json
+      }
+      get_user_role_in_org: {
+        Args: { user_uuid: string; org_uuid: string }
+        Returns: string
       }
       update_user_role: {
         Args: {

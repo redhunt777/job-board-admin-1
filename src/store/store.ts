@@ -4,6 +4,7 @@ import UserReducer from "./features/userSlice";
 import jobReducer from "./features/jobSlice";
 import candidateReducer from "./features/candidatesSlice";
 import organisationReducer from "./features/organisationSlice";
+import DashboardReducer from "./features/dashboardSlice";
 
 const store = configureStore({
   reducer: {
@@ -12,6 +13,7 @@ const store = configureStore({
     jobs: jobReducer,
     candidates: candidateReducer,
     organisation: organisationReducer,
+    dashboard: DashboardReducer,
     // Add other reducers here as they are created
   },
   middleware: (getDefaultMiddleware) =>
