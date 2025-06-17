@@ -1,11 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { IoMdEye, IoMdEyeOff, IoMdCheckmark } from "react-icons/io";
+import { IoMdEye, IoMdEyeOff } from "react-icons/io";
 import { IoAlertCircleOutline } from "react-icons/io5";
 import { motion } from "framer-motion";
 import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 
 interface PasswordStrength {
   score: number;
@@ -15,159 +18,173 @@ interface PasswordStrength {
   label: string;
 }
 
+// Define the form schema using zod
+const resetPasswordSchema = z.object({
+  password: z
+    .string()
+    .min(1, "Password is required")
+    .min(6, "Password must be at least 6 characters long")
+    .refine((val) => {
+      // Password strength validation
+      const hasUpperCase = /[A-Z]/.test(val);
+      const hasLowerCase = /[a-z]/.test(val);
+      const hasNumbers = /\d/.test(val);
+      const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(val);
+      return hasUpperCase && hasLowerCase && hasNumbers && hasSpecialChar;
+    }, "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character"),
+});
+
+type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>;
+
+interface CustomFormState {
+  success: boolean;
+  message?: string;
+  error?: string;
+}
+
 const ResetPasswordForm = () => {
-  const [step, setStep] = useState<"password" | "success">("password");
-  const router = useRouter();
-  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [hasSubmitted, setHasSubmitted] = useState(false);
+  const [formState, setFormState] = useState<CustomFormState | null>(null);
+  const router = useRouter();
 
-  const supabase = createClient();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    setError,
+    watch,
+  } = useForm<ResetPasswordFormData>({
+    resolver: zodResolver(resetPasswordSchema),
+    mode: "onBlur",
+  });
 
-  // Check if user has valid reset session
-  useEffect(() => {
-    const checkSession = async () => {
-      const {
-        data: { session },
-        error,
-      } = await supabase.auth.getSession();
-      if (!session || error) {
-        setError(
-          "Invalid or expired reset link. Please request a new password reset."
-        );
-      }
-    };
-    checkSession();
-  }, [supabase.auth]);
+  // Watch password for validation
+  const password = watch("password");
 
-  // Password strength checker
-  const checkPasswordStrength = (pwd: string): PasswordStrength => {
-    const feedback = [];
+  // Password strength calculation
+  const calculatePasswordStrength = (password: string): PasswordStrength => {
+    if (!password) {
+      return {
+        score: 0,
+        feedback: [],
+        isValid: false,
+        color: "bg-neutral-200",
+        label: "Enter a password",
+      };
+    }
+
+    const feedback: string[] = [];
     let score = 0;
 
-    if (pwd.length < 8) {
-      feedback.push("At least 8 characters");
-    } else {
+    // Length check
+    if (password.length >= 8) {
       score += 1;
+    } else {
+      feedback.push("Password should be at least 8 characters long");
     }
 
-    if (!/[A-Z]/.test(pwd)) {
-      feedback.push("One uppercase letter");
-    } else {
-      score += 1;
-    }
+    // Character type checks
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasLowerCase = /[a-z]/.test(password);
+    const hasNumbers = /\d/.test(password);
+    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
 
-    if (!/[a-z]/.test(pwd)) {
-      feedback.push("One lowercase letter");
-    } else {
-      score += 1;
-    }
+    if (hasUpperCase) score += 1;
+    else feedback.push("Add an uppercase letter");
+    if (hasLowerCase) score += 1;
+    else feedback.push("Add a lowercase letter");
+    if (hasNumbers) score += 1;
+    else feedback.push("Add a number");
+    if (hasSpecialChar) score += 1;
+    else feedback.push("Add a special character");
 
-    if (!/\d/.test(pwd)) {
-      feedback.push("One number");
-    } else {
-      score += 1;
-    }
-
-    if (!/[!@#$%^&*(),.?":{}|<>]/.test(pwd)) {
-      feedback.push("One special character");
-    } else {
-      score += 1;
-    }
-
-    const isValid = score >= 4;
-    let color = "text-red-500";
+    // Determine color and label based on score
+    let color = "bg-red-500";
     let label = "Weak";
+    let isValid = false;
 
-    if (score >= 5) {
-      color = "text-green-500";
+    if (score >= 4) {
+      color = "bg-green-500";
       label = "Strong";
+      isValid = true;
     } else if (score >= 3) {
-      color = "text-yellow-500";
+      color = "bg-yellow-500";
       label = "Medium";
+    } else if (score >= 2) {
+      color = "bg-orange-500";
+      label = "Fair";
     }
 
-    return { score, feedback, isValid, color, label };
+    return {
+      score,
+      feedback,
+      isValid,
+      color,
+      label,
+    };
   };
 
-  const passwordStrength = checkPasswordStrength(password);
+  const passwordStrength = calculatePasswordStrength(password);
 
-  const handlePasswordSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setHasSubmitted(true);
-    setError(null);
-
-    // Validation
-    if (!passwordStrength.isValid) {
-      setError("Please ensure your password meets all requirements.");
-      return;
+  // Clear form state when user starts typing
+  useEffect(() => {
+    if (formState) {
+      setFormState(null);
     }
+  }, [password, formState]);
 
-    setIsLoading(true);
+  const onSubmit = async (data: ResetPasswordFormData) => {
+    // Reset form state
+    setFormState(null);
 
     try {
-      const { error: updateError } = await supabase.auth.updateUser({
-        password: password,
+      const supabase = createClient();
+      const { error } = await supabase.auth.updateUser({
+        password: data.password,
       });
 
-      if (updateError) {
-        throw updateError;
-      }
-
-      setStep("success");
-    } catch (err: Error | unknown) {
-      console.log("Error updating password:", err);
-
-      // Handle specific error types
-      const errorMessage =
-        err instanceof Error ? err.message : "Unknown error occurred";
-
-      if (errorMessage.includes("same as the old password")) {
-        setError("New password must be different from your current password.");
-      } else if (errorMessage.includes("weak password")) {
-        setError("Password is too weak. Please choose a stronger password.");
-      } else if (errorMessage.includes("session_not_found")) {
-        setError(
-          "Your session has expired. Please request a new password reset link."
-        );
+      if (error) {
+        setFormState({
+          success: false,
+          error: error.message || "Failed to reset password. Please try again.",
+        });
+        setError("password", { message: error.message });
       } else {
-        setError(
-          "Failed to update password. Please try again or request a new reset link."
-        );
+        setFormState({
+          success: true,
+          message:
+            "Password has been reset successfully. Redirecting to login...",
+        });
+        // Redirect to login after 3 seconds
+        setTimeout(() => {
+          router.push("/login");
+        }, 3000);
       }
-    } finally {
-      setIsLoading(false);
+    } catch (error) {
+      console.log("Form submission error:", error);
+      setFormState({
+        success: false,
+        error: "Something went wrong. Please try again.",
+      });
     }
   };
-
-  const isFormValid = passwordStrength.isValid && password;
 
   return (
     <div className="container mx-auto px-4">
-      <div className="flex flex-col justify-center items-center bg-white rounded-xl shadow-sm max-w-xl mx-auto p-6 sm:p-10 my-10">
+      <div className="flex flex-col justify-center items-center bg-white rounded-xl shadow-sm max-w-xl mx-auto p-6 sm:py-12 sm:px-18 my-10">
         <div className="slide-container">
           {/* New Password Step */}
-          <div
-            className={`slide${
-              step === "password"
-                ? " active"
-                : step === "success"
-                ? " left"
-                : ""
-            }`}
-          >
-            <h1 className="text-center text-neutral-800 font-semibold text-2xl sm:text-4xl mb-4">
+          <div className="slide active">
+            <h1 className="text-center text-neutral-800 font-semibold text-2xl sm:text-3xl mb-8">
               Set a New Password
             </h1>
             <p className="text-center text-neutral-500 mb-8">
-              Set a new password for your account. Make sure it&apos;s strong and
-              easy to remember.
+              Set a new password for your account. Make sure it&apos;s strong
+              and easy to remember.
             </p>
 
             <form
-              onSubmit={handlePasswordSubmit}
+              onSubmit={handleSubmit(onSubmit)}
               className="w-full flex flex-col gap-4"
             >
               {/* New Password Field */}
@@ -182,154 +199,104 @@ const ResetPasswordForm = () => {
                   <input
                     id="new-password"
                     type={showPassword ? "text" : "password"}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    {...register("password")}
                     placeholder="Enter your new password"
-                    className={`w-full border rounded-lg py-3 px-4 pr-12 text-lg outline-hidden focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${
-                      password && !passwordStrength.isValid && hasSubmitted
+                    className={`w-full border rounded-lg py-3 px-4 pr-12 text-sm outline-hidden focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${
+                      errors.password
                         ? "border-red-300 focus:border-red-500"
                         : "border-neutral-300"
                     }`}
-                    required
-                    disabled={isLoading}
+                    disabled={isSubmitting}
                     autoComplete="new-password"
                   />
                   <button
                     type="button"
-                    onClick={() => setShowPassword((v) => !v)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600 disabled:cursor-not-allowed"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-4 text-neutral-500 hover:text-neutral-700"
                     tabIndex={-1}
-                    disabled={isLoading}
-                    aria-label={
-                      showPassword ? "Hide password" : "Show password"
-                    }
                   >
                     {showPassword ? (
-                      <IoMdEye size={24} className="text-neutral-500" />
+                      <IoMdEyeOff size={20} />
                     ) : (
-                      <IoMdEyeOff size={24} className="text-neutral-500" />
+                      <IoMdEye size={20} />
                     )}
                   </button>
                 </div>
+                {errors.password && (
+                  <span className="text-red-500 text-sm mt-1">
+                    {errors.password.message}
+                  </span>
+                )}
 
                 {/* Password Strength Indicator */}
                 {password && (
-                  <div className="mt-2">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-sm text-neutral-600">
-                        Password strength:
+                  <div className="mt-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium text-neutral-700">
+                        Password Strength
                       </span>
                       <span
-                        className={`text-sm font-medium ${passwordStrength.color}`}
+                        className={`text-sm font-medium ${passwordStrength.color.replace(
+                          "bg-",
+                          "text-"
+                        )}`}
                       >
                         {passwordStrength.label}
                       </span>
                     </div>
-                    <div className="w-full bg-neutral-200 rounded-full h-2">
-                      <div
-                        className={`h-2 rounded-full transition-all duration-300 ${
-                          passwordStrength.score >= 5
-                            ? "bg-green-500"
-                            : passwordStrength.score >= 3
-                            ? "bg-yellow-500"
-                            : "bg-red-500"
-                        }`}
-                        style={{
-                          width: `${(passwordStrength.score / 5) * 100}%`,
+                    <div className="h-2 bg-neutral-200 rounded-full overflow-hidden">
+                      <motion.div
+                        className={`h-full ${passwordStrength.color}`}
+                        initial={{ width: 0 }}
+                        animate={{
+                          width: `${(passwordStrength.score / 4) * 100}%`,
                         }}
+                        transition={{ duration: 0.3 }}
                       />
                     </div>
                     {passwordStrength.feedback.length > 0 && (
-                      <div className="mt-2">
-                        <p className="text-sm text-neutral-600 mb-1">
-                          Required:
-                        </p>
-                        <ul className="text-xs text-neutral-500 space-y-1">
-                          {passwordStrength.feedback.map((item, index) => (
-                            <li key={index} className="flex items-center">
-                              <span className="w-1 h-1 bg-neutral-400 rounded-full mr-2" />
-                              {item}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
+                      <ul className="mt-2 space-y-1">
+                        {passwordStrength.feedback.map((feedback, index) => (
+                          <li
+                            key={index}
+                            className="flex items-center text-sm text-neutral-600"
+                          >
+                            <IoAlertCircleOutline className="mr-2 flex-shrink-0" />
+                            {feedback}
+                          </li>
+                        ))}
+                      </ul>
                     )}
                   </div>
                 )}
               </div>
 
-              {/* Error Message */}
-              {error && (
-                <div className="flex items-center space-x-2 text-red-600 bg-red-50 p-3 rounded-lg border border-red-200">
-                  <IoAlertCircleOutline className="h-5 w-5 flex-shrink-0" />
-                  <span className="text-sm font-medium">{error}</span>
+              {/* Form state messages */}
+              {formState && (
+                <div
+                  className={`font-medium text-lg p-3 rounded-lg border ${
+                    formState.success
+                      ? "text-green-600 bg-green-50 border-green-200"
+                      : "text-red-500 bg-red-50 border-red-200"
+                  }`}
+                >
+                  {formState.success ? formState.message : formState.error}
                 </div>
               )}
 
               {/* Submit Button */}
               <button
                 type="submit"
-                disabled={!isFormValid || isLoading}
-                className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed text-white font-medium text-2xl rounded-lg py-3 transition-colors mt-4 flex items-center justify-center"
+                disabled={isSubmitting || !passwordStrength.isValid}
+                className={`w-full p-4 text-lg font-medium text-white rounded-lg transition-colors ${
+                  !isSubmitting && passwordStrength.isValid
+                    ? "bg-blue-600 hover:bg-blue-700"
+                    : "bg-blue-400 cursor-not-allowed"
+                }`}
               >
-                {isLoading ? (
-                  <>
-                    <svg
-                      className="animate-spin -ml-1 mr-3 h-6 w-6 text-white"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      />
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      />
-                    </svg>
-                    Updating Password...
-                  </>
-                ) : (
-                  "Change Password"
-                )}
+                {isSubmitting ? "Resetting Password..." : "Reset Password"}
               </button>
             </form>
-          </div>
-
-          {/* Success Step */}
-          <div className={`slide${step === "success" ? " active" : ""}`}>
-            <div className="flex flex-col items-center justify-center h-full">
-              {step === "success" && (
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                >
-                  <IoMdCheckmark className="h-24 w-24 sm:h-32 sm:w-32 text-white bg-green-500 rounded-full p-2 mt-8 mb-12" />
-                </motion.div>
-              )}
-              <h1 className="text-center text-neutral-800 font-semibold text-2xl sm:text-4xl mb-2">
-                Password Changed!
-              </h1>
-              <p className="text-center text-neutral-500 mb-8">
-                Your password has been changed successfully. You can now log in
-                with your new password.
-              </p>
-              <button
-                type="button"
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium text-2xl rounded-lg py-3 transition-colors cursor-pointer"
-                onClick={() => router.push("/login")}
-              >
-                Back to Login
-              </button>
-            </div>
           </div>
         </div>
       </div>

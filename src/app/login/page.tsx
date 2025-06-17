@@ -1,56 +1,149 @@
-'use client';
-import { useEffect, useState } from "react";
+"use client";
+import { useEffect, useState, useCallback, memo, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import { IoMdEye, IoMdEyeOff } from "react-icons/io";
 import Link from "next/link";
-import { useAppSelector, useAppDispatch } from '@/store/hooks';
-import { selectIsAuthenticated, selectUserLoading } from '@/store/features/userSlice';
-import { loginUser, selectUserError, clearError } from '@/store/features/userSlice';
-import { useRouter } from 'next/navigation';
-import { IoAlertCircleOutline, IoCheckmarkCircleOutline } from "react-icons/io5";
+import { useAppSelector, useAppDispatch } from "@/store/hooks";
+import {
+  selectIsAuthenticated,
+  loginUser,
+  selectUserError,
+  clearError,
+} from "@/store/features/userSlice";
+import { useRouter } from "next/navigation";
+import {
+  IoAlertCircleOutline,
+  IoCheckmarkCircleOutline,
+} from "react-icons/io5";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 
-interface FormData {
-  email: string;
-  password: string;
-}
+// Define the form schema using zod
+const loginSchema = z.object({
+  email: z
+    .string()
+    .min(1, "Email is required")
+    .email("Please enter a valid email address"),
+  password: z
+    .string()
+    .min(1, "Password is required")
+    .min(6, "Password must be at least 6 characters long"),
+});
 
-interface ValidationErrors {
-  email?: string;
-  password?: string;
-}
+type LoginFormData = z.infer<typeof loginSchema>;
 
-const AdminLogin = () => {
+const LoginForm = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
   const dispatch = useAppDispatch();
-  
-  // Redux state
+
   const error = useAppSelector(selectUserError);
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
-  const isLoading = useAppSelector(selectUserLoading);
 
-  const [formData, setFormData] = useState<FormData>({
-    email: "",
-    password: ""
-  });
-  
   const [showPassword, setShowPassword] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
-  const [hasSubmitted, setHasSubmitted] = useState(false);
+
+  const formMethods = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
+    mode: "onBlur",
+  });
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    setError,
+  } = formMethods;
+
+  // Memoize error message
+  const errorMessage = useMemo(() => {
+    if (errors.email?.message) return errors.email.message;
+    if (errors.password?.message) return errors.password.message;
+    if (errors.root?.message) return errors.root.message;
+    if (error) return error;
+    return null;
+  }, [errors, error]);
+
+  // Memoize form validity
+  const isFormValid = useMemo(() => !Object.keys(errors).length, [errors]);
+
+  const togglePasswordVisibility = useCallback(() => {
+    setShowPassword(prev => !prev);
+  }, []);
+
+  const onSubmit = useCallback(async (data: LoginFormData) => {
+    try {
+      await dispatch(
+        loginUser({
+          email: data.email.trim().toLowerCase(),
+          password: data.password,
+        })
+      ).unwrap();
+    } catch (err) {
+      console.log("Login failed:", err);
+      if (error) {
+        setError("root", { message: error });
+      }
+      // Reset the form state after a failed login attempt
+      formMethods.reset();
+    }
+  }, [dispatch, error, setError, formMethods]);
+
+  const handleFormSubmit = useMemo(
+    () => handleSubmit(onSubmit),
+    [handleSubmit, onSubmit]
+  );
+
+  // Memoize input props
+  const emailInputProps = useMemo(() => ({
+    id: "email",
+    type: "email",
+    ...register("email"),
+    disabled: isSubmitting,
+    placeholder: "Enter your email",
+    autoComplete: "email",
+    className: `w-full p-4 border text-sm rounded-lg outline-hidden hover:border-neutral-400 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${
+      errors.email?.message
+        ? "border-red-300 focus:border-red-500"
+        : "border-neutral-300"
+    }`
+  }), [register, errors.email?.message, isSubmitting]);
+
+  const passwordInputProps = useMemo(() => ({
+    inputProps: {
+      id: "password",
+      type: showPassword ? "text" : "password",
+      ...register("password"),
+      disabled: isSubmitting,
+      placeholder: "Enter your password",
+      autoComplete: "current-password",
+      className: `w-full p-4 border text-sm rounded-lg pr-12 outline-hidden hover:border-neutral-400 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${
+        errors.password?.message
+          ? "border-red-300 focus:border-red-500"
+          : "border-neutral-300"
+      }`
+    },
+    showPassword,
+    onTogglePassword: togglePasswordVisibility
+  }), [register, errors.password?.message, isSubmitting, showPassword, togglePasswordVisibility]);
 
   // Handle URL parameters for messages
   useEffect(() => {
-    const emailConfirmed = searchParams.get('email_confirmed');
-    const message = searchParams.get('message');
-    const registered = searchParams.get('registered');
-    
+    const emailConfirmed = searchParams.get("email_confirmed");
+    const message = searchParams.get("message");
+    const registered = searchParams.get("registered");
+
     if (emailConfirmed) {
-      setSuccessMessage("Your email has been confirmed! Please log in to continue.");
+      setSuccessMessage(
+        "Your email has been confirmed! Please log in to continue."
+      );
     } else if (message) {
       setSuccessMessage(decodeURIComponent(message));
     } else if (registered) {
-      setSuccessMessage("Registration successful! Please check your email for confirmation link.");
+      setSuccessMessage(
+        "Registration successful! Please check your email for confirmation link."
+      );
     }
 
     // Clear message after 8 seconds
@@ -65,7 +158,7 @@ const AdminLogin = () => {
   // Redirect if authenticated
   useEffect(() => {
     if (isAuthenticated) {
-      router.push('/dashboard');
+      router.push("/dashboard");
     }
   }, [isAuthenticated, router]);
 
@@ -79,269 +172,103 @@ const AdminLogin = () => {
     }
   }, [error, dispatch]);
 
-  // Clear success message when user starts typing
+  // Clear success message when form is modified
   useEffect(() => {
-    if (successMessage && (formData.email || formData.password)) {
+    if (successMessage && (errors.email || errors.password)) {
       setSuccessMessage(null);
     }
-  }, [formData.email, formData.password, successMessage]);
-
-  const handleInputChange = (field: keyof FormData) => (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const value = e.target.value;
-    setFormData(prev => ({ ...prev, [field]: value }));
-    
-    // Clear validation error for this field
-    if (validationErrors[field]) {
-      setValidationErrors(prev => {
-        const newErrors = { ...prev };
-        delete newErrors[field];
-        return newErrors;
-      });
-    }
-    
-    // Clear Redux error when user starts typing
-    if (error) {
-      dispatch(clearError());
-    }
-  };
-
-  const validateField = (field: keyof FormData, value: string): string | undefined => {
-    switch (field) {
-      case 'email':
-        if (!value.trim()) {
-          return 'Email is required';
-        }
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-          return 'Please enter a valid email address';
-        }
-        break;
-      case 'password':
-        if (!value) {
-          return 'Password is required';
-        }
-        if (value.length < 6) {
-          return 'Password must be at least 6 characters long';
-        }
-        break;
-    }
-    return undefined;
-  };
-
-  const validateForm = (): boolean => {
-    const errors: ValidationErrors = {};
-    
-    Object.keys(formData).forEach(key => {
-      const field = key as keyof FormData;
-      const error = validateField(field, formData[field]);
-      if (error) {
-        errors[field] = error;
-      }
-    });
-    
-    setValidationErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
-
-  // Real-time validation for touched fields
-  const handleBlur = (field: keyof FormData) => () => {
-    if (hasSubmitted || formData[field]) {
-      const error = validateField(field, formData[field]);
-      // Better approach:
-      setValidationErrors(prev => {
-        const newErrors = { ...prev };
-        if (error) {
-          newErrors[field] = error;
-        } else {
-          delete newErrors[field];
-        }
-        return newErrors;
-      });
-    }
-  };
-
-  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setHasSubmitted(true);
-    
-    if (!validateForm()) {
-      return;
-    }
-
-    try {
-      await dispatch(loginUser({
-        email: formData.email.trim().toLowerCase(),
-        password: formData.password
-      })).unwrap();
-      
-      // Success is handled by the redirect in useEffect
-    } catch (err) {
-      console.log("Login failed:", err);
-      // Error is handled by Redux state
-    }
-  };
-
-  // Get the primary error message to display
-  const getErrorMessage = (): string | null => {
-    // Show validation errors first
-    if (validationErrors.email) return validationErrors.email;
-    if (validationErrors.password) return validationErrors.password;
-    
-    // Then show Redux errors
-    if (error) return error;
-    
-    return null;
-  };
-
-  const errorMessage = getErrorMessage();
-  const isFormValid = formData.email && formData.password && !Object.keys(validationErrors).length;
+  }, [errors, successMessage]);
 
   return (
     <div className="container mx-auto px-4">
-      <div className="flex flex-col justify-center items-center bg-white rounded-xl shadow-sm max-w-xl mx-auto p-6 sm:p-10 my-12">
-        <form className="w-full flex flex-col gap-2" onSubmit={handleLogin}>
-          <h1 className="text-center text-neutral-800 font-semibold text-2xl sm:text-4xl mb-4">
+      <div className="flex flex-col justify-center items-center bg-white rounded-xl shadow-sm max-w-xl mx-auto p-6 sm:py-12 sm:px-18 my-12">
+        <form
+          className="w-full flex flex-col gap-2"
+          onSubmit={handleFormSubmit}
+        >
+          <h1 className="text-center text-neutral-800 font-semibold text-2xl sm:text-3xl mb-4">
             Admin Login
           </h1>
-          
-          {/* Email Field */}
+
           <div>
-            <label className="text-lg mt-4 block" htmlFor="email">
+            <label className="text-sm font-medium mt-4 mb-2 block" htmlFor={emailInputProps.id}>
               Email
             </label>
-            <input
-              id="email"
-              type="email"
-              name="email"
-              placeholder="Enter your email"
-              value={formData.email}
-              onChange={handleInputChange('email')}
-              onBlur={handleBlur('email')}
-              className={`w-full p-4 text-lg border rounded-lg mb-2 outline-hidden focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${
-                validationErrors.email 
-                  ? 'border-red-300 focus:border-red-500' 
-                  : 'border-neutral-300'
-              }`}
-              required
-              autoComplete="email"
-              disabled={isLoading}
-            />
+            <input {...emailInputProps} />
           </div>
 
-          {/* Password Field */}
           <div>
-            <label className="text-lg mt-4 block" htmlFor="password">
+            <label className="text-sm font-medium mt-4 mb-2 block" htmlFor={passwordInputProps.inputProps.id}>
               Password
             </label>
             <div className="relative flex items-center mb-2">
-              <input
-                id="password"
-                name="password"
-                type={showPassword ? "text" : "password"}
-                placeholder="Enter your password"
-                value={formData.password}
-                onChange={handleInputChange('password')}
-                onBlur={handleBlur('password')}
-                className={`w-full p-4 text-lg border rounded-lg pr-12 outline-hidden focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${
-                  validationErrors.password 
-                    ? 'border-red-300 focus:border-red-500' 
-                    : 'border-neutral-300'
-                }`}
-                autoComplete="current-password"
-                required
-                disabled={isLoading}
-              />
+              <input {...passwordInputProps.inputProps} />
               <button
                 type="button"
-                className="absolute right-4 top-1/2 -translate-y-1/2 cursor-pointer disabled:cursor-not-allowed"
-                onClick={() => setShowPassword((prev) => !prev)}
-                aria-label={showPassword ? "Hide password" : "Show password"}
-                disabled={isLoading}
+                onClick={passwordInputProps.onTogglePassword}
+                className="absolute right-4 text-neutral-500 hover:text-neutral-700"
+                tabIndex={-1}
               >
-                {showPassword ? (
-                  <IoMdEye size={24} className="text-neutral-500" />
+                {passwordInputProps.showPassword ? (
+                  <IoMdEyeOff size={20} />
                 ) : (
-                  <IoMdEyeOff size={24} className="text-neutral-500" />
+                  <IoMdEye size={20} />
                 )}
               </button>
             </div>
-          </div>
-
-          {/* Forgot Password Link */}
-          <div className="text-center mb-4">
             <Link
               href="/forgot-password"
-              className="text-blue-600 font-medium text-base hover:text-blue-700 hover:underline transition-colors"
+              className="text-blue-600 hover:text-blue-700 hover:underline text-sm font-medium block text-center mt-6 mb-2"
             >
               Forgot Password?
             </Link>
           </div>
 
-          {/* Success Message */}
-          {successMessage && (
-            <div className="flex items-center space-x-2 text-green-600 bg-green-50 p-3 rounded-lg border border-green-200 mb-4">
-              <IoCheckmarkCircleOutline className="h-5 w-5 flex-shrink-0" />
-              <span className="text-sm font-medium">{successMessage}</span>
-            </div>
-          )}
-
-          {/* Error Message */}
           {errorMessage && (
-            <div className="flex items-center space-x-2 text-red-600 bg-red-50 p-3 rounded-lg border border-red-200 mb-4">
-              <IoAlertCircleOutline className="h-5 w-5 flex-shrink-0" />
-              <span className="text-sm font-medium">{errorMessage}</span>
+            <div className="flex items-center gap-2 text-red-500 text-sm mt-1">
+              <IoAlertCircleOutline size={16} />
+              <span>{errorMessage}</span>
             </div>
           )}
 
-          {/* Submit Button */}
-          <button
-            type="submit"
-            disabled={!isFormValid || isLoading}
-            className="w-full cursor-pointer bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed text-white font-medium text-lg sm:text-2xl rounded-lg py-3 mb-2 transition-colors flex items-center justify-center"
-          >
-            {isLoading ? (
-              <>
-                <svg 
-                  className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" 
-                  xmlns="http://www.w3.org/2000/svg" 
-                  fill="none" 
-                  viewBox="0 0 24 24"
-                >
-                  <circle 
-                    className="opacity-25" 
-                    cx="12" 
-                    cy="12" 
-                    r="10" 
-                    stroke="currentColor" 
-                    strokeWidth="4"
-                  />
-                  <path 
-                    className="opacity-75" 
-                    fill="currentColor" 
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  />
-                </svg>
-                Signing in...
-              </>
-            ) : (
-              'Login'
-            )}
-          </button>
-        </form>
+          {successMessage && (
+            <div className="flex items-center gap-2 text-green-500 text-sm mt-1">
+              <IoCheckmarkCircleOutline size={16} />
+              <span>{successMessage}</span>
+            </div>
+          )}
 
-        {/* Register Link */}
-        <div className="text-center mt-10">
-          <Link
-            href="/register"
-            className="text-black font-medium text-xl underline hover:text-blue-700 transition-colors"
-          >
-            Register here
-          </Link>
-        </div>
+          <div className="flex flex-col items-center gap-16 mt-6">
+            <button
+              type="submit"
+              disabled={!isFormValid || isSubmitting}
+              className={`w-full py-3 text-lg font-semibold text-white rounded-lg transition-colors cursor-pointer ${
+                isFormValid && !isSubmitting
+                  ? "bg-blue-600 hover:bg-blue-700"
+                  : "bg-blue-400 cursor-not-allowed"
+              }`}
+            >
+              {isSubmitting ? "Logging in..." : "Login"}
+            </button>
+
+            <Link
+              href="/register"
+              className="text-neutral-900 hover:underline text-lg font-semibold"
+            >
+              Register here
+            </Link>
+          </div>
+        </form>
       </div>
     </div>
   );
 };
+
+const AdminLogin = memo(LoginForm, () => {
+  // Custom comparison function to prevent unnecessary re-renders
+  return true; // Since we have no props, always return true to prevent re-renders
+});
+
+AdminLogin.displayName = 'AdminLogin';
 
 export default AdminLogin;

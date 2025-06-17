@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, memo } from "react";
 import { IoMdClose } from "react-icons/io";
 import { FaExclamationCircle } from "react-icons/fa";
 
@@ -29,75 +29,188 @@ const ROLE_OPTIONS = [
   { value: "hr", label: "HR Manager" },
 ] as const;
 
-// Move InputField component outside to prevent recreation on every render
-const InputField = ({ 
-  id, 
-  label, 
-  type = "text", 
-  value, 
-  field, 
-  placeholder, 
-  disabled = false,
-  required = true,
-  onChange,
-  onBlur,
-  errors,
-  isSubmitting,
-  inputRef
-}: {
-  id: string;
-  label: string;
-  type?: string;
-  value: string;
-  field: keyof TeamMember;
-  placeholder: string;
-  disabled?: boolean;
-  required?: boolean;
-  onChange: (field: keyof TeamMember, value: string) => void;
-  onBlur: (field: keyof TeamMember) => void;
-  errors: FormErrors;
-  isSubmitting: boolean;
-  inputRef?: React.RefObject<HTMLInputElement | null>;
-}) => (
-  <div>
-    <label htmlFor={id} className="block text-sm font-medium text-neutral-800 mb-2">
-      {label}
-      {required && <span className="text-red-500 ml-1" aria-label="required">*</span>}
-    </label>
-    <input
-      ref={inputRef}
-      id={id}
-      type={type}
-      value={value}
-      onChange={(e) => onChange(field, e.target.value)}
-      onBlur={() => onBlur(field)}
-      className={`w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 transition-all duration-200 ${
-        errors[field as keyof FormErrors]
-          ? "border-red-400 focus:ring-red-500 bg-red-50"
-          : "border-neutral-300 focus:ring-blue-500 hover:border-neutral-400"
-      } ${
-        disabled 
-          ? "bg-neutral-100 cursor-not-allowed text-neutral-500" 
-          : "bg-white"
-      }`}
-      placeholder={placeholder}
-      aria-describedby={errors[field as keyof FormErrors] ? `${id}-error` : undefined}
-      aria-invalid={errors[field as keyof FormErrors] ? "true" : "false"}
-      disabled={disabled || isSubmitting}
-      maxLength={field === 'name' ? 50 : field === 'email' ? 100 : undefined}
-    />
-    {errors[field as keyof FormErrors] && (
-      <div
-        id={`${id}-error`}
-        className="flex items-center gap-1 text-red-600 text-sm mt-1"
-        role="alert"
+// Memoize the InputField component
+const InputField = memo(
+  ({
+    id,
+    label,
+    type = "text",
+    value,
+    field,
+    placeholder,
+    disabled = false,
+    required = true,
+    onChange,
+    onBlur,
+    errors,
+    isSubmitting,
+    inputRef,
+  }: {
+    id: string;
+    label: string;
+    type?: string;
+    value: string;
+    field: keyof TeamMember;
+    placeholder: string;
+    disabled?: boolean;
+    required?: boolean;
+    onChange: (field: keyof TeamMember, value: string) => void;
+    onBlur: (field: keyof TeamMember) => void;
+    errors: FormErrors;
+    isSubmitting: boolean;
+    inputRef?: React.RefObject<HTMLInputElement | null>;
+  }) => (
+    <div>
+      <label
+        htmlFor={id}
+        className="block text-sm font-medium text-neutral-800 mb-2"
       >
-        <FaExclamationCircle className="w-3 h-3 flex-shrink-0" />
-        <span>{errors[field as keyof FormErrors]}</span>
-      </div>
-    )}
-  </div>
+        {label}
+        {required && (
+          <span className="text-red-500 ml-1" aria-label="required">
+            *
+          </span>
+        )}
+      </label>
+      <input
+        ref={inputRef}
+        id={id}
+        type={type}
+        value={value}
+        onChange={(e) => onChange(field, e.target.value)}
+        onBlur={() => onBlur(field)}
+        className={`w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 transition-all duration-200 ${
+          errors[field as keyof FormErrors]
+            ? "border-red-400 focus:ring-red-500 bg-red-50"
+            : "border-neutral-300 focus:ring-blue-500 hover:border-neutral-400"
+        } ${
+          disabled
+            ? "bg-neutral-100 cursor-not-allowed text-neutral-500"
+            : "bg-white"
+        }`}
+        placeholder={placeholder}
+        aria-describedby={
+          errors[field as keyof FormErrors] ? `${id}-error` : undefined
+        }
+        aria-invalid={errors[field as keyof FormErrors] ? "true" : "false"}
+        disabled={disabled || isSubmitting}
+        maxLength={field === "name" ? 50 : field === "email" ? 100 : undefined}
+      />
+      {errors[field as keyof FormErrors] && (
+        <div
+          id={`${id}-error`}
+          className="flex items-center gap-1 text-red-600 text-sm mt-1"
+          role="alert"
+        >
+          <FaExclamationCircle className="w-3 h-3 flex-shrink-0" />
+          <span>{errors[field as keyof FormErrors]}</span>
+        </div>
+      )}
+    </div>
+  )
 );
+
+InputField.displayName = "InputField";
+
+// Memoize the form section component
+const FormSection = memo(
+  ({
+    formData,
+    errors,
+    isSubmitting,
+    isEditing,
+    handleInputChange,
+    validateField,
+    firstFocusableRef,
+  }: {
+    formData: TeamMember;
+    errors: FormErrors;
+    isSubmitting: boolean;
+    isEditing: boolean;
+    handleInputChange: (field: keyof TeamMember, value: string) => void;
+    validateField: (field: keyof TeamMember) => void;
+    firstFocusableRef: React.RefObject<HTMLInputElement | null>;
+  }) => (
+    <div className="space-y-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <InputField
+          id="member-name"
+          label="Full Name"
+          value={formData.name}
+          field="name"
+          placeholder="Enter member's full name"
+          disabled={isEditing}
+          onChange={handleInputChange}
+          onBlur={validateField}
+          errors={errors}
+          isSubmitting={isSubmitting}
+          inputRef={firstFocusableRef}
+        />
+
+        <InputField
+          id="member-email"
+          label="Email Address"
+          type="email"
+          value={formData.email}
+          field="email"
+          placeholder="Enter member's email"
+          disabled={isEditing}
+          onChange={handleInputChange}
+          onBlur={validateField}
+          errors={errors}
+          isSubmitting={isSubmitting}
+        />
+      </div>
+
+      <div>
+        <label
+          htmlFor="member-role"
+          className="block text-sm font-medium text-neutral-800 mb-2"
+        >
+          Role{" "}
+          <span className="text-red-500 ml-1" aria-label="required">
+            *
+          </span>
+        </label>
+        <select
+          id="member-role"
+          value={formData.role}
+          onChange={(e) => handleInputChange("role", e.target.value)}
+          onBlur={() => validateField("role")}
+          className={`w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 appearance-none transition-all duration-200 ${
+            errors.role
+              ? "border-red-400 focus:ring-red-500 bg-red-50"
+              : "border-neutral-300 focus:ring-blue-500 hover:border-neutral-400"
+          } bg-white`}
+          aria-describedby={errors.role ? "role-error" : undefined}
+          aria-invalid={errors.role ? "true" : "false"}
+          disabled={isSubmitting}
+        >
+          <option value="" disabled>
+            Select a role for this team member
+          </option>
+          {ROLE_OPTIONS.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+        {errors.role && (
+          <div
+            id="role-error"
+            className="flex items-center gap-1 text-red-600 text-sm mt-1"
+            role="alert"
+          >
+            <FaExclamationCircle className="w-3 h-3 flex-shrink-0" />
+            <span>{errors.role}</span>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+);
+
+FormSection.displayName = "FormSection";
 
 export const Overlay = ({ setShowOverlay, member, onSave }: OverlayProps) => {
   // Form state
@@ -129,7 +242,7 @@ export const Overlay = ({ setShowOverlay, member, onSave }: OverlayProps) => {
 
   // Check for unsaved changes
   useEffect(() => {
-    const hasChanges = 
+    const hasChanges =
       formData.name !== initialData.current.name ||
       formData.email !== initialData.current.email ||
       formData.role !== initialData.current.role;
@@ -165,7 +278,7 @@ export const Overlay = ({ setShowOverlay, member, onSave }: OverlayProps) => {
     // Role validation
     if (!formData.role) {
       newErrors.role = "Please select a role";
-    } else if (!ROLE_OPTIONS.some(option => option.value === formData.role)) {
+    } else if (!ROLE_OPTIONS.some((option) => option.value === formData.role)) {
       newErrors.role = "Please select a valid role";
     }
 
@@ -174,46 +287,50 @@ export const Overlay = ({ setShowOverlay, member, onSave }: OverlayProps) => {
   }, [formData]);
 
   // Real-time validation on blur
-  const validateField = useCallback((field: keyof TeamMember) => {
-    const newErrors = { ...errors };
+  const validateField = useCallback(
+    (field: keyof TeamMember) => {
+      const newErrors = { ...errors };
 
-    switch (field) {
-      case 'name':
-        if (!formData.name.trim()) {
-          newErrors.name = "Name is required";
-        } else if (formData.name.trim().length < 2) {
-          newErrors.name = "Name must be at least 2 characters long";
-        } else if (formData.name.trim().length > 50) {
-          newErrors.name = "Name must be less than 50 characters";
-        } else {
-          delete newErrors.name;
-        }
-        break;
-      case 'email':
-        if (!formData.email.trim()) {
-          newErrors.email = "Email is required";
-        } else {
-          const emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
-          if (!emailRegex.test(formData.email)) {
-            newErrors.email = "Please enter a valid email address";
-          } else if (formData.email.length > 100) {
-            newErrors.email = "Email must be less than 100 characters";
+      switch (field) {
+        case "name":
+          if (!formData.name.trim()) {
+            newErrors.name = "Name is required";
+          } else if (formData.name.trim().length < 2) {
+            newErrors.name = "Name must be at least 2 characters long";
+          } else if (formData.name.trim().length > 50) {
+            newErrors.name = "Name must be less than 50 characters";
           } else {
-            delete newErrors.email;
+            delete newErrors.name;
           }
-        }
-        break;
-      case 'role':
-        if (!formData.role) {
-          newErrors.role = "Please select a role";
-        } else {
-          delete newErrors.role;
-        }
-        break;
-    }
+          break;
+        case "email":
+          if (!formData.email.trim()) {
+            newErrors.email = "Email is required";
+          } else {
+            const emailRegex =
+              /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
+            if (!emailRegex.test(formData.email)) {
+              newErrors.email = "Please enter a valid email address";
+            } else if (formData.email.length > 100) {
+              newErrors.email = "Email must be less than 100 characters";
+            } else {
+              delete newErrors.email;
+            }
+          }
+          break;
+        case "role":
+          if (!formData.role) {
+            newErrors.role = "Please select a role";
+          } else {
+            delete newErrors.role;
+          }
+          break;
+      }
 
-    setErrors(newErrors);
-  }, [formData, errors]);
+      setErrors(newErrors);
+    },
+    [formData, errors]
+  );
 
   // Handle close with unsaved changes check
   const handleClose = useCallback(() => {
@@ -273,19 +390,22 @@ export const Overlay = ({ setShowOverlay, member, onSave }: OverlayProps) => {
   }, [handleEscapeKey, showExitConfirmation]);
 
   // Handle input changes with real-time feedback - made stable with useCallback
-  const handleInputChange = useCallback((field: keyof TeamMember, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+  const handleInputChange = useCallback(
+    (field: keyof TeamMember, value: string) => {
+      setFormData((prev) => ({ ...prev, [field]: value }));
 
-    // Clear field error when user starts typing
-    if (field !== 'id' && field in errors) {
-      setErrors((prev) => ({ ...prev, [field]: undefined }));
-    }
+      // Clear field error when user starts typing
+      if (field !== "id" && field in errors) {
+        setErrors((prev) => ({ ...prev, [field]: undefined }));
+      }
 
-    // Clear submit error if exists
-    if (errors.submit) {
-      setErrors((prev) => ({ ...prev, submit: undefined }));
-    }
-  }, [errors]);
+      // Clear submit error if exists
+      if (errors.submit) {
+        setErrors((prev) => ({ ...prev, submit: undefined }));
+      }
+    },
+    [errors]
+  );
 
   // Handle form submission with better error handling
   const handleSubmit = async (event: React.FormEvent) => {
@@ -315,9 +435,10 @@ export const Overlay = ({ setShowOverlay, member, onSave }: OverlayProps) => {
     } catch (error) {
       console.error("Error saving team member:", error);
       setErrors({
-        submit: error instanceof Error 
-          ? error.message 
-          : "An unexpected error occurred. Please try again."
+        submit:
+          error instanceof Error
+            ? error.message
+            : "An unexpected error occurred. Please try again.",
       });
     } finally {
       setIsSubmitting(false);
@@ -333,7 +454,9 @@ export const Overlay = ({ setShowOverlay, member, onSave }: OverlayProps) => {
 
       if (focusableElements && focusableElements.length > 0) {
         const firstElement = focusableElements[0] as HTMLElement;
-        const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement;
+        const lastElement = focusableElements[
+          focusableElements.length - 1
+        ] as HTMLElement;
 
         if (event.shiftKey && document.activeElement === firstElement) {
           event.preventDefault();
@@ -364,14 +487,19 @@ export const Overlay = ({ setShowOverlay, member, onSave }: OverlayProps) => {
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-neutral-200">
             <div>
-              <h2 id="overlay-title" className="text-xl font-semibold text-neutral-900">
+              <h2
+                id="overlay-title"
+                className="text-xl font-semibold text-neutral-900"
+              >
                 {isEditing ? "Edit Team Member" : "Add New Team Member"}
               </h2>
-              <p id="overlay-description" className="text-sm text-neutral-600 mt-1">
-                {isEditing 
+              <p
+                id="overlay-description"
+                className="text-sm text-neutral-600 mt-1"
+              >
+                {isEditing
                   ? "Update the team member's information below."
-                  : "Fill in the details to add a new team member to your organization."
-                }
+                  : "Fill in the details to add a new team member to your organization."}
               </p>
             </div>
             <button
@@ -397,76 +525,15 @@ export const Overlay = ({ setShowOverlay, member, onSave }: OverlayProps) => {
             )}
 
             <form onSubmit={handleSubmit} noValidate>
-              <div className="space-y-4 mb-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <InputField
-                    id="member-name"
-                    label="Full Name"
-                    value={formData.name}
-                    field="name"
-                    placeholder="Enter member's full name"
-                    disabled={isEditing}
-                    onChange={handleInputChange}
-                    onBlur={validateField}
-                    errors={errors}
-                    isSubmitting={isSubmitting}
-                    inputRef={firstFocusableRef}
-                  />
-
-                  <InputField
-                    id="member-email"
-                    label="Email Address"
-                    type="email"
-                    value={formData.email}
-                    field="email"
-                    placeholder="Enter member's email"
-                    disabled={isEditing}
-                    onChange={handleInputChange}
-                    onBlur={validateField}
-                    errors={errors}
-                    isSubmitting={isSubmitting}
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="member-role" className="block text-sm font-medium text-neutral-800 mb-2">
-                    Role <span className="text-red-500 ml-1" aria-label="required">*</span>
-                  </label>
-                  <select
-                    id="member-role"
-                    value={formData.role}
-                    onChange={(e) => handleInputChange("role", e.target.value)}
-                    onBlur={() => validateField("role")}
-                    className={`w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 appearance-none transition-all duration-200 ${
-                      errors.role
-                        ? "border-red-400 focus:ring-red-500 bg-red-50"
-                        : "border-neutral-300 focus:ring-blue-500 hover:border-neutral-400"
-                    } bg-white`}
-                    aria-describedby={errors.role ? "role-error" : undefined}
-                    aria-invalid={errors.role ? "true" : "false"}
-                    disabled={isSubmitting}
-                  >
-                    <option value="" disabled>
-                      Select a role for this team member
-                    </option>
-                    {ROLE_OPTIONS.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                  {errors.role && (
-                    <div
-                      id="role-error"
-                      className="flex items-center gap-1 text-red-600 text-sm mt-1"
-                      role="alert"
-                    >
-                      <FaExclamationCircle className="w-3 h-3 flex-shrink-0" />
-                      <span>{errors.role}</span>
-                    </div>
-                  )}
-                </div>
-              </div>
+              <FormSection
+                formData={formData}
+                errors={errors}
+                isSubmitting={isSubmitting}
+                isEditing={isEditing}
+                handleInputChange={handleInputChange}
+                validateField={validateField}
+                firstFocusableRef={firstFocusableRef}
+              />
 
               {/* Action Buttons */}
               <div className="flex justify-end gap-3 pt-4 border-t border-neutral-200">

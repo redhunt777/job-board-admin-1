@@ -1,250 +1,400 @@
 "use client";
-import React, { useState, FormEvent, useEffect } from "react";
+import React, {
+  useState,
+  useEffect,
+  useMemo,
+  useCallback,
+  useReducer,
+} from "react";
 import { IoMdEye, IoMdEyeOff } from "react-icons/io";
-import "react-phone-number-input/style.css"
-import PhoneInput from "react-phone-number-input"
+import "react-phone-number-input/style.css";
+import PhoneInput from "react-phone-number-input";
 import Link from "next/link";
 import { admin_email_signup } from "@/app/register/actions";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
-import { useAppSelector } from '@/store/hooks';
-import { selectIsAuthenticated } from '@/store/features/userSlice';
+import { useAppSelector } from "@/store/hooks";
+import { selectIsAuthenticated } from "@/store/features/userSlice";
 import { FormState } from "@/types/custom";
+import { useForm, UseFormRegister, FieldErrors } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+
+// Define the form schema using zod
+const registerSchema = z.object({
+  name: z
+    .string()
+    .min(1, "Name is required")
+    .min(2, "Name must be at least 2 characters"),
+  email: z
+    .string()
+    .min(1, "Email is required")
+    .email("Please enter a valid email address"),
+  phone: z
+    .string()
+    .min(1, "Phone number is required")
+    .refine((val) => val.length >= 10, "Please enter a valid phone number"),
+  password: z
+    .string()
+    .min(1, "Password is required")
+    .min(6, "Password must be at least 6 characters long"),
+});
+
+type RegisterFormData = z.infer<typeof registerSchema>;
+
+// Define action types for the reducer
+type FormAction =
+  | { type: "SET_FORM_STATE"; payload: FormState | null }
+  | { type: "CLEAR_FORM_STATE" }
+  | {
+      type: "SET_ERROR";
+      payload: { field: keyof RegisterFormData; message: string };
+    };
+
+// Form reducer
+const formReducer = (
+  state: { formState: FormState | null },
+  action: FormAction
+) => {
+  switch (action.type) {
+    case "SET_FORM_STATE":
+      return { ...state, formState: action.payload };
+    case "CLEAR_FORM_STATE":
+      return { ...state, formState: null };
+    case "SET_ERROR":
+      return {
+        ...state,
+        formState: { success: false, error: action.payload.message },
+      };
+    default:
+      return state;
+  }
+};
+
+// Separate form fields component to prevent unnecessary re-renders
+const FormFields = React.memo(
+  ({
+    register,
+    errors,
+    isSubmitting,
+    phone,
+    handlePhoneChange,
+    showPassword,
+    handleShowPassword,
+  }: {
+    register: UseFormRegister<RegisterFormData>;
+    errors: FieldErrors<RegisterFormData>;
+    isSubmitting: boolean;
+    phone: string;
+    handlePhoneChange: (value: string | undefined) => void;
+    showPassword: boolean;
+    handleShowPassword: () => void;
+  }) => (
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div>
+        <label className="text-sm font-medium mt-4 mb-2" htmlFor="name">
+          Name
+        </label>
+        <input
+          id="name"
+          type="text"
+          {...register("name")}
+          placeholder="Enter your full name"
+          className={`w-full p-4 text-sm border rounded-lg mb-2 outline-hidden hover:border-neutral-400 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed ${
+            errors.name
+              ? "border-red-300 focus:border-red-500"
+              : "border-neutral-300"
+          }`}
+          disabled={isSubmitting}
+        />
+        {errors.name && (
+          <span className="text-red-500 text-sm">{errors.name.message}</span>
+        )}
+      </div>
+
+      <div>
+        <label className="text-sm font-medium mt-4 mb-2" htmlFor="email">
+          Email
+        </label>
+        <input
+          id="email"
+          type="email"
+          {...register("email")}
+          placeholder="Enter your email"
+          className={`w-full p-4 text-sm border rounded-lg mb-2 outline-hidden hover:border-neutral-400 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed ${
+            errors.email
+              ? "border-red-300 focus:border-red-500"
+              : "border-neutral-300"
+          }`}
+          disabled={isSubmitting}
+        />
+        {errors.email && (
+          <span className="text-red-500 text-sm">{errors.email.message}</span>
+        )}
+      </div>
+
+      <div>
+        <label className="text-sm font-medium mt-4 mb-2" htmlFor="phone">
+          Mobile Number
+        </label>
+        <div
+          className={`focus-within:border-blue-500 focus-within:outline-hidden border rounded-lg mb-2 hover:border-neutral-400 ${
+            errors.phone
+              ? "border-red-300 focus-within:border-red-500"
+              : "border-neutral-300"
+          }`}
+        >
+          <PhoneInput
+            id="phone"
+            international
+            countryCallingCodeEditable={false}
+            defaultCountry="IN"
+            value={phone}
+            onChange={handlePhoneChange}
+            className="w-full p-4 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            placeholder="0000-000-000"
+            disabled={isSubmitting}
+          />
+        </div>
+        {errors.phone && (
+          <span className="text-red-500 text-sm">{errors.phone.message}</span>
+        )}
+      </div>
+
+      <div>
+        <label className="text-sm font-medium mt-4 mb-2" htmlFor="password">
+          Password
+        </label>
+        <div className="relative flex items-center mb-2">
+          <input
+            id="password"
+            type={showPassword ? "text" : "password"}
+            {...register("password")}
+            placeholder="Enter your password"
+            className={`w-full p-4 text-sm border rounded-lg pr-12 outline-hidden hover:border-neutral-400 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed ${
+              errors.password
+                ? "border-red-300 focus:border-red-500"
+                : "border-neutral-300"
+            }`}
+            disabled={isSubmitting}
+          />
+          <button
+            type="button"
+            onClick={handleShowPassword}
+            className="absolute right-4 text-neutral-500 hover:text-neutral-700"
+            tabIndex={-1}
+          >
+            {showPassword ? <IoMdEyeOff size={20} /> : <IoMdEye size={20} />}
+          </button>
+        </div>
+        {errors.password && (
+          <span className="text-red-500 text-sm">
+            {errors.password.message}
+          </span>
+        )}
+      </div>
+    </div>
+  )
+);
+FormFields.displayName = 'FormFields';
+
+// Separate form messages component
+const FormMessages = React.memo(
+  ({
+    searchParams,
+    formState,
+  }: {
+    searchParams: URLSearchParams;
+    formState: FormState | null;
+  }) => (
+    <>
+      {searchParams.get("error") && !formState && (
+        <div className="text-red-500 font-medium text-lg bg-red-50 p-3 rounded-lg border border-red-200">
+          {searchParams.get("error")}
+        </div>
+      )}
+
+      {formState && (
+        <div
+          className={`font-medium text-lg p-3 rounded-lg border ${
+            formState.success
+              ? "text-green-600 bg-green-50 border-green-200"
+              : "text-red-500 bg-red-50 border-red-200"
+          }`}
+        >
+          {formState.success ? formState.message : formState.error}
+        </div>
+      )}
+    </>
+  )
+);
+FormMessages.displayName = 'FormMessages';
 
 const AdminRegister = () => {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phoneNumber, setPhoneNumber] = useState<string>("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [formState, setFormState] = useState<FormState | null>(null);
-  
   const searchParams = useSearchParams();
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
   const router = useRouter();
+  const [showPassword, setShowPassword] = useState(false);
+  const [state, dispatch] = useReducer(formReducer, { formState: null });
 
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    setError,
+    watch,
+    setValue,
+  } = useForm<RegisterFormData>({
+    resolver: zodResolver(registerSchema),
+    mode: "onBlur",
+  });
+
+  // Memoize watched values
+  const phone = useMemo(() => watch("phone"), [watch]);
+
+  // Memoize handlers
+  const handleShowPassword = useCallback(() => {
+    setShowPassword((prev) => !prev);
+  }, []);
+
+  const handlePhoneChange = useCallback(
+    (value: string | undefined) => {
+      setValue("phone", value || "");
+    },
+    [setValue]
+  );
+
+  const clearFormState = useCallback(() => {
+    dispatch({ type: "CLEAR_FORM_STATE" });
+  }, []);
+
+  // Watch for form value changes to clear form state
+  useEffect(() => {
+    const subscription = watch(() => {
+      if (state.formState) {
+        clearFormState();
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [watch, state.formState, clearFormState]);
+
+  // Handle authentication redirect
   useEffect(() => {
     if (isAuthenticated) {
-      router.push('/dashboard');
+      router.push("/dashboard");
     }
   }, [isAuthenticated, router]);
 
-  // Clear form state when user starts typing
-  useEffect(() => {
-    if (formState) {
-      setFormState(null);
-    }
-  }, [name, email, phoneNumber, password, formState]);
+  const onSubmit = useCallback(
+    async (data: RegisterFormData) => {
+      clearFormState();
 
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    
-    // Reset form state
-    setFormState(null);
-    setIsLoading(true);
+      try {
+        const formData = new FormData();
+        formData.append("name", data.name);
+        formData.append("email", data.email);
+        formData.append("phone", data.phone);
+        formData.append("password", data.password);
 
-    try {
-      const formData = new FormData();
-      formData.append('name', name);
-      formData.append('email', email);
-      formData.append('phone', phoneNumber);
-      formData.append('password', password);
+        const result = await admin_email_signup(formData);
 
-      const result = await admin_email_signup(formData);
-      
-      if (result.success) {
-        setFormState({
-          success: true,
-          message: result.message
-        });
-        // Optional: Clear form on success
-        // setName("");
-        // setEmail("");
-        // setPhoneNumber("");
-        // setPassword("");
-      } else {
-        setFormState({
-          success: false,
-          error: result.error || 'Registration failed. Please try again.'
+        if (result.success) {
+          dispatch({
+            type: "SET_FORM_STATE",
+            payload: { success: true, message: result.message },
+          });
+        } else {
+          if (result.error?.includes("email")) {
+            setError("email", { message: result.error });
+          }
+          dispatch({
+            type: "SET_FORM_STATE",
+            payload: {
+              success: false,
+              error: result.error || "Registration failed. Please try again.",
+            },
+          });
+        }
+      } catch (error) {
+        console.log("Form submission error:", error);
+        dispatch({
+          type: "SET_FORM_STATE",
+          payload: {
+            success: false,
+            error: "Something went wrong. Please try again.",
+          },
         });
       }
-    } catch (error) {
-      console.log('Form submission error:', error);
-      setFormState({
-        success: false,
-        error: 'Something went wrong. Please try again.'
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    },
+    [clearFormState, setError]
+  );
 
-  const isFormValid = name && email && phoneNumber && password;
+  const formContent = useMemo(
+    () => (
+      <form
+        className="w-full flex flex-col gap-2"
+        onSubmit={handleSubmit(onSubmit)}
+      >
+        <h1 className="text-center text-neutral-800 font-semibold text-2xl sm:text-3xl mb-8">
+          Register
+        </h1>
 
-  return (
-    <div className="container mx-auto px-4">
-      <div className="flex flex-col justify-center items-center bg-white rounded-xl shadow-sm max-w-4xl mx-auto p-6 sm:p-10 my-10">
-        <form className="w-full flex flex-col gap-2" onSubmit={handleSubmit}>
-          <h1 className="text-center text-neutral-800 font-semibold text-2xl sm:text-4xl mb-4">
-            Register
-          </h1>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="text-lg mt-4" htmlFor="name">
-                Name
-              </label>
-              <input
-                id="name"
-                type="text"
-                name="name"
-                placeholder="Enter your full name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="w-full p-4 text-lg border border-neutral-300 rounded-lg mb-2 outline-hidden focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                required
-                disabled={isLoading}
-              />
-            </div>
-            
-            <div>
-              <label className="text-lg mt-4" htmlFor="email">
-                Email
-              </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                placeholder="Enter your email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full p-4 text-lg border border-neutral-300 rounded-lg mb-2 outline-hidden focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                required
-                disabled={isLoading}
-              />
-            </div>
-            
-            <div>
-              <label className="text-lg mt-4" htmlFor="phone">
-                Mobile Number
-              </label>
-              <div className="focus-within:border-blue-500 focus-within:outline-hidden border border-neutral-300 rounded-lg mb-2">
-                <PhoneInput
-                  id="phone"
-                  name="phone"
-                  international
-                  countryCallingCodeEditable={false}
-                  defaultCountry="IN"
-                  value={phoneNumber}
-                  onChange={(value) => setPhoneNumber(value || "")}
-                  className="w-full p-4 text-lg disabled:opacity-50 disabled:cursor-not-allowed"
-                  placeholder="Enter phone number"
-                  required
-                  disabled={isLoading}
-                />
-              </div>
-            </div>
-            
-            <div>
-              <label className="text-lg mt-4" htmlFor="password">
-                Password
-              </label>
-              <div className="relative flex items-center mb-2">
-                <input
-                  id="password"
-                  name="password"
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Enter your password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full p-4 text-lg border border-neutral-300 rounded-lg pr-12 outline-hidden focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                  required
-                  disabled={isLoading}
-                />
-                <span
-                  className="absolute right-4 top-1/2 -translate-y-1/2 cursor-pointer"
-                  onClick={() => setShowPassword((prev) => !prev)}
-                  role="button"
-                  tabIndex={0}
-                  aria-label={showPassword ? "Hide password" : "Show password"}
-                >
-                  {showPassword ? (
-                    <IoMdEye size={24} className="text-neutral-500" />
-                  ) : (
-                    <IoMdEyeOff size={24} className="text-neutral-500" />
-                  )}
-                </span>
-              </div>
-            </div>
-          </div>
-          
-          {/* Error from URL params (legacy support) */}
-          {searchParams.get('error') && !formState && (
-            <div className="text-red-500 font-medium text-lg bg-red-50 p-3 rounded-lg border border-red-200">
-              {searchParams.get('error')}
-            </div>
-          )}
-          
-          {/* Success message */}
-          {formState?.success && (
-            <div className="text-green-600 font-medium text-lg bg-green-50 p-3 rounded-lg border border-green-200">
-              {formState.message}
-            </div>
-          )}
-          
-          {/* Error message */}
-          {formState?.error && (
-            <div className="text-red-500 font-medium text-lg bg-red-50 p-3 rounded-lg border border-red-200">
-              {formState.error}
-            </div>
-          )}
-          
-          <button
-            type="submit"
-            disabled={!isFormValid || isLoading}
-            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed text-white sm:font-medium text-lg sm:text-2xl rounded-lg py-3 mt-6 mb-2 transition-colors cursor-pointer flex items-center justify-center"
-          >
-            {isLoading ? (
-              <>
-                <svg 
-                  className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" 
-                  xmlns="http://www.w3.org/2000/svg" 
-                  fill="none" 
-                  viewBox="0 0 24 24"
-                >
-                  <circle 
-                    className="opacity-25" 
-                    cx="12" 
-                    cy="12" 
-                    r="10" 
-                    stroke="currentColor" 
-                    strokeWidth="4"
-                  ></circle>
-                  <path 
-                    className="opacity-75" 
-                    fill="currentColor" 
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  ></path>
-                </svg>
-                Registering...
-              </>
-            ) : (
-              'Register'
-            )}
-          </button>
-        </form>
-        
-        <div className="text-center mt-10">
+        <FormFields
+          register={register}
+          errors={errors}
+          isSubmitting={isSubmitting}
+          phone={phone}
+          handlePhoneChange={handlePhoneChange}
+          showPassword={showPassword}
+          handleShowPassword={handleShowPassword}
+        />
+
+        <FormMessages searchParams={searchParams} formState={state.formState} />
+
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className={`w-full my-6 p-4 text-lg font-semibold text-white rounded-lg transition-colors cursor-pointer ${
+            !isSubmitting
+              ? "bg-blue-600 hover:bg-blue-700"
+              : "bg-blue-400 cursor-not-allowed"
+          }`}
+        >
+          {isSubmitting ? "Registering..." : "Register"}
+        </button>
+
+        <div className="text-center mt-4">
           <Link
             href="/login"
-            className="text-black font-medium text-xl underline hover:text-blue-700"
+            className="text-neutral-900 hover:underline text-lg font-semibold"
           >
             Login here
           </Link>
         </div>
+      </form>
+    ),
+    [
+      handleSubmit,
+      onSubmit,
+      register,
+      errors,
+      isSubmitting,
+      phone,
+      handlePhoneChange,
+      showPassword,
+      handleShowPassword,
+      searchParams,
+      state.formState,
+    ]
+  );
+
+  return (
+    <div className="container mx-auto px-4">
+      <div className="flex flex-col justify-center items-center bg-white rounded-xl shadow-sm max-w-5xl mx-auto p-6 sm:py-12 sm:px-18 my-10">
+        {formContent}
       </div>
     </div>
   );
 };
 
-export default AdminRegister;
+export default React.memo(AdminRegister);

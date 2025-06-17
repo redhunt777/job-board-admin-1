@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useEffect, useRef } from "react";
+import { useMemo, useEffect, useRef, memo } from "react";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { CiFilter } from "react-icons/ci";
 import { useRouter } from "next/navigation";
@@ -25,8 +25,9 @@ import {
   CandidateWithApplication,
   // CandidateFilters,
   SortOption,
+  CandidateFilters,
 } from "@/store/features/candidatesSlice";
-// import { MdErrorOutline } from "react-icons/md";
+import type { AppDispatch } from "@/store/store";
 import { TiArrowSortedDown } from "react-icons/ti";
 import GlobalStickyTable from "@/components/GlobalStickyTable";
 
@@ -119,6 +120,88 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
+// Memoize the filter select component
+const FilterSelect = memo(
+  ({
+    value,
+    onChange,
+    options,
+    placeholder,
+    className = "",
+  }: {
+    value: string;
+    onChange: (value: string) => void;
+    options: string[];
+    placeholder: string;
+    className?: string;
+  }) => (
+    <div className="relative">
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className={`bg-transparent text-gray-600 text-sm border border-gray-300 rounded-full px-4 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-300 hover:border-gray-400 transition-colors cursor-pointer appearance-none ${className}`}
+      >
+        <option value="">{placeholder}</option>
+        {options.map((option) => (
+          <option key={option} value={option}>
+            {option}
+          </option>
+        ))}
+      </select>
+      <TiArrowSortedDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" />
+    </div>
+  )
+);
+
+FilterSelect.displayName = "FilterSelect";
+
+// Memoize the filters section component
+const FiltersSection = memo(
+  ({
+    filters,
+    filteredCandidates,
+    dispatch,
+  }: {
+    filters: CandidateFilters;
+    filteredCandidates: CandidateWithApplication[];
+    dispatch: AppDispatch;
+  }) => {
+    const companyOptions = useMemo(
+      () =>
+        Array.from(
+          new Set(filteredCandidates.map((c) => c.company_name).filter(Boolean))
+        ),
+      [filteredCandidates]
+    );
+
+    return (
+      <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2">
+          <FilterSelect
+            value={filters.company ?? ""}
+            onChange={(value) =>
+              dispatch(setFilters({ ...filters, company: value }))
+            }
+            options={companyOptions.filter(
+              (option): option is string => option !== null
+            )}
+            placeholder="Company"
+          />
+
+          <FilterSelect
+            value=""
+            onChange={() => {}}
+            options={["0-2", "3-5", "5+"]}
+            placeholder="Years of Exp."
+          />
+        </div>
+      </div>
+    );
+  }
+);
+
+FiltersSection.displayName = "FiltersSection";
+
 export default function CandidatesList({
   showHeader = true,
   showFilters = true,
@@ -151,7 +234,7 @@ export default function CandidatesList({
   const candidatesToDisplay = useMemo(() => {
     let candidatesSource = filteredCandidates;
     if (jobId) {
-      candidatesSource = candidatesSource.filter(c => c.job_id === jobId);
+      candidatesSource = candidatesSource.filter((c) => c.job_id === jobId);
     }
     if (maxItems && maxItems > 0) {
       return candidatesSource.slice(0, maxItems);
@@ -178,10 +261,71 @@ export default function CandidatesList({
         })
       );
     }
-  }, [userContext, loading, candidatesToDisplay.length, error, dispatch, filters]);
+  }, [
+    userContext,
+    loading,
+    candidatesToDisplay.length,
+    error,
+    dispatch,
+    filters,
+  ]);
 
   // Handlers
   // const handleStatusUpdate = async (applicationId: string, status: string) => {
+  //   if (!userContext) {
+  //     console.log("User context not available");
+  //     return;
+  //   }
+
+  //   //confirm status change
+  //   const confirmed = window.confirm(
+  //     `Are you sure you want to change the status to "${status}"?`
+  //   );
+  //   if (!confirmed) {
+  //     return;
+  //   }
+
+  //   try {
+  //     await dispatch(
+  //       updateApplicationStatusWithAccess({
+  //         applicationId,
+  //         status,
+  //         userContext,
+  //       })
+  //     ).unwrap();
+
+  //     // Update the overlay candidate status if it's the same candidate
+  //     if (
+  //       candidatesDetailsOverlay.candidate?.application_id === applicationId
+  //     ) {
+  //       setCandidatesDetailsOverlay((prev) => ({
+  //         ...prev,
+  //         candidate: prev.candidate
+  //           ? {
+  //               ...prev.candidate,
+  //               application_status: status,
+  //             }
+  //           : null,
+  //       }));
+  //     }
+  //   } catch (error) {
+  //     console.log("Failed to update status:", error);
+  //   }
+  // };
+
+  // const handleViewCandidate = (candidate: CandidateWithApplication) => {
+  //   // Show overlay instead of navigating
+  //   setCandidatesDetailsOverlay({
+  //     candidate,
+  //     show: true,
+  //   });
+
+  //   if (onCandidateClick) {
+  //     onCandidateClick(candidate);
+  //   }
+  // };
+
+  // const handleDeleteCandidate = async (applicationId: string) => {
   //   if (!userContext) {
   //     console.log("User context not available");
   //     return;
@@ -247,9 +391,7 @@ export default function CandidatesList({
   const columns = [
     {
       key: "checkbox",
-      header: (
-        <input type="checkbox" className="rounded border-gray-300" />
-      ),
+      header: <input type="checkbox" className="rounded border-gray-300" />,
       width: "48px",
       render: (candidate: CandidateWithApplication) => (
         <input
@@ -283,8 +425,12 @@ export default function CandidatesList({
       header: "Candidate Name",
       render: (candidate: CandidateWithApplication) => (
         <div>
-          <div className="text-sm font-medium text-gray-900">{candidate.name}</div>
-          <div className="text-sm text-gray-500">{candidate.candidate_email}</div>
+          <div className="text-sm font-medium text-gray-900">
+            {candidate.name}
+          </div>
+          <div className="text-sm text-gray-500">
+            {candidate.candidate_email}
+          </div>
         </div>
       ),
     },
@@ -299,21 +445,27 @@ export default function CandidatesList({
       key: "company_name",
       header: "Company",
       render: (candidate: CandidateWithApplication) => (
-        <span className="text-sm text-gray-900">{candidate.company_name || "—"}</span>
+        <span className="text-sm text-gray-900">
+          {candidate.company_name || "—"}
+        </span>
       ),
     },
     {
       key: "location",
       header: "Location",
       render: (candidate: CandidateWithApplication) => (
-        <span className="text-sm text-gray-900">{candidate.address || candidate.job_location || "—"}</span>
+        <span className="text-sm text-gray-900">
+          {candidate.address || candidate.job_location || "—"}
+        </span>
       ),
     },
     {
       key: "years_of_exp",
       header: "Years of Exp.",
       render: (candidate: CandidateWithApplication) => (
-        <span className="text-sm text-gray-900">{calculateExperience(candidate)}</span>
+        <span className="text-sm text-gray-900">
+          {calculateExperience(candidate)}
+        </span>
       ),
     },
     {
@@ -394,42 +546,48 @@ export default function CandidatesList({
         </div>
       )}
 
-      {/* Filters and Sorting */}
-      {(showSorting || showFilters) && (
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-          {/* Left side - Sorting */}
-          <div className="flex items-center gap-4">
-            {showSorting && (
-              <div className="flex items-center gap-2">
-                <div className="relative">
-                  <select
-                    value={sortBy}
-                    onChange={(e) =>
-                      dispatch(setSortBy(e.target.value as SortOption))
-                    }
-                    className="bg-blue-600 text-white text-sm border border-blue-600 rounded-full px-4 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-300 hover:bg-blue-700 transition-colors cursor-pointer appearance-none"
-                  >
-                    <option
-                      value="date_desc"
-                      className="bg-white text-gray-900"
+        {/* Filters and Sorting */}
+        {(showSorting || showFilters) && (
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+            {/* Left side - Sorting */}
+            <div className="flex items-center gap-4">
+              {showSorting && (
+                <div className="flex items-center gap-2">
+                  <div className="relative">
+                    <select
+                      value={sortBy}
+                      onChange={(e) =>
+                        dispatch(setSortBy(e.target.value as SortOption))
+                      }
+                      className="bg-blue-600 text-white text-sm border border-blue-600 rounded-full px-4 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-300 hover:bg-blue-700 transition-colors cursor-pointer appearance-none"
                     >
-                      Newest First
-                    </option>
-                    <option value="date_asc" className="bg-white text-gray-900">
-                      Oldest First
-                    </option>
-                    <option value="name_asc" className="bg-white text-gray-900">
-                      Name (A-Z)
-                    </option>
-                    <option
-                      value="name_desc"
-                      className="bg-white text-gray-900"
-                    >
-                      Name (Z-A)
-                    </option>
-                  </select>
-                  <TiArrowSortedDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white pointer-events-none" />
-                </div>
+                      <option
+                        value="date_desc"
+                        className="bg-white text-gray-900"
+                      >
+                        Newest First
+                      </option>
+                      <option
+                        value="date_asc"
+                        className="bg-white text-gray-900"
+                      >
+                        Oldest First
+                      </option>
+                      <option
+                        value="name_asc"
+                        className="bg-white text-gray-900"
+                      >
+                        Name (A-Z)
+                      </option>
+                      <option
+                        value="name_desc"
+                        className="bg-white text-gray-900"
+                      >
+                        Name (Z-A)
+                      </option>
+                    </select>
+                    <TiArrowSortedDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white pointer-events-none" />
+                  </div>
 
                 <div className="relative">
                   <select

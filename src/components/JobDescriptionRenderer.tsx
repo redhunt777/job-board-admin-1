@@ -1,25 +1,25 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
 interface JobDescriptionRendererProps {
   content: string;
   className?: string;
 }
 
-export default function JobDescriptionRenderer({ 
-  content, 
-  className = "" 
+export default function JobDescriptionRenderer({
+  content,
+  className = "",
 }: JobDescriptionRendererProps) {
   const [isClient, setIsClient] = useState(false);
-  
+
   // Ensure we're on the client side to avoid hydration mismatches
   useEffect(() => {
     setIsClient(true);
   }, []);
   // Debug logging (development only)
-  if (process.env.NODE_ENV === 'development') {
+  if (process.env.NODE_ENV === "development") {
     console.log("JobDescriptionRenderer received content:", {
       length: content?.length,
-      isHTML: content?.includes('<') || false
+      isHTML: content?.includes("<") || false,
     });
   }
 
@@ -41,62 +41,72 @@ export default function JobDescriptionRenderer({
     [&>blockquote]:text-blue-900 [&>blockquote]:rounded-r-xl [&>blockquote]:shadow-sm
     [&>code]:bg-gray-100 [&>code]:rounded-md [&>code]:px-2 [&>code]:border [&>code]:border-gray-200
     [&>code]:py-1 [&>code]:font-mono [&>code]:text-sm [&>code]:text-gray-800
-  `.trim().replace(/\s+/g, ' ');
+  `
+    .trim()
+    .replace(/\s+/g, " ");
 
   // Function to convert plain text to HTML and ensure proper HTML rendering
   const processContentForDisplay = (text: string): string => {
     if (!text) return "<p>No job description provided.</p>";
-    
+
     // Clean the text first
     const cleanText = text.trim();
-    
+
     // Check if it's already properly formatted HTML
-    const isHTML = cleanText.includes('<') && cleanText.includes('>');
-    
+    const isHTML = cleanText.includes("<") && cleanText.includes(">");
+
     if (isHTML) {
       // Ensure the HTML is properly formatted and not escaped
       let processedHTML = cleanText;
-      
+
       // Fix common HTML escaping issues
       processedHTML = processedHTML
-        .replace(/&lt;/g, '<')
-        .replace(/&gt;/g, '>')
-        .replace(/&amp;/g, '&')
+        .replace(/&lt;/g, "<")
+        .replace(/&gt;/g, ">")
+        .replace(/&amp;/g, "&")
         .replace(/&quot;/g, '"')
         .replace(/&#x27;/g, "'");
-      
+
       // Validate that we have proper HTML structure
-      if (processedHTML.includes('<h') || processedHTML.includes('<p') || processedHTML.includes('<ul') || processedHTML.includes('<li')) {
+      if (
+        processedHTML.includes("<h") ||
+        processedHTML.includes("<p") ||
+        processedHTML.includes("<ul") ||
+        processedHTML.includes("<li")
+      ) {
         return processedHTML;
       }
     }
-    
+
     // Convert plain text to HTML with better paragraph handling
     return cleanText
-      .split('\n\n') // Split by double newlines (paragraphs)
-      .filter(paragraph => paragraph.trim()) // Remove empty paragraphs
-      .map(paragraph => {
+      .split("\n\n") // Split by double newlines (paragraphs)
+      .filter((paragraph) => paragraph.trim()) // Remove empty paragraphs
+      .map((paragraph) => {
         // Handle single newlines within paragraphs
         const formatted = paragraph
-          .split('\n')
-          .map(line => line.trim())
-          .filter(line => line)
-          .join('<br/>');
-        
+          .split("\n")
+          .map((line) => line.trim())
+          .filter((line) => line)
+          .join("<br/>");
+
         return `<p>${formatted}</p>`;
       })
-      .join('');
+      .join("");
   };
 
   const htmlContent = processContentForDisplay(content);
 
   // Show raw content for debugging
-  if (process.env.NODE_ENV === 'development') {
+  if (process.env.NODE_ENV === "development") {
     console.log("JobDescriptionRenderer - Content processing:", {
       originalContent: content?.substring(0, 100) + "...",
-      isHTML: content?.includes('<'),
+      isHTML: content?.includes("<"),
       processedHTML: htmlContent?.substring(0, 100) + "...",
-      hasHTMLTags: htmlContent?.includes('<h') || htmlContent?.includes('<p') || htmlContent?.includes('<ul')
+      hasHTMLTags:
+        htmlContent?.includes("<h") ||
+        htmlContent?.includes("<p") ||
+        htmlContent?.includes("<ul"),
     });
   }
 
@@ -115,8 +125,12 @@ export default function JobDescriptionRenderer({
   );
 
   // Check if we should use fallback rendering
-  const shouldUseFallback = !htmlContent || 
-    (content?.includes('<') && htmlContent === content && !htmlContent.includes('<h') && !htmlContent.includes('<p'));
+  const shouldUseFallback =
+    !htmlContent ||
+    (content?.includes("<") &&
+      htmlContent === content &&
+      !htmlContent.includes("<h") &&
+      !htmlContent.includes("<p"));
 
   // Show loading state during SSR
   if (!isClient) {
@@ -132,19 +146,21 @@ export default function JobDescriptionRenderer({
   }
 
   if (shouldUseFallback) {
-    if (process.env.NODE_ENV === 'development') {
-      console.warn("JobDescriptionRenderer: Using fallback renderer due to HTML processing issue");
+    if (process.env.NODE_ENV === "development") {
+      console.warn(
+        "JobDescriptionRenderer: Using fallback renderer due to HTML processing issue"
+      );
     }
     return <FallbackRenderer />;
   }
 
   return (
-    <div 
+    <div
       key={`job-desc-${content?.length}-${htmlContent?.length}`} // Force re-render when content changes
       className={`${defaultClasses} ${className}`}
       dangerouslySetInnerHTML={{
-        __html: htmlContent
+        __html: htmlContent,
       }}
     />
   );
-} 
+}
