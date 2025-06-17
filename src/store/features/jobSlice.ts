@@ -635,6 +635,25 @@ const jobSlice = createSlice({
         state.filteredJobs[filteredJobIndex].access_type = accessType;
       }
     },
+
+    // Pagination actions
+    setCurrentPage: (state, action: PayloadAction<number>) => {
+      state.pagination.currentPage = action.payload;
+    },
+
+    setPageSize: (state, action: PayloadAction<number>) => {
+      state.pagination.pageSize = action.payload;
+      state.pagination.currentPage = 1; // Reset to first page when changing page size
+    },
+
+    updatePaginationInfo: (state, action: PayloadAction<{ totalCount: number; pageSize?: number }>) => {
+      const { totalCount, pageSize } = action.payload;
+      state.pagination.totalCount = totalCount;
+      if (pageSize) {
+        state.pagination.pageSize = pageSize;
+      }
+      state.pagination.totalPages = Math.ceil(totalCount / state.pagination.pageSize);
+    },
   },
 
   extraReducers: (builder) => {
@@ -817,6 +836,9 @@ export const {
   clearError,
   clearSelectedJob,
   updateJobAccess,
+  setCurrentPage,
+  setPageSize,
+  updatePaginationInfo,
 } = jobSlice.actions;
 
 export default jobSlice.reducer;
@@ -900,3 +922,15 @@ export const selectUserJobAccess =
     state.jobs.userAccess.filter(
       (access) => access.user_id === userId && access.access_type === "granted"
     );
+
+// Paginated jobs selector
+export const selectPaginatedJobs = createSelector(
+  [selectJobs, selectJobPagination],
+  (jobs, pagination) => {
+    const { currentPage, pageSize } = pagination;
+    const startIndex = (currentPage - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    
+    return jobs.slice(startIndex, endIndex);
+  }
+);

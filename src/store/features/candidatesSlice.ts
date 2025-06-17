@@ -672,6 +672,25 @@ const candidatesSlice = createSlice({
     setAccessibleJobs: (state, action) => {
       state.accessibleJobs = action.payload;
     },
+
+    // Pagination actions
+    setCurrentPage: (state, action) => {
+      state.pagination.currentPage = action.payload;
+    },
+
+    setCandidatesPerPage: (state, action) => {
+      state.pagination.candidatesPerPage = action.payload;
+      state.pagination.currentPage = 1; // Reset to first page when changing page size
+    },
+
+    updatePaginationInfo: (state, action) => {
+      const { totalCandidates, candidatesPerPage } = action.payload;
+      state.pagination.totalCandidates = totalCandidates;
+      state.pagination.candidatesPerPage = candidatesPerPage || state.pagination.candidatesPerPage;
+      state.pagination.totalPages = Math.ceil(totalCandidates / state.pagination.candidatesPerPage);
+      state.pagination.hasNextPage = state.pagination.currentPage < state.pagination.totalPages;
+      state.pagination.hasPreviousPage = state.pagination.currentPage > 1;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -686,6 +705,12 @@ const candidatesSlice = createSlice({
         state.stats = calculateStats(action.payload);
         state.lastFetched = new Date().toISOString();
         state.error = null;
+        
+        // Update pagination info
+        state.pagination.totalCandidates = action.payload.length;
+        state.pagination.totalPages = Math.ceil(action.payload.length / state.pagination.candidatesPerPage);
+        state.pagination.hasNextPage = state.pagination.currentPage < state.pagination.totalPages;
+        state.pagination.hasPreviousPage = state.pagination.currentPage > 1;
       })
       .addCase(fetchJobApplicationsWithAccess.rejected, (state, action) => {
         state.loading = false;
@@ -731,6 +756,9 @@ export const {
   updateApplicationStatusInList,
   refreshStats,
   setAccessibleJobs,
+  setCurrentPage,
+  setCandidatesPerPage,
+  updatePaginationInfo,
 } = candidatesSlice.actions;
 
 // Enhanced selectors with proper typing

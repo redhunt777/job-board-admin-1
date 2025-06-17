@@ -14,6 +14,11 @@ import {
   selectSortBy,
   selectUserContext,
   selectFilteredCandidatesWithAccess,
+  selectPaginatedCandidatesWithAccess,
+  selectPagination,
+  setCurrentPage,
+  setCandidatesPerPage,
+  updatePaginationInfo,
   CandidateWithApplication,
   SortOption,
   CandidateFilters,
@@ -22,6 +27,7 @@ import type { AppDispatch } from "@/store/store";
 import { TiArrowSortedDown } from "react-icons/ti";
 import GlobalStickyTable from "@/components/GlobalStickyTable";
 import CandidatesDetailsOverlay from "./candidates-details-overlay"; // Import the overlay component
+import Pagination from "./pagination";
 
 // Types for component props
 interface CandidatesListProps {
@@ -206,6 +212,8 @@ export default function CandidatesList({
 
   // Redux selectors
   const filteredCandidates = useAppSelector(selectFilteredCandidatesWithAccess);
+  const paginatedCandidates = useAppSelector(selectPaginatedCandidatesWithAccess);
+  const pagination = useAppSelector(selectPagination);
   const loading = useAppSelector(selectCandidatesLoading);
   const error = useAppSelector(selectCandidatesError);
   const filters = useAppSelector(selectFilters);
@@ -223,15 +231,32 @@ export default function CandidatesList({
 
   // Get candidates to display with jobId filtering
   const candidatesToDisplay = useMemo(() => {
-    let candidatesSource = filteredCandidates;
+    // If maxItems is specified, we use the filtered candidates without pagination
+    if (maxItems && maxItems > 0) {
+      let candidatesSource = filteredCandidates;
+      if (jobId) {
+        candidatesSource = candidatesSource.filter((c) => c.job_id === jobId);
+      }
+      return candidatesSource.slice(0, maxItems);
+    }
+    
+    // Otherwise, use paginated candidates
+    let candidatesSource = paginatedCandidates;
     if (jobId) {
       candidatesSource = candidatesSource.filter((c) => c.job_id === jobId);
     }
-    if (maxItems && maxItems > 0) {
-      return candidatesSource.slice(0, maxItems);
-    }
     return candidatesSource;
-  }, [filteredCandidates, jobId, maxItems]);
+  }, [filteredCandidates, paginatedCandidates, jobId, maxItems]);
+
+  // Update pagination info when filtered candidates change
+  useEffect(() => {
+    if (filteredCandidates.length > 0 || !loading) {
+      dispatch(updatePaginationInfo({
+        totalCandidates: filteredCandidates.length,
+        candidatesPerPage: pagination.candidatesPerPage
+      }));
+    }
+  }, [filteredCandidates.length, pagination.candidatesPerPage, dispatch, loading]);
 
   // Prevent infinite fetch loop
   const hasFetched = useRef(false);
@@ -368,6 +393,15 @@ export default function CandidatesList({
 
     const years = Math.floor(totalMonths / 12);
     return years.toString();
+  };
+
+  // Pagination handlers
+  const handlePageChange = (page: number) => {
+    dispatch(setCurrentPage(page));
+  };
+
+  const handleItemsPerPageChange = (itemsPerPage: number) => {
+    dispatch(setCandidatesPerPage(itemsPerPage));
   };
 
   const generateShortId = (applicationId: string) => {
@@ -672,6 +706,21 @@ export default function CandidatesList({
             data={candidatesToDisplay}
             stickyFirst
             stickyLastTwo
+          />
+        )}
+
+        {/* Pagination - Only show if not using maxItems limit */}
+        {!loading && !maxItems && candidatesToDisplay.length > 0 && (
+          <Pagination
+            currentPage={pagination.currentPage}
+            totalPages={pagination.totalPages}
+            totalItems={pagination.totalCandidates}
+            itemsPerPage={pagination.candidatesPerPage}
+            onPageChange={handlePageChange}
+            onItemsPerPageChange={handleItemsPerPageChange}
+            showItemsPerPage={true}
+            itemsPerPageOptions={[10, 20, 50, 100]}
+            className="mt-6"
           />
         )}
       </div>

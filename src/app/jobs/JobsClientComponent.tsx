@@ -9,6 +9,8 @@ import { CiFilter } from "react-icons/ci";
 import { HiOutlineArrowCircleLeft } from "react-icons/hi";
 import {
   selectJobs,
+  selectPaginatedJobs,
+  selectJobPagination,
   selectJobsLoading,
   selectJobsError,
   selectJobViewMode,
@@ -17,6 +19,9 @@ import {
   setFilters,
   clearError,
   fetchJobs,
+  setCurrentPage,
+  setPageSize,
+  updatePaginationInfo,
 } from "@/store/features/jobSlice";
 import {
   JobListComponent,
@@ -29,6 +34,7 @@ import {
   ErrorState,
   FilterDropdown,
 } from "./job_utils";
+import Pagination from "@/components/pagination";
 
 // Constants
 const INITIAL_PAGE_SIZE = 18;
@@ -57,6 +63,8 @@ export default function JobsClientComponent({
   // Redux selectors
   const collapsed = useAppSelector((state) => state.ui.sidebar.collapsed);
   const jobs = useAppSelector(selectJobs);
+  const paginatedJobs = useAppSelector(selectPaginatedJobs);
+  const pagination = useAppSelector(selectJobPagination);
   const loading = useAppSelector(selectJobsLoading);
   const error = useAppSelector(selectJobsError);
   const viewMode = useAppSelector(selectJobViewMode);
@@ -199,6 +207,25 @@ export default function JobsClientComponent({
     }
   }, [dispatch, userRole, userId, organizationId, isValidProps]);
 
+  // Pagination handlers
+  const handlePageChange = useCallback((page: number) => {
+    dispatch(setCurrentPage(page));
+  }, [dispatch]);
+
+  const handlePageSizeChange = useCallback((pageSize: number) => {
+    dispatch(setPageSize(pageSize));
+  }, [dispatch]);
+
+  // Update pagination info when jobs change
+  useEffect(() => {
+    if (jobs.length > 0 || !loading) {
+      dispatch(updatePaginationInfo({
+        totalCount: jobs.length,
+        pageSize: pagination.pageSize
+      }));
+    }
+  }, [jobs.length, pagination.pageSize, dispatch, loading]);
+
   const toggleFilterDropdown = useCallback(
     (filterType: "status" | "location" | "company") => {
       setFilterDropdowns((prev) => ({
@@ -223,9 +250,9 @@ export default function JobsClientComponent({
     }
   }, [dispatch]);
 
-  // Optimized job transformations
+  // Optimized job transformations - now using paginated jobs
   const transformedJobs = useMemo(() => {
-    const forCards = jobs.map((job) => ({
+    const forCards = paginatedJobs.map((job) => ({
       id: job.id,
       title: job.title,
       company_name: job.company_name ?? "",
@@ -235,7 +262,7 @@ export default function JobsClientComponent({
       company_logo_url: job.company_logo_url || "/demo.png",
     }));
 
-    const forList = jobs.map((job) => ({
+    const forList = paginatedJobs.map((job) => ({
       job_id: job.id,
       job_title: job.title,
       company_name: job.company_name || "",
@@ -259,7 +286,7 @@ export default function JobsClientComponent({
     }));
 
     return { forCards, forList };
-  }, [jobs]);
+  }, [paginatedJobs]);
 
   // Enhanced loading component
   const LoadingView = () => (
@@ -489,6 +516,21 @@ export default function JobsClientComponent({
               </div>
             ) : (
               <JobListComponent jobsFromStore={transformedJobs.forList} />
+            )}
+
+            {/* Pagination */}
+            {jobs.length > 0 && (
+              <Pagination
+                currentPage={pagination.currentPage}
+                totalPages={pagination.totalPages}
+                totalItems={pagination.totalCount}
+                itemsPerPage={pagination.pageSize}
+                onPageChange={handlePageChange}
+                onItemsPerPageChange={handlePageSizeChange}
+                showItemsPerPage={true}
+                itemsPerPageOptions={[6, 12, 18, 30]}
+                className="mt-8"
+              />
             )}
           </>
         )}

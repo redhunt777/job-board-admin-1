@@ -298,9 +298,8 @@ const CandidatesContent = ({
         <CandidatesList
           showHeader={false} // We're showing our own header above
           showFilters={true}
-          // showPagination={true}
           showSorting={true}
-          maxItems={20}
+          // Removed maxItems to enable pagination
         />
       </div>
     </div>
