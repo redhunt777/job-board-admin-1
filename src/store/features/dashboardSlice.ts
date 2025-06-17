@@ -1,5 +1,5 @@
 // dashboardSlice.ts
-import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { createClient } from '@/utils/supabase/client'; // Adjust path as needed
 
 const supabase = createClient();
@@ -80,8 +80,11 @@ export const fetchDashboardData = createAsyncThunk(
         }
 
         // Handle error responses from the function
-        if ((data as any)?.stats?.error) {
-            throw new Error((data as any).stats.message || 'Access denied');
+        if (data && typeof data === 'object' && 'stats' in data) {
+            const errorData = data as { stats?: { error?: boolean; message?: string } };
+            if (errorData.stats?.error) {
+                throw new Error(errorData.stats.message || 'Access denied');
+            }
         }
 
         return data as unknown as DashboardData;
@@ -100,8 +103,11 @@ export const fetchDashboardStats = createAsyncThunk(
             throw new Error(error.message);
         }
 
-        if ((data as any)?.error) {
-            throw new Error((data as any).message || 'Access denied');
+        if (data && typeof data === 'object' && 'error' in data) {
+            const errorData = data as { error?: boolean; message?: string };
+            if (errorData.error) {
+                throw new Error(errorData.message || 'Access denied');
+            }
         }
 
         return data as unknown as DashboardStats;
@@ -130,7 +136,10 @@ export const fetchApplicationsOverTime = createAsyncThunk(
         }
 
         if (data && typeof data === 'object' && 'error' in data) {
-            throw new Error((data as any).message || 'Access denied');
+            const errorData = data as { error?: boolean; message?: string };
+            if (errorData.error) {
+                throw new Error(errorData.message || 'Access denied');
+            }
         }
 
         return data as unknown as ChartDataPoint[];
@@ -162,7 +171,10 @@ export const fetchTopPerformers = createAsyncThunk(
         }
 
         if (data && typeof data === 'object' && 'error' in data) {
-            throw new Error((data as any).message || 'Access denied');
+            const errorData = data as { error?: boolean; message?: string };
+            if (errorData.error) {
+                throw new Error(errorData.message || 'Access denied');
+            }
         }
 
         return { type: metricType, data: data as unknown as TopPerformer[] };

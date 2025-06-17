@@ -24,7 +24,6 @@ import {
 } from "@/store/features/dashboardSlice"; // Adjust path as needed
 
 import {
-  selectIsAuthenticated,
   initializeAuth,
 } from "@/store/features/userSlice"; // Adjust path as needed
 
@@ -55,18 +54,30 @@ const InfoMessage = ({
   </div>
 );
 
+// Add proper types for user and organization
+interface User {
+  id: string;
+  email?: string;
+  // Add other user properties as needed
+}
+
+interface Organization {
+  id: string;
+  name?: string;
+  // Add other organization properties as needed
+}
+
 // Main Dashboard Content Component
 const DashboardContent = ({
   user,
   organization,
   collapsed,
 }: {
-  user: any;
-  organization: any;
+  user: User;
+  organization: Organization;
   collapsed: boolean;
 }) => {
   const dispatch = useDispatch<AppDispatch>();
-  const [filterBy, setFilterBy] = useState("all");
 
   // Redux selectors
   const dashboardData = useSelector(selectDashboardData);
@@ -143,8 +154,11 @@ const DashboardContent = ({
     };
   }, [dispatch, error]);
 
-  // Custom tooltip component
-  const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?: any[]; label?: string }) => {
+  // Custom tooltip component with proper types
+  const CustomTooltip = ({ active, payload }: { 
+    active?: boolean; 
+    payload?: Array<{ value: number }>;
+  }) => {
     if (active && payload && payload.length) {
       return (
         <div className="bg-white p-3 rounded-lg shadow-lg border">
@@ -350,12 +364,11 @@ const DashboardContent = ({
 
 export default function DashboardPage() {
   const dispatch = useDispatch<AppDispatch>();
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed] = useState(false);
 
   // User authentication data
   const user = useSelector((state: RootState) => state.user.user);
   const organization = useSelector((state: RootState) => state.user.organization);
-  const isAuthenticated = useSelector(selectIsAuthenticated);
   const isLoading = useSelector((state: RootState) => state.user.loading);
   const error = useSelector((state: RootState) => state.user.error);
 
