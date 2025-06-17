@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo } from "react";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { useRouter } from "next/navigation";
 import { GoPlus } from "react-icons/go";
@@ -259,7 +259,7 @@ const CandidatesContent = ({
           <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
             <div className="flex items-center">
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-3"></div>
-              <p className="text-blue-800 text-sm"><LoadingSpinner message="Loading candidates..." /></p>
+              <p className="text-blue-800 text-sm">Loading candidates...</p>
             </div>
           </div>
         )}
@@ -322,41 +322,15 @@ export default function Candidates() {
   const isLoading = useAppSelector((state: RootState) => state.user.loading);
   const error = useAppSelector((state: RootState) => state.user.error);
 
-  // Ref to track if auth initialization has been attempted
-  const authInitialized = useRef(false);
-  const mountedRef = useRef(true);
-
-  // Cleanup on unmount
+  // Initialize authentication if not already done
   useEffect(() => {
-    return () => {
-      mountedRef.current = false;
-    };
-  }, []);
-
-  // Initialize auth only once and only if user is truly not authenticated
-  useEffect(() => {
-    if (
-      authInitialized.current || 
-      isLoading || 
-      user || 
-      error ||
-      !mountedRef.current
-    ) {
-      return;
+    if (!user && !isLoading) {
+      console.log("User not found, initializing auth...");
+      console.log("Current user state:", user);
+      console.log("Current loading state:", isLoading);
+      dispatch(initializeAuth());
     }
-
-    console.log("Initializing auth for the first time...");
-    authInitialized.current = true;
-    dispatch(initializeAuth());
-  }, [dispatch, user, isLoading, error]);
-
-  // Reset auth initialization flag when user logs out
-  useEffect(() => {
-    if (error && authInitialized.current) {
-      console.log("User error detected, resetting auth initialization flag");
-      authInitialized.current = false;
-    }
-  }, [error]);
+  }, [user, isLoading, dispatch]);
 
   // Handle error state
   if (error) {
@@ -367,40 +341,17 @@ export default function Candidates() {
         } pt-4`}
       >
         <div className="max-w-8xl mx-auto px-2 md:px-4 py-4">
-          <div className="bg-red-50 border border-red-200 rounded-md p-4">
-            <h3 className="text-red-800 font-medium">Authentication Error</h3>
-            <p className="text-red-700 mt-2">{error}</p>
-            <div className="mt-4">
-              <Link
-                href="/login"
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-              >
-                Go to Login
-              </Link>
-            </div>
-          </div>
+          <InfoMessage
+            message={`Authentication error: ${error}`}
+            type="error"
+          />
         </div>
       </div>
     );
   }
 
-  // Show loading only during initial auth check
-  if (isLoading && !authInitialized.current) {
-    return (
-      <div
-        className={`transition-all duration-300 h-full px-3 md:px-0 ${
-          collapsed ? "md:ml-20" : "md:ml-60"
-        } pt-4`}
-      >
-        <div className="max-w-8xl mx-auto px-2 md:px-4 py-4 flex justify-center items-center">
-          <LoadingSpinner message="Loading candidates..." />
-        </div>
-      </div>
-    );
-  }
-
-  // If no user after auth initialization, redirect to login
-  if (!user && authInitialized.current && !isLoading) {
+  // Handle loading state
+  if (isLoading || !user) {
     return (
       <div
         className={`transition-all duration-300 h-full px-3 md:px-0 ${
@@ -408,18 +359,7 @@ export default function Candidates() {
         } pt-4`}
       >
         <div className="max-w-8xl mx-auto px-2 md:px-4 py-4">
-          <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4">
-            <h3 className="text-yellow-800 font-medium">Authentication Required</h3>
-            <p className="text-yellow-700 mt-2">Please log in to access candidates.</p>
-            <div className="mt-4">
-              <Link
-                href="/login"
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-yellow-600 hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500"
-              >
-                Go to Login
-              </Link>
-            </div>
-          </div>
+          <LoadingSpinner message="Loading user authentication..." />
         </div>
       </div>
     );
@@ -462,7 +402,7 @@ export default function Candidates() {
   }
 
   // Additional validation for required data
-  if (!user || !user.id || !organization.id) {
+  if (!user.id || !organization.id) {
     return (
       <div
         className={`transition-all duration-300 h-full px-3 md:px-0 ${
