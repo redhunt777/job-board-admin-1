@@ -8,7 +8,6 @@ import {
   Education,
   Experience,
 } from "@/store/features/candidatesSlice";
-import { on } from "events";
 
 // Memoized candidate header component
 const CandidateHeader = memo(
