@@ -74,10 +74,10 @@ function ErrorMessage({
           />
         </svg>
       </div>
-      <h3 className="text-lg font-semibold text-gray-900 mb-2">
+      <h3 className="text-lg font-semibold text-neutral-900 mb-2">
         Something went wrong
       </h3>
-      <p className="text-gray-600 mb-4">{message}</p>
+      <p className="text-neutral-600 mb-4">{message}</p>
       {onRetry && (
         <button
           onClick={onRetry}
@@ -102,7 +102,7 @@ function StatusBadge({ status }: { status: string }) {
       case "on hold":
         return "bg-orange-100 text-orange-800 border-orange-200";
       default:
-        return "bg-gray-100 text-gray-800 border-gray-200";
+        return "bg-neutral-100 text-neutral-800 border-neutral-200";
     }
   };
 
@@ -136,7 +136,7 @@ const FilterSelect = memo(
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className={`bg-transparent text-gray-600 text-sm border border-gray-300 rounded-full px-4 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-300 hover:border-gray-400 transition-colors cursor-pointer appearance-none ${className}`}
+        className={`bg-transparent text-neutral-600 text-sm border border-neutral-300 rounded-full px-4 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-300 hover:border-neutral-400 transition-colors cursor-pointer appearance-none ${className}`}
       >
         <option value="">{placeholder}</option>
         {options.map((option) => (
@@ -145,7 +145,7 @@ const FilterSelect = memo(
           </option>
         ))}
       </select>
-      <TiArrowSortedDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" />
+      <TiArrowSortedDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-400 pointer-events-none" />
     </div>
   )
 );
@@ -212,7 +212,9 @@ export default function CandidatesList({
 
   // Redux selectors
   const filteredCandidates = useAppSelector(selectFilteredCandidatesWithAccess);
-  const paginatedCandidates = useAppSelector(selectPaginatedCandidatesWithAccess);
+  const paginatedCandidates = useAppSelector(
+    selectPaginatedCandidatesWithAccess
+  );
   const pagination = useAppSelector(selectPagination);
   const loading = useAppSelector(selectCandidatesLoading);
   const error = useAppSelector(selectCandidatesError);
@@ -239,7 +241,7 @@ export default function CandidatesList({
       }
       return candidatesSource.slice(0, maxItems);
     }
-    
+
     // Otherwise, use paginated candidates
     let candidatesSource = paginatedCandidates;
     if (jobId) {
@@ -251,12 +253,19 @@ export default function CandidatesList({
   // Update pagination info when filtered candidates change
   useEffect(() => {
     if (filteredCandidates.length > 0 || !loading) {
-      dispatch(updatePaginationInfo({
-        totalCandidates: filteredCandidates.length,
-        candidatesPerPage: pagination.candidatesPerPage
-      }));
+      dispatch(
+        updatePaginationInfo({
+          totalCandidates: filteredCandidates.length,
+          candidatesPerPage: pagination.candidatesPerPage,
+        })
+      );
     }
-  }, [filteredCandidates.length, pagination.candidatesPerPage, dispatch, loading]);
+  }, [
+    filteredCandidates.length,
+    pagination.candidatesPerPage,
+    dispatch,
+    loading,
+  ]);
 
   // Prevent infinite fetch loop
   const hasFetched = useRef(false);
@@ -414,12 +423,12 @@ export default function CandidatesList({
   const columns = [
     {
       key: "checkbox",
-      header: <input type="checkbox" className="rounded border-gray-300" />,
+      header: <input type="checkbox" className="rounded border-neutral-300" />,
       width: "48px",
       render: (candidate: CandidateWithApplication) => (
         <input
           type="checkbox"
-          className="rounded border-gray-300"
+          className="rounded border-neutral-300"
           onClick={(e) => e.stopPropagation()}
           aria-label={`Select ${candidate.name}`}
         />
@@ -429,7 +438,7 @@ export default function CandidatesList({
       key: "id",
       header: "ID",
       render: (candidate: CandidateWithApplication) => (
-        <span className="text-sm font-medium text-gray-900">
+        <span className="text-sm font-medium text-neutral-900">
           {generateShortId(candidate.application_id)}
         </span>
       ),
@@ -438,7 +447,7 @@ export default function CandidatesList({
       key: "applied_date",
       header: "Applied Date",
       render: (candidate: CandidateWithApplication) => (
-        <span className="text-sm text-gray-900">
+        <span className="text-sm text-neutral-900">
           {formatDate(candidate.applied_date)}
         </span>
       ),
@@ -448,10 +457,10 @@ export default function CandidatesList({
       header: "Candidate Name",
       render: (candidate: CandidateWithApplication) => (
         <div>
-          <div className="text-sm font-medium text-gray-900">
+          <div className="text-sm font-medium text-neutral-900">
             {candidate.name}
           </div>
-          <div className="text-sm text-gray-500">
+          <div className="text-sm text-neutral-500">
             {candidate.candidate_email}
           </div>
         </div>
@@ -461,14 +470,14 @@ export default function CandidatesList({
       key: "job_title",
       header: "Job",
       render: (candidate: CandidateWithApplication) => (
-        <span className="text-sm text-gray-900">{candidate.job_title}</span>
+        <span className="text-sm text-neutral-900">{candidate.job_title}</span>
       ),
     },
     {
       key: "company_name",
       header: "Company",
       render: (candidate: CandidateWithApplication) => (
-        <span className="text-sm text-gray-900">
+        <span className="text-sm text-neutral-900">
           {candidate.company_name || "—"}
         </span>
       ),
@@ -477,7 +486,7 @@ export default function CandidatesList({
       key: "location",
       header: "Location",
       render: (candidate: CandidateWithApplication) => (
-        <span className="text-sm text-gray-900">
+        <span className="text-sm text-neutral-900">
           {candidate.address || candidate.job_location || "—"}
         </span>
       ),
@@ -486,7 +495,7 @@ export default function CandidatesList({
       key: "years_of_exp",
       header: "Years of Exp.",
       render: (candidate: CandidateWithApplication) => (
-        <span className="text-sm text-gray-900">
+        <span className="text-sm text-neutral-900">
           {calculateExperience(candidate)}
         </span>
       ),
@@ -546,10 +555,10 @@ export default function CandidatesList({
           <div className="mb-6">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">
+                <h1 className="text-2xl font-semibold text-neutral-900">
                   All Candidates
                 </h1>
-                <p className="text-gray-600 mt-1">
+                <p className="text-neutral-600 mt-1">
                   Manage all candidates and their applications with ease.
                 </p>
               </div>
@@ -590,25 +599,25 @@ export default function CandidatesList({
                     >
                       <option
                         value="date_desc"
-                        className="bg-white text-gray-900"
+                        className="bg-white text-neutral-900"
                       >
                         Newest First
                       </option>
                       <option
                         value="date_asc"
-                        className="bg-white text-gray-900"
+                        className="bg-white text-neutral-900"
                       >
                         Oldest First
                       </option>
                       <option
                         value="name_asc"
-                        className="bg-white text-gray-900"
+                        className="bg-white text-neutral-900"
                       >
                         Name (A-Z)
                       </option>
                       <option
                         value="name_desc"
-                        className="bg-white text-gray-900"
+                        className="bg-white text-neutral-900"
                       >
                         Name (Z-A)
                       </option>
@@ -632,7 +641,7 @@ export default function CandidatesList({
                           })
                         )
                       }
-                      className="bg-transparent text-gray-600 text-sm border border-gray-300 rounded-full px-4 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-300 hover:border-gray-400 transition-colors cursor-pointer appearance-none"
+                      className="bg-transparent text-neutral-600 text-sm border border-neutral-300 rounded-full px-4 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-300 hover:border-neutral-400 transition-colors cursor-pointer appearance-none"
                     >
                       <option value="All">App. Status</option>
                       <option value="accepted">Accepted</option>
@@ -640,7 +649,7 @@ export default function CandidatesList({
                       <option value="rejected">Rejected</option>
                       <option value="on hold">On Hold</option>
                     </select>
-                    <TiArrowSortedDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" />
+                    <TiArrowSortedDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-400 pointer-events-none" />
                   </div>
                 </div>
               )}
@@ -650,13 +659,13 @@ export default function CandidatesList({
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
                 <div className="relative">
-                  <select className="bg-transparent text-gray-600 text-sm border border-gray-300 rounded-full px-4 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-300 hover:border-gray-400 transition-colors cursor-pointer appearance-none">
+                  <select className="bg-transparent text-neutral-600 text-sm border border-neutral-300 rounded-full px-4 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-300 hover:border-neutral-400 transition-colors cursor-pointer appearance-none">
                     <option>Years of Exp.</option>
                     <option>0-2</option>
                     <option>3-5</option>
                     <option>5+</option>
                   </select>
-                  <TiArrowSortedDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" />
+                  <TiArrowSortedDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-400 pointer-events-none" />
                 </div>
 
                 <div className="relative">
@@ -667,7 +676,7 @@ export default function CandidatesList({
                         setFilters({ ...filters, company: e.target.value })
                       )
                     }
-                    className="bg-transparent text-gray-600 text-sm border border-gray-300 rounded-full px-4 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-300 hover:border-gray-400 transition-colors cursor-pointer appearance-none"
+                    className="bg-transparent text-neutral-600 text-sm border border-neutral-300 rounded-full px-4 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-300 hover:border-neutral-400 transition-colors cursor-pointer appearance-none"
                   >
                     <option value="">Company</option>
                     {Array.from(
@@ -682,12 +691,12 @@ export default function CandidatesList({
                       </option>
                     ))}
                   </select>
-                  <TiArrowSortedDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" />
+                  <TiArrowSortedDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-400 pointer-events-none" />
                 </div>
               </div>
 
               {showFilters && (
-                <button className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-full border border-gray-300 text-sm text-gray-600 transition-colors">
+                <button className="flex items-center gap-2 px-4 py-2 bg-neutral-100 hover:bg-neutral-200 rounded-full border border-neutral-300 text-sm text-neutral-600 transition-colors">
                   <CiFilter className="w-4 h-4" />
                   All Filters
                 </button>

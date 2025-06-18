@@ -298,19 +298,19 @@ export default function AddJob() {
     <div
       className={`transition-all duration-300 min-h-full md:pb-0 px-3 md:px-6 ${
         collapsed ? "md:ml-20" : "md:ml-60"
-      } md:pt-0 pt-4`}
+      } pt-18`}
     >
-      <div className="max-w-7xl w-full mx-auto mt-4 px-2 md:px-4 py-4">
+      <div className="w-full mx-auto mt-4 px-2">
         {/* Breadcrumb */}
-        <div className="flex items-center gap-1 mb-4">
+        <div className="flex items-center gap-1 mb-2">
           <Link
             href="/dashboard"
-            className="flex items-center text-neutral-500 hover:text-neutral-700 font-semibold text-base"
+            className="flex items-center text-neutral-500 hover:text-neutral-700 font-medium text-sm"
           >
             <HiOutlineArrowCircleLeft className="w-5 h-5 mr-1" />
             <span>Back to Dashboard</span>
           </Link>
-          <span className="text-base text-neutral-500 font-light">/</span>
+          <span className="text-sm text-neutral-500 font-light">/</span>
           <Link
             href="/jobs"
             className="text-neutral-500 hover:text-neutral-700 font-medium text-sm"
@@ -324,8 +324,8 @@ export default function AddJob() {
         </div>
 
         {/* Header */}
-        <h1 className="text-2xl font-semibold mb-1">Add a New Job</h1>
-        <p className="text-neutral-500 text-sm mb-6">
+        <h1 className="text-xl font-semibold mb-1">Add a New Job</h1>
+        <p className="text-neutral-500 text-sm mb-10">
           Create and publish a new job listing to attract the right candidates.
         </p>
 
@@ -345,7 +345,7 @@ export default function AddJob() {
                   key={s}
                   className={`px-3 sm:px-4 py-2 text-sm sm:text-base text-center font-medium transition-colors whitespace-nowrap cursor-pointer ${
                     i === step
-                      ? "border-b-4 border-blue-600 text-blue-600"
+                      ? "border-b-4 border-blue-600"
                       : i < step
                       ? "text-green-600"
                       : "text-neutral-500"
@@ -363,15 +363,15 @@ export default function AddJob() {
 
         {/* Form Content */}
         <div className="flex justify-center items-center w-full">
-          <div className="max-w-5xl w-full pb-20">
+          <div className="w-full pb-20">
             <form
-              className="bg-white rounded-2xl shadow-xs p-6"
+              className="bg-white rounded-2xl shadow-xs p-8"
               onSubmit={(e) => e.preventDefault()}
             >
               {/* Step 0: Company */}
               {step === 0 && (
                 <div>
-                  <label className="block text-lg font-medium mb-2">
+                  <label className="block font-medium mb-2">
                     Company Logo
                   </label>
                   <label
@@ -444,12 +444,12 @@ export default function AddJob() {
                 <div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="col-span-2">
-                      <label className="block font-medium mb-2">
+                      <label className="block text-sm font-medium mb-2">
                         Job Title<span className="text-red-500">*</span>
                       </label>
                       <input
                         type="text"
-                        className={`w-full border rounded-lg px-3 py-2 mb-2 ${
+                        className={`w-full border text-sm rounded-lg px-3 py-4 mb-2 ${
                           errors.jobTitle
                             ? "border-red-300"
                             : "border-neutral-300"
@@ -464,11 +464,11 @@ export default function AddJob() {
                     </div>
 
                     <div>
-                      <label className="block font-medium mb-2">
+                      <label className="block text-sm font-medium mb-2">
                         Job Type<span className="text-red-500">*</span>
                       </label>
                       <select
-                        className={`w-full border rounded-lg px-3 py-2 mb-2 ${
+                        className={`w-full border text-sm rounded-lg px-3 py-4 mb-2 ${
                           errors.jobType
                             ? "border-red-300"
                             : "border-neutral-300"
@@ -488,11 +488,11 @@ export default function AddJob() {
                     </div>
 
                     <div>
-                      <label className="block font-medium mb-2">
+                      <label className="block text-sm font-medium mb-2">
                         Job Location Type<span className="text-red-500">*</span>
                       </label>
                       <select
-                        className={`w-full border rounded-lg px-3 py-2 mb-2 ${
+                        className={`w-full border text-sm rounded-lg px-3 py-4 mb-2 ${
                           errors.jobLocationType
                             ? "border-red-300"
                             : "border-neutral-300"
@@ -512,11 +512,11 @@ export default function AddJob() {
                     </div>
 
                     <div>
-                      <label className="block font-medium mb-2">
+                      <label className="block text-sm font-medium mb-2">
                         Job Location<span className="text-red-500">*</span>
                       </label>
                       <select
-                        className={`w-full border rounded-lg px-3 py-2 mb-2 ${
+                        className={`w-full border text-sm rounded-lg px-3 py-4 mb-2 ${
                           errors.jobLocation
                             ? "border-red-300"
                             : "border-neutral-300"
@@ -538,11 +538,11 @@ export default function AddJob() {
                     </div>
 
                     <div>
-                      <label className="block font-medium mb-2">
+                      <label className="block text-sm font-medium mb-2">
                         Working Type<span className="text-red-500">*</span>
                       </label>
                       <select
-                        className={`w-full border rounded-lg px-3 py-2 mb-2 ${
+                        className={`w-full border text-sm rounded-lg px-3 py-4 mb-2 ${
                           errors.workingType
                             ? "border-red-300"
                             : "border-neutral-300"
@@ -561,11 +561,11 @@ export default function AddJob() {
                     </div>
 
                     <div>
-                      <label className="block font-medium mb-2">
+                      <label className="block text-sm font-medium mb-2">
                         Status<span className="text-red-500">*</span>
                       </label>
                       <select
-                        className="w-full border border-neutral-300 rounded-lg px-3 py-2 mb-2"
+                        className="w-full border text-sm border-neutral-300 rounded-lg px-3 py-4 mb-2"
                         value={formData.status}
                         onChange={(e) =>
                           handleInputChange("status", e.target.value)
@@ -579,13 +579,13 @@ export default function AddJob() {
                   </div>
 
                   <div className="mt-4">
-                    <label className="block font-medium mb-2">
+                    <label className="block text-sm font-medium mb-2">
                       Experience<span className="text-red-500">*</span>{" "}
                       <span className="text-neutral-400">(Years)</span>
                     </label>
                     <div className="flex gap-2">
                       <select
-                        className={`w-full border rounded-lg px-3 py-2 ${
+                        className={`w-full border text-sm rounded-lg px-3 py-4 ${
                           errors.experience
                             ? "border-red-300"
                             : "border-neutral-300"
@@ -603,7 +603,7 @@ export default function AddJob() {
                         ))}
                       </select>
                       <select
-                        className={`w-full border rounded-lg px-3 py-2 ${
+                        className={`w-full border text-sm rounded-lg px-3 py-4 ${
                           errors.experience
                             ? "border-red-300"
                             : "border-neutral-300"
@@ -625,7 +625,7 @@ export default function AddJob() {
                   </div>
 
                   <div className="mt-4">
-                    <label className="block font-medium mb-2">
+                    <label className="block text-sm font-medium mb-2">
                       Salary<span className="text-red-500">*</span>{" "}
                       <span className="text-neutral-400">
                         (Lakhs per annum)
@@ -633,7 +633,7 @@ export default function AddJob() {
                     </label>
                     <div className="flex gap-2">
                       <select
-                        className={`w-full border rounded-lg px-3 py-2 ${
+                        className={`w-full border text-sm rounded-lg px-3 py-4 ${
                           errors.salary
                             ? "border-red-300"
                             : "border-neutral-300"
@@ -651,7 +651,7 @@ export default function AddJob() {
                         ))}
                       </select>
                       <select
-                        className={`w-full border rounded-lg px-3 py-2 ${
+                        className={`w-full border text-sm rounded-lg px-3 py-4 ${
                           errors.salary
                             ? "border-red-300"
                             : "border-neutral-300"
@@ -677,7 +677,7 @@ export default function AddJob() {
               {/* Step 2: Job Description */}
               {step === 2 && (
                 <div>
-                  <label className="block font-medium mb-2">
+                  <label className="block text-sm font-medium mb-2">
                     Job Description<span className="text-red-500">*</span>
                   </label>
                   <div
@@ -703,7 +703,7 @@ export default function AddJob() {
             <div className="flex justify-end mt-6 gap-2">
               <button
                 type="button"
-                className="border border-neutral-400 text-neutral-700 rounded-lg px-6 py-2 font-medium hover:bg-neutral-100 cursor-pointer disabled:opacity-50"
+                className="border border-neutral-500 text-neutral-600 rounded-lg px-4 py-2 font-medium hover:bg-neutral-100 cursor-pointer disabled:opacity-50"
                 onClick={handleBack}
                 disabled={isSubmitting || loading}
               >
@@ -711,7 +711,7 @@ export default function AddJob() {
               </button>
               <button
                 type="button"
-                className="bg-blue-600 text-white rounded-lg px-6 py-2 font-medium hover:bg-blue-700 flex items-center cursor-pointer disabled:opacity-50"
+                className="bg-blue-600 text-white rounded-lg px-4 py-2 font-medium hover:bg-blue-700 flex items-center cursor-pointer disabled:opacity-50"
                 onClick={handleNext}
                 disabled={isSubmitting || loading}
               >

@@ -31,8 +31,8 @@ export default function GlobalStickyTable<T>({
 
   return (
     <div className={`overflow-x-auto ${className}`}>
-      <table className="min-w-full divide-y divide-gray-200">
-        <thead className="bg-gray-50">
+      <table className="min-w-full divide-y divide-neutral-200">
+        <thead className="bg-neutral-50">
           <tr>
             {columns.map((col, idx) => {
               let stickyClass = "";
@@ -64,7 +64,7 @@ export default function GlobalStickyTable<T>({
               return (
                 <th
                   key={col.key}
-                  className={`px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${stickyClass} ${
+                  className={`px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider ${stickyClass} ${
                     col.className || ""
                   }`}
                   style={{
@@ -78,12 +78,12 @@ export default function GlobalStickyTable<T>({
             })}
           </tr>
         </thead>
-        <tbody className="bg-white divide-y divide-gray-200">
+        <tbody className="bg-white divide-y divide-neutral-200">
           {data.length === 0 ? (
             <tr>
               <td
                 colSpan={colCount}
-                className="px-6 py-12 text-center text-gray-500"
+                className="px-6 py-12 text-center text-neutral-500"
               >
                 <p className="text-lg font-medium">No data found</p>
               </td>

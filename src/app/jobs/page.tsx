@@ -91,7 +91,7 @@ export default function JobsPage() {
           collapsed ? "md:ml-20" : "md:ml-60"
         } pt-4`}
       >
-        <div className="max-w-8xl mx-auto px-2 md:px-4 py-4">
+        <div className="max-w-8xl mx-auto px-2 py-4">
           <div className="bg-red-50 border border-red-200 rounded-md p-4">
             <h3 className="text-red-800 font-medium">Authentication Error</h3>
             <p className="text-red-700 mt-2">{error}</p>
@@ -117,7 +117,7 @@ export default function JobsPage() {
           collapsed ? "md:ml-20" : "md:ml-60"
         } pt-4`}
       >
-        <div className="max-w-8xl mx-auto px-2 md:px-4 py-4">
+        <div className="max-w-8xl mx-auto px-2 py-4">
           <LoadingSpinner message="Loading user authentication..." />
         </div>
       </div>
@@ -132,7 +132,7 @@ export default function JobsPage() {
           collapsed ? "md:ml-20" : "md:ml-60"
         } pt-4`}
       >
-        <div className="max-w-8xl mx-auto px-2 md:px-4 py-4">
+        <div className="max-w-8xl mx-auto px-2 py-4">
           <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4">
             <h3 className="text-yellow-800 font-medium">Authentication Required</h3>
             <p className="text-yellow-700 mt-2">Please log in to access jobs.</p>
@@ -158,7 +158,7 @@ export default function JobsPage() {
           collapsed ? "md:ml-20" : "md:ml-60"
         } pt-4`}
       >
-        <div className="max-w-8xl mx-auto px-2 md:px-4 py-4">
+        <div className="max-w-8xl mx-auto px-2 py-4">
           <InfoMessage
             message="You are not part of any organization. Please contact your administrator."
             type="info"
@@ -176,7 +176,7 @@ export default function JobsPage() {
           collapsed ? "md:ml-20" : "md:ml-60"
         } pt-4`}
       >
-        <div className="max-w-8xl mx-auto px-2 md:px-4 py-4">
+        <div className="max-w-8xl mx-auto px-2 py-4">
           <InfoMessage
             message="No role is assigned to you. Please contact your administrator to assign a role."
             type="info"
@@ -197,7 +197,7 @@ export default function JobsPage() {
           collapsed ? "md:ml-20" : "md:ml-60"
         } pt-4`}
       >
-        <div className="max-w-8xl mx-auto px-2 md:px-4 py-4">
+        <div className="max-w-8xl mx-auto px-2 py-4">
           <InfoMessage
             message="Invalid user or organization data. Please try refreshing the page."
             type="error"

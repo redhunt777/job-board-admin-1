@@ -208,21 +208,29 @@ export default function JobsClientComponent({
   }, [dispatch, userRole, userId, organizationId, isValidProps]);
 
   // Pagination handlers
-  const handlePageChange = useCallback((page: number) => {
-    dispatch(setCurrentPage(page));
-  }, [dispatch]);
+  const handlePageChange = useCallback(
+    (page: number) => {
+      dispatch(setCurrentPage(page));
+    },
+    [dispatch]
+  );
 
-  const handlePageSizeChange = useCallback((pageSize: number) => {
-    dispatch(setPageSize(pageSize));
-  }, [dispatch]);
+  const handlePageSizeChange = useCallback(
+    (pageSize: number) => {
+      dispatch(setPageSize(pageSize));
+    },
+    [dispatch]
+  );
 
   // Update pagination info when jobs change
   useEffect(() => {
     if (jobs.length > 0 || !loading) {
-      dispatch(updatePaginationInfo({
-        totalCount: jobs.length,
-        pageSize: pagination.pageSize
-      }));
+      dispatch(
+        updatePaginationInfo({
+          totalCount: jobs.length,
+          pageSize: pagination.pageSize,
+        })
+      );
     }
   }, [jobs.length, pagination.pageSize, dispatch, loading]);
 
@@ -293,27 +301,27 @@ export default function JobsClientComponent({
     <div
       className={`transition-all duration-300 min-h-full md:pb-0 px-3 md:px-6 ${
         collapsed ? "md:ml-20" : "md:ml-60"
-      } md:pt-0 pt-4`}
+      } pt-18`}
     >
-      <div className="mt-4 px-2 md:px-4 py-4">
-        <div className="flex items-center gap-1 mb-4">
+      <div className="mt-4 px-2">
+        <div className="flex items-center gap-1 mb-2">
           <Link
             href="/dashboard"
             className="flex items-center text-neutral-500 hover:text-neutral-700 font-medium text-base"
           >
             <HiOutlineArrowCircleLeft className="w-6 h-6 mr-1" />
-            <p>Back to Dashboard</p>
+            <p className="text-sm">Back to Dashboard</p>
           </Link>
-          <span className="text-base text-neutral-500 font-light">/</span>
-          <span className="text-base font-medium text-neutral-900">Jobs</span>
+          <span className="text-sm text-neutral-500 font-light">/</span>
+          <span className="text-sm font-medium text-neutral-900">Jobs</span>
         </div>
 
         <div className="flex items-center justify-between my-6">
           <div>
-            <h1 className="text-2xl font-semibold text-neutral-900">
+            <h1 className="text-xl font-semibold text-neutral-900">
               Manage All Jobs
             </h1>
-            <p className="text-sm text-neutral-600 mt-2">
+            <p className="text-sm text-neutral-500 mt-2">
               Loading your job listings...
             </p>
           </div>
@@ -339,9 +347,9 @@ export default function JobsClientComponent({
       <div
         className={`transition-all duration-300 min-h-full md:pb-0 px-3 md:px-6 ${
           collapsed ? "md:ml-20" : "md:ml-60"
-        } md:pt-0 pt-4`}
+        } pt-18`}
       >
-        <div className="mt-4 px-2 md:px-4 py-4">
+        <div className="mt-4 px-2">
           <ErrorState error={initState.error} onRetry={handleRetry} />
         </div>
       </div>
@@ -355,29 +363,29 @@ export default function JobsClientComponent({
     <div
       className={`transition-all duration-300 min-h-full md:pb-0 px-3 md:px-6 ${
         collapsed ? "md:ml-20" : "md:ml-60"
-      } md:pt-0 pt-4`}
+      } pt-18`}
     >
-      <div className="mt-4 px-2 md:px-4 py-4">
+      <div className="mt-4 px-2">
         {/* Header section */}
-        <div className="flex items-center gap-1 mb-4">
+        <div className="flex items-center gap-1 mb-2">
           <Link
             href="/dashboard"
             className="flex items-center text-neutral-500 hover:text-neutral-700 font-medium text-base transition-colors"
           >
             <HiOutlineArrowCircleLeft className="w-6 h-6 mr-1" />
-            <p>Back to Dashboard</p>
+            <p className="text-sm">Back to Dashboard</p>
           </Link>
-          <span className="text-base text-neutral-500 font-light">/</span>
-          <span className="text-base font-medium text-neutral-900">Jobs</span>
+          <span className="text-sm text-neutral-500 font-light">/</span>
+          <span className="text-sm font-medium text-neutral-900">Jobs</span>
         </div>
 
         {/* Title and Add Job section */}
-        <div className="flex items-center flex-wrap justify-between my-6">
+        <div className="flex items-center flex-wrap justify-between mb-6">
           <div>
-            <h1 className="text-2xl font-semibold text-neutral-900">
+            <h1 className="text-xl font-semibold text-neutral-900">
               Manage All Jobs
             </h1>
-            <p className="text-sm text-neutral-600 my-2">
+            <p className="text-sm text-neutral-500 mb-2">
               Manage your job listings and applications with ease.
               {jobs.length > 0 && (
                 <span className="ml-1 font-medium">
@@ -391,9 +399,9 @@ export default function JobsClientComponent({
               type="button"
               onClick={handleAddJob}
               aria-label="Add New Job"
-              className="bg-blue-600 w-full sm:w-auto hover:bg-blue-700 text-white font-medium text-xl rounded-lg py-2 transition-colors cursor-pointer px-5 flex items-center justify-center md:justify-start gap-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              className="bg-blue-600 w-full sm:w-auto hover:bg-blue-700 text-white font-medium rounded-lg py-2 transition-colors cursor-pointer px-4 flex items-center justify-center md:justify-start gap-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
             >
-              <GoPlus className="h-8 w-8" />
+              <GoPlus className="h-6 w-6" />
               Add Job
             </button>
           </div>

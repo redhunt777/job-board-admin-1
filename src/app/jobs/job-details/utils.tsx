@@ -197,7 +197,7 @@ export const StatusDropdown: React.FC<{
   disabled: boolean;
 }> = ({ status, onChange, disabled }) => (
   <div className="relative w-full" data-testid="status-dropdown">
-    <label className="block text-sm font-medium text-gray-700 mb-2">
+    <label className="block text-sm font-medium text-neutral-700 mb-2">
       Job Status
     </label>
     <select
@@ -219,7 +219,7 @@ export const StatusDropdown: React.FC<{
       ))}
     </select>
     <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none mt-7">
-      <FaCaretDown className="text-gray-400" />
+      <FaCaretDown className="text-neutral-400" />
     </div>
   </div>
 );
@@ -243,7 +243,7 @@ export const ActionButtons: React.FC<{
 
     <button
       onClick={onShare}
-      className="text-gray-700 text-sm font-medium bg-gray-100 hover:bg-gray-200 px-4 py-3 rounded-xl transition-all duration-200 flex items-center justify-center hover:shadow-md"
+      className="text-neutral-700 text-sm font-medium bg-neutral-100 hover:bg-neutral-200 px-4 py-3 rounded-xl transition-all duration-200 flex items-center justify-center hover:shadow-md"
       type="button"
       data-testid="share-button"
     >
@@ -342,7 +342,7 @@ export const JobHeader: React.FC<{ jobMetadata: JobMetadata; jobId?: string }> =
 }) => (
   <div className="flex gap-6 items-start" data-testid="job-header">
     <div className="flex-shrink-0">
-      <div className="w-20 h-20 rounded-2xl overflow-hidden bg-gray-100 border-2 border-gray-200 shadow-sm">
+      <div className="w-20 h-20 rounded-2xl overflow-hidden bg-neutral-100 border-2 border-neutral-200 shadow-sm">
         <Image
           src={jobMetadata.company_logo_url || "/demo.png"}
           alt={`${jobMetadata.companyName} logo`}
@@ -361,7 +361,7 @@ export const JobHeader: React.FC<{ jobMetadata: JobMetadata; jobId?: string }> =
       <div className="flex items-start justify-between">
         <div className="min-w-0 flex-1">
           <h1
-            className="text-3xl font-bold text-gray-900 mb-2 leading-tight"
+            className="text-3xl font-bold text-neutral-900 mb-2 leading-tight"
             data-testid="job-title"
           >
             {jobMetadata.jobTitle}
@@ -384,19 +384,19 @@ export const JobHeader: React.FC<{ jobMetadata: JobMetadata; jobId?: string }> =
             </div>
             <div>
               <p
-                className="text-lg font-semibold text-gray-900"
+                className="text-lg font-semibold text-neutral-900"
                 data-testid="company-name"
               >
                 {jobMetadata.companyName}
               </p>
-              <p className="text-sm text-gray-600">Hiring Company</p>
+              <p className="text-sm text-neutral-600">Hiring Company</p>
             </div>
           </div>
         </div>
         <div className="flex-shrink-0 ml-4">
           <div className="text-right">
-            <p className="text-sm text-gray-600">Job ID</p>
-            <p className="font-mono text-sm text-gray-900 truncate max-w-[120px]" title={jobId}>
+            <p className="text-sm text-neutral-600">Job ID</p>
+            <p className="font-mono text-sm text-neutral-900 truncate max-w-[120px]" title={jobId}>
               {jobId ? `#${jobId.slice(-8).toUpperCase()}` : '#--------'}
             </p>
           </div>
@@ -480,14 +480,14 @@ export const JobInfoTags: React.FC<{
     {/* Job Info Grid */}
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       {jobMetadata.jobLocation && (
-        <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+        <div className="bg-neutral-50 rounded-xl p-4 border border-neutral-100">
           <div className="flex items-center">
             <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
               <GrLocation className="text-blue-600 text-lg" />
             </div>
             <div>
-              <p className="text-sm text-gray-600">Location</p>
-              <p className="font-semibold text-gray-900">
+              <p className="text-sm text-neutral-600">Location</p>
+              <p className="font-semibold text-neutral-900">
                 {jobMetadata.jobLocation}
               </p>
             </div>
@@ -495,28 +495,28 @@ export const JobInfoTags: React.FC<{
         </div>
       )}
 
-      <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+      <div className="bg-neutral-50 rounded-xl p-4 border border-neutral-100">
         <div className="flex items-center">
           <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mr-3">
             <LiaRupeeSignSolid className="text-green-600 text-xl" />
           </div>
           <div>
-            <p className="text-sm text-gray-600">Salary</p>
-            <p className="font-semibold text-gray-900">
+            <p className="text-sm text-neutral-600">Salary</p>
+            <p className="font-semibold text-neutral-900">
               {formatSalary(jobMetadata.salary.min, jobMetadata.salary.max)}
             </p>
           </div>
         </div>
       </div>
 
-      <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+      <div className="bg-neutral-50 rounded-xl p-4 border border-neutral-100">
         <div className="flex items-center">
           <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center mr-3">
             <MdOutlinePeopleAlt className="text-purple-600 text-lg" />
           </div>
           <div>
-            <p className="text-sm text-gray-600">Applications</p>
-            <p className="font-semibold text-gray-900">
+            <p className="text-sm text-neutral-600">Applications</p>
+            <p className="font-semibold text-neutral-900">
               {numberOfCandidates} Applicant
               {numberOfCandidates !== 1 ? "s" : ""}
             </p>

@@ -18,7 +18,7 @@ import { AppDispatch } from "@/store/store";
 // Memoized SearchBar component
 const SearchBar = memo(() => {
   return (
-    <div className="hidden md:block relative w-full max-w-md bg-neutral-200 rounded-xl min-w-[200px]">
+    <div className="hidden md:block relative w-full max-w-md bg-neutral-200 rounded-xl min-w-48">
       <IoSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-400 w-5 h-5 flex-shrink-0" />
       <input
         type="text"
@@ -70,13 +70,13 @@ const UserButton = memo(() => {
   }, []);
 
   return (
-    <div className="relative ml-4" ref={dropdownRef}>
+    <div className="fixed top-3 right-6 z-50" ref={dropdownRef}>
       <button
         role="button"
         onClick={toggleDropdown}
         className="flex items-center bg-neutral-200 rounded-3xl px-2 py-2 cursor-pointer whitespace-nowrap"
       >
-        <div className="flex items-center justify-center bg-gradient-to-b from-blue-600 to-blue-700 shadow-lg rounded-full p-2">
+        <div className="flex items-center justify-center bg-gradient-to-b from-blue-600 to-blue-700 shadow-lg rounded-full p-2 flex-shrink-0">
           <Image
             src="/logomark-white.svg"
             alt="logo"
@@ -85,7 +85,7 @@ const UserButton = memo(() => {
             className="h-3 w-3"
           />
         </div>
-        <FaCaretDown className="w-5 h-5 text-neutral-500" />
+        <FaCaretDown className="w-5 h-5 text-neutral-500 flex-shrink-0" />
       </button>
 
       {isOpen && (
@@ -127,7 +127,7 @@ UserButton.displayName = "UserButton";
 
 // Memoized MobileLogo component
 const MobileLogo = memo(() => (
-  <div className="md:hidden">
+  <div className="md:hidden flex-shrink-0">
     <Image
       src="/wordmark-blue.svg"
       alt="logo"
@@ -142,7 +142,7 @@ MobileLogo.displayName = "MobileLogo";
 
 // Memoized SearchIcon component
 const SearchIcon = memo(() => (
-  <button className="md:hidden rounded-full p-2 ml-10">
+  <button className="md:hidden rounded-full p-2 ml-10 flex-shrink-0">
     <IoSearch className="w-6 h-6 text-neutral-700" />
   </button>
 ));
@@ -151,11 +151,11 @@ SearchIcon.displayName = "SearchIcon";
 
 const SearchComponent = memo(() => {
   return (
-    <div className="w-full py-4 md:py-6 border-b border-neutral-200 transition-all duration-300">
-      <div className="container mx-auto px-4 flex items-center justify-between gap-4">
+    <div className="fixed w-full py-4 bg-white border-b border-neutral-200 transition-all duration-300 z-40">
+      <div className="container mx-auto px-4 md:px-6 lg:px-8 flex items-center justify-between gap-4 md:gap-6">
         <Suspense
           fallback={
-            <div className="flex items-center justify-between w-full gap-4">
+            <div className="flex items-center justify-between w-full gap-4 md:gap-6">
               <div className="h-12 w-40 bg-neutral-200 animate-pulse rounded" />
               <div className="hidden md:block flex-1 max-w-md min-w-[200px] h-10 bg-neutral-200 animate-pulse rounded-xl" />
               <div className="h-10 w-32 bg-neutral-200 animate-pulse rounded-3xl" />
@@ -163,15 +163,15 @@ const SearchComponent = memo(() => {
           }
         >
           <MobileLogo />
-          <div className="hidden md:flex flex-1 items-center justify-center min-w-0">
+          <div className="hidden md:flex flex-1 items-center justify-center min-w-0 px-4">
             <SearchBar />
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 md:gap-3">
             <SearchIcon />
-            <UserButton />
           </div>
         </Suspense>
       </div>
+      <UserButton />
     </div>
   );
 });

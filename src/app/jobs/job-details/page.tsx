@@ -69,8 +69,10 @@ export default function JobDetailsComponent() {
     if (!jobId || !candidates || !Array.isArray(candidates)) {
       return 0;
     }
-    
-    const filteredCandidates = candidates.filter(candidate => candidate.job_id === jobId);
+
+    const filteredCandidates = candidates.filter(
+      (candidate) => candidate.job_id === jobId
+    );
     return filteredCandidates.length;
   }, [jobId, candidates]);
 
@@ -258,8 +260,6 @@ export default function JobDetailsComponent() {
     router.push("/jobs");
   }, [router]);
 
-
-
   // Initialize authentication if not ready
   useEffect(() => {
     if (!isAuthReady) {
@@ -276,7 +276,7 @@ export default function JobDetailsComponent() {
 
   // Load candidates when user context is available
   const shouldLoadCandidates = useRef(false);
-  
+
   useEffect(() => {
     if (memoizedUserContext && jobId && !shouldLoadCandidates.current) {
       shouldLoadCandidates.current = true;
@@ -330,14 +330,14 @@ export default function JobDetailsComponent() {
   const containerClassName = useMemo(() => {
     return `transition-all duration-300 min-h-full md:pb-0 px-0 ${
       collapsed ? "md:ml-20" : "md:ml-64"
-    } md:pt-0 pt-4`;
+    } pt-18`;
   }, [collapsed]);
 
   // Early returns for different states
   if (loading) {
     return (
       <div className={containerClassName}>
-        <div className="max-w-7xl w-full mx-auto mt-4 px-2 md:px-4 py-4">
+        <div className="w-full mx-auto mt-4 px-2 py-4">
           <div className="flex items-center gap-2 mb-4 animate-pulse">
             <div className="w-40 h-6 bg-neutral-300 rounded" />
             <div className="w-4 h-6 bg-neutral-300 rounded" />
@@ -363,7 +363,7 @@ export default function JobDetailsComponent() {
   if (error) {
     return (
       <div className={containerClassName}>
-        <div className="max-w-8xl w-full mx-auto mt-4 px-2 md:px-4 py-4">
+        <div className="w-full mx-auto mt-4 px-2 py-4">
           <div className="flex justify-center items-center w-full min-h-[400px]">
             <ErrorState
               error={error}
@@ -379,7 +379,7 @@ export default function JobDetailsComponent() {
   if (!jobMetadata.jobTitle && !loading) {
     return (
       <div className={containerClassName}>
-        <div className="max-w-8xl w-full mx-auto mt-4 px-2 md:px-4 py-4">
+        <div className="w-full mx-auto mt-4 px-2 py-4">
           <div className="flex justify-center items-center w-full min-h-[400px]">
             <JobNotFound onGoBack={handleGoBack} />
           </div>
@@ -392,7 +392,7 @@ export default function JobDetailsComponent() {
     <div className={containerClassName} data-testid="job-details-component">
       {/* Background with subtle gradient */}
       <div className="bg-gradient-to-br from-slate-50 to-blue-50/30 min-h-screen -mt-4 pt-4">
-        <div className="max-w-7xl w-full mx-auto px-4 md:px-6 py-6">
+        <div className="w-full mx-auto px-4 md:px-6 py-6">
           <Breadcrumb jobTitle={jobMetadata.jobTitle} />
           <TabNavigation activeStep={step} onStepChange={setStep} />
 
@@ -402,10 +402,13 @@ export default function JobDetailsComponent() {
               {step === 0 && (
                 <div data-testid="job-details-tab" className="space-y-6">
                   {/* Enhanced Job Header Card */}
-                  <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
-                    <JobHeader jobMetadata={jobMetadata} jobId={jobId || undefined} />
-                    
-                    <div className="mt-6 pt-6 border-t border-gray-100">
+                  <div className="bg-white rounded-2xl shadow-sm border border-neutral-100 p-8">
+                    <JobHeader
+                      jobMetadata={jobMetadata}
+                      jobId={jobId || undefined}
+                    />
+
+                    <div className="mt-6 pt-6 border-t border-neutral-100">
                       <JobInfoTags
                         jobMetadata={jobMetadata}
                         numberOfCandidates={numberOfCandidates}
@@ -415,23 +418,38 @@ export default function JobDetailsComponent() {
                   </div>
 
                   {/* Enhanced Job Description Card */}
-                  <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8" data-testid="job-description">
+                  <div
+                    className="bg-white rounded-2xl shadow-sm border border-neutral-100 p-8"
+                    data-testid="job-description"
+                  >
                     <div className="flex items-center gap-3 mb-6">
                       <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
-                        <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        <svg
+                          className="w-5 h-5 text-blue-600"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                          />
                         </svg>
                       </div>
-                      <h2 className="text-2xl font-bold text-gray-900">
+                      <h2 className="text-2xl font-bold text-neutral-900">
                         Job Description
                       </h2>
                     </div>
-                    
+
                     <div className="relative">
                       {/* Subtle background pattern */}
                       <div className="absolute top-0 left-0 w-full h-full opacity-[0.02] bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl"></div>
-                      <div className="relative bg-gradient-to-br from-gray-50/50 to-blue-50/30 rounded-xl p-6 border border-gray-100/50">
-                        <JobDescriptionRenderer content={jobMetadata.jobDescription} />
+                      <div className="relative bg-gradient-to-br from-neutral-50/50 to-blue-50/30 rounded-xl p-6 border border-neutral-100/50">
+                        <JobDescriptionRenderer
+                          content={jobMetadata.jobDescription}
+                        />
                       </div>
                     </div>
                   </div>
@@ -439,29 +457,49 @@ export default function JobDetailsComponent() {
               )}
 
               {step === 1 && (
-                <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                  <CandidatesList 
+                <div className="bg-white rounded-xl shadow-sm border border-neutral-100 overflow-hidden">
+                  <CandidatesList
                     jobId={jobId}
                     showHeader={false}
                     maxItems={10}
                     onCandidateClick={(candidate) => {
-                      console.log('Candidate clicked:', candidate);
+                      console.log("Candidate clicked:", candidate);
                     }}
                   />
                 </div>
               )}
 
               {step === 2 && (
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 text-center">
+                <div className="bg-white rounded-2xl shadow-sm border border-neutral-100 p-8 text-center">
                   <div className="max-w-md mx-auto">
                     <div className="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                      <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <svg
+                        className="w-8 h-8 text-blue-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+                        />
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                        />
                       </svg>
                     </div>
-                    <h3 className="text-xl font-bold text-gray-900 mb-2">Settings Coming Soon</h3>
-                    <p className="text-gray-600">Job settings and configuration features are currently under development.</p>
+                    <h3 className="text-xl font-bold text-neutral-900 mb-2">
+                      Settings Coming Soon
+                    </h3>
+                    <p className="text-neutral-600">
+                      Job settings and configuration features are currently
+                      under development.
+                    </p>
                   </div>
                 </div>
               )}
@@ -470,8 +508,10 @@ export default function JobDetailsComponent() {
             {/* Enhanced Sidebar */}
             <div className="xl:col-span-1 space-y-6">
               {/* Action Card */}
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
+              <div className="bg-white rounded-2xl shadow-sm border border-neutral-100 p-6">
+                <h3 className="text-lg font-semibold text-neutral-900 mb-4">
+                  Quick Actions
+                </h3>
                 <div className="space-y-3">
                   <StatusDropdown
                     status={jobMetadata.status}
@@ -488,48 +528,67 @@ export default function JobDetailsComponent() {
               </div>
 
               {/* Job Stats Card */}
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Job Statistics</h3>
+              <div className="bg-white rounded-2xl shadow-sm border border-neutral-100 p-6">
+                <h3 className="text-lg font-semibold text-neutral-900 mb-4">
+                  Job Statistics
+                </h3>
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-600">Total Applications</span>
-                    <span className="font-semibold text-gray-900">{numberOfCandidates}</span>
+                    <span className="text-neutral-600">Total Applications</span>
+                    <span className="font-semibold text-neutral-900">
+                      {numberOfCandidates}
+                    </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-600">Status</span>
-                    <span className={`font-medium capitalize ${
-                      jobMetadata.status === 'active' ? 'text-green-600' : 
-                      jobMetadata.status === 'closed' ? 'text-red-600' : 'text-yellow-600'
-                    }`}>
+                    <span className="text-neutral-600">Status</span>
+                    <span
+                      className={`font-medium capitalize ${
+                        jobMetadata.status === "active"
+                          ? "text-green-600"
+                          : jobMetadata.status === "closed"
+                          ? "text-red-600"
+                          : "text-yellow-600"
+                      }`}
+                    >
                       {jobMetadata.status}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-600">Job Type</span>
-                    <span className="font-medium text-gray-900">{jobMetadata.jobType || 'Not specified'}</span>
+                    <span className="text-neutral-600">Job Type</span>
+                    <span className="font-medium text-neutral-900">
+                      {jobMetadata.jobType || "Not specified"}
+                    </span>
                   </div>
                 </div>
               </div>
 
               {/* Company Info Card */}
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Company Details</h3>
+              <div className="bg-white rounded-2xl shadow-sm border border-neutral-100 p-6">
+                <h3 className="text-lg font-semibold text-neutral-900 mb-4">
+                  Company Details
+                </h3>
                 <div className="text-center">
-                  <div className="w-16 h-16 mx-auto mb-3 rounded-2xl overflow-hidden bg-gray-100">
+                  <div className="w-16 h-16 mx-auto mb-3 rounded-2xl overflow-hidden bg-neutral-100">
                     <Image
                       src={jobMetadata.company_logo_url || "/demo.png"}
                       alt={`${jobMetadata.companyName} logo`}
                       width={64}
                       height={64}
                       className="w-full h-full object-cover"
-                                             onError={(e: React.SyntheticEvent<HTMLImageElement, Event>) => {
-                         const target = e.target as HTMLImageElement;
-                         target.src = "/demo.png";
-                       }}
+                      onError={(
+                        e: React.SyntheticEvent<HTMLImageElement, Event>
+                      ) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = "/demo.png";
+                      }}
                     />
                   </div>
-                  <h4 className="font-semibold text-gray-900">{jobMetadata.companyName}</h4>
-                  <p className="text-sm text-gray-600 mt-1">{jobMetadata.jobLocation}</p>
+                  <h4 className="font-semibold text-neutral-900">
+                    {jobMetadata.companyName}
+                  </h4>
+                  <p className="text-sm text-neutral-600 mt-1">
+                    {jobMetadata.jobLocation}
+                  </p>
                 </div>
               </div>
             </div>

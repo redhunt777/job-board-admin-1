@@ -24,23 +24,23 @@ export default function JobDescriptionRenderer({
   }
 
   const defaultClasses = `
-    text-gray-700 text-base font-normal leading-relaxed
-    [&>h1]:text-3xl [&>h1]:font-bold [&>h1]:text-gray-900 [&>h1]:mb-6 [&>h1]:mt-8 [&>h1]:pb-2 [&>h1]:border-b [&>h1]:border-gray-200
-    [&>h2]:text-2xl [&>h2]:font-bold [&>h2]:text-gray-900 [&>h2]:mb-4 [&>h2]:mt-6 [&>h2]:pb-2 [&>h2]:border-b [&>h2]:border-gray-100
-    [&>h3]:text-xl [&>h3]:font-semibold [&>h3]:text-gray-900 [&>h3]:mb-3 [&>h3]:mt-5
-    [&>p]:mb-4 [&>p]:text-gray-700 [&>p]:leading-relaxed [&>p]:text-justify
+    text-neutral-700 text-base font-normal leading-relaxed
+    [&>h1]:text-3xl [&>h1]:font-bold [&>h1]:text-neutral-900 [&>h1]:mb-6 [&>h1]:mt-8 [&>h1]:pb-2 [&>h1]:border-b [&>h1]:border-neutral-200
+    [&>h2]:text-2xl [&>h2]:font-bold [&>h2]:text-neutral-900 [&>h2]:mb-4 [&>h2]:mt-6 [&>h2]:pb-2 [&>h2]:border-b [&>h2]:border-neutral-100
+    [&>h3]:text-xl [&>h3]:font-semibold [&>h3]:text-neutral-900 [&>h3]:mb-3 [&>h3]:mt-5
+    [&>p]:mb-4 [&>p]:text-neutral-700 [&>p]:leading-relaxed [&>p]:text-justify
     [&>ul]:list-none [&>ul]:mb-6 [&>ul]:space-y-3 [&>ul]:pl-0
     [&>ol]:list-decimal [&>ol]:ml-6 [&>ol]:mb-6 [&>ol]:space-y-3
-    [&>li]:text-gray-700 [&>li]:leading-relaxed [&>li]:relative [&>li]:pl-6
+    [&>li]:text-neutral-700 [&>li]:leading-relaxed [&>li]:relative [&>li]:pl-6
     [&>li:before]:content-['•'] [&>li:before]:absolute [&>li:before]:left-0 [&>li:before]:text-blue-600 [&>li:before]:font-bold [&>li:before]:text-lg
-    [&>strong]:font-semibold [&>strong]:text-gray-900 [&>strong]:bg-blue-50 [&>strong]:px-1 [&>strong]:py-0.5 [&>strong]:rounded
+    [&>strong]:font-semibold [&>strong]:text-neutral-900 [&>strong]:bg-blue-50 [&>strong]:px-1 [&>strong]:py-0.5 [&>strong]:rounded
     [&>em]:italic [&>em]:text-blue-700 [&>em]:font-medium
     [&>a]:text-blue-600 [&>a]:underline [&>a]:cursor-pointer [&>a]:hover:text-blue-800 [&>a]:transition-colors
     [&>blockquote]:border-l-4 [&>blockquote]:border-blue-300 [&>blockquote]:bg-gradient-to-r [&>blockquote]:from-blue-50 [&>blockquote]:to-indigo-50
     [&>blockquote]:pl-6 [&>blockquote]:py-4 [&>blockquote]:italic [&>blockquote]:my-6 [&>blockquote]:font-medium
     [&>blockquote]:text-blue-900 [&>blockquote]:rounded-r-xl [&>blockquote]:shadow-sm
-    [&>code]:bg-gray-100 [&>code]:rounded-md [&>code]:px-2 [&>code]:border [&>code]:border-gray-200
-    [&>code]:py-1 [&>code]:font-mono [&>code]:text-sm [&>code]:text-gray-800
+    [&>code]:bg-neutral-100 [&>code]:rounded-md [&>code]:px-2 [&>code]:border [&>code]:border-neutral-200
+    [&>code]:py-1 [&>code]:font-mono [&>code]:text-sm [&>code]:text-neutral-800
   `
     .trim()
     .replace(/\s+/g, " ");
@@ -137,9 +137,9 @@ export default function JobDescriptionRenderer({
     return (
       <div className={`${defaultClasses} ${className}`}>
         <div className="animate-pulse">
-          <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-          <div className="h-4 bg-gray-200 rounded w-full mb-2"></div>
-          <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+          <div className="h-4 bg-neutral-200 rounded w-3/4 mb-2"></div>
+          <div className="h-4 bg-neutral-200 rounded w-full mb-2"></div>
+          <div className="h-4 bg-neutral-200 rounded w-5/6"></div>
         </div>
       </div>
     );
