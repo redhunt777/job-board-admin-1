@@ -38,6 +38,7 @@ import {
   JobHeader,
   JobInfoTags,
 } from "./utils";
+import { RootState } from "@/store/store";
 
 // Main Component - Optimized Version
 export default function JobDetailsComponent() {
@@ -49,9 +50,9 @@ export default function JobDetailsComponent() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   // Redux selectors - moved up for better organization
-  const collapsed = useAppSelector((state) => state.ui.sidebar.collapsed);
+  const collapsed = useAppSelector((state: RootState) => state.ui.sidebar.collapsed);
   const jobs = useAppSelector(selectJobs);
-  const selectedJob = useAppSelector(selectSelectedJob);
+  const selectedJob = useAppSelector(selectSelectedJob);  
   const loading = useAppSelector(selectJobsLoading);
   const error = useAppSelector(selectJobsError);
   const userContext = useAppSelector(selectUserContext);
@@ -178,6 +179,12 @@ export default function JobDetailsComponent() {
   const handleStatusChange = useCallback(
     async (newStatus: JobStatus) => {
       if (!jobId) return;
+
+      //CONFIRMATION BEFORE UPDATING STATUS
+      const confirmMessage = `Are you sure you want to change the job status to "${newStatus}"?`;
+      if (!window.confirm(confirmMessage)) {
+        return;
+      }
 
       try {
         const result = await dispatch(
@@ -522,9 +529,9 @@ export default function JobDetailsComponent() {
                       width={64}
                       height={64}
                       className="w-full h-full object-cover"
-                                             onError={(e: React.SyntheticEvent<HTMLImageElement, Event>) => {
-                         const target = e.target as HTMLImageElement;
-                         target.src = "/demo.png";
+                      onError={(e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+                      const target = e.target as HTMLImageElement;
+                      target.src = "/demo.png";
                        }}
                     />
                   </div>
