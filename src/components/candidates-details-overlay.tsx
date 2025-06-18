@@ -8,17 +8,20 @@ import {
   Education,
   Experience,
 } from "@/store/features/candidatesSlice";
+import { on } from "events";
 
 // Memoized candidate header component
 const CandidateHeader = memo(
   ({
     candidate,
     onClose,
+    onDelete,
     onStatusUpdate,
   }: {
     candidate: CandidateWithApplication | null;
     onClose: () => void;
     onStatusUpdate: (applicationId: string, status: string) => void;
+    onDelete?: (applicationId: string) => void;
   }) => {
     const [isUpdating, setIsUpdating] = useState(false);
 
@@ -89,14 +92,8 @@ const CandidateHeader = memo(
           <button
             className="border border-red-700 hover:border-red-800 transition-colors px-4 py-2 rounded-md cursor-pointer flex items-center gap-2"
             onClick={() => {
-              if (
-                window.confirm(
-                  "Are you sure you want to delete this application?"
-                )
-              ) {
-                // Handle deletion logic here
-                onClose();
-              }
+              onDelete?.(candidate?.application_id || "");
+              onClose();
             }}
           >
             <FaRegTrashAlt className="w-4 h-4 text-red-700" />
@@ -517,7 +514,7 @@ const CandidatesDetailsOverlay = memo(
     candidatesDetailsOverlay,
     setCandidatesDetailsOverlay,
     onStatusUpdate,
-    // onDelete,
+    onDelete,
     calculateExperience,
   }: {
     candidatesDetailsOverlay: {
@@ -531,7 +528,7 @@ const CandidatesDetailsOverlay = memo(
       }>
     >;
     onStatusUpdate?: (applicationId: string, status: string) => void;
-    // onDelete?: (applicationId: string) => void;
+    onDelete?: (applicationId: string) => void;
     calculateExperience?: (candidate: CandidateWithApplication) => string;
   }) => {
     const handleClose = useCallback(() => {
@@ -566,6 +563,7 @@ const CandidatesDetailsOverlay = memo(
           <CandidateHeader
             candidate={candidate}
             onClose={handleClose}
+            onDelete={onDelete}
             onStatusUpdate={handleStatusUpdate}
           />
 

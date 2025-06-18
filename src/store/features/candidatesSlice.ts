@@ -492,6 +492,47 @@ export const updateApplicationStatusWithAccess = createAsyncThunk(
   }
 );
 
+//Enhaced async thunk for deleting a candidate application
+export const deleteCandidateApplication = createAsyncThunk(
+  "candidates/deleteCandidateApplication",
+  async (applicationId: string, { rejectWithValue, getState }) => {
+    const state = getState() as RootState;
+    const userContext = state.candidates.userContext;
+
+    if (!userContext) {
+      return rejectWithValue("User context is not available");
+    }
+
+    console.log("deleteCandidateApplication called with:", applicationId);
+
+    //only admin and hr can delete applications
+    if (!userContext.roles.includes("admin") && !userContext.roles.includes("hr")) {
+      return rejectWithValue("You do not have permission to delete applications");
+    }
+
+    try {
+      const response = await supabase
+        .from("job_applications")
+        .delete()
+        .eq("id", applicationId)
+        .single();
+
+      if (response.error) {
+        throw new Error(`Failed to delete application: ${response.error.message}`);
+      }
+
+      return applicationId;
+    } catch (error) {
+      console.log("deleteCandidateApplication error:", error);
+      return rejectWithValue(
+        error instanceof Error
+          ? error.message
+          : "Failed to delete candidate application"
+      );
+    }
+  }
+);
+
 // Enhanced state interface
 interface CandidatesState {
   candidates: CandidateWithApplication[];
@@ -705,7 +746,7 @@ const candidatesSlice = createSlice({
         state.stats = calculateStats(action.payload);
         state.lastFetched = new Date().toISOString();
         state.error = null;
-        
+
         // Update pagination info
         state.pagination.totalCandidates = action.payload.length;
         state.pagination.totalPages = Math.ceil(action.payload.length / state.pagination.candidatesPerPage);
@@ -739,6 +780,24 @@ const candidatesSlice = createSlice({
         if (hasAccess && !state.accessibleJobs.includes(jobId)) {
           state.accessibleJobs.push(jobId);
         }
+      });
+
+    // Delete candidate application
+    builder.addCase(deleteCandidateApplication.pending, (state) => {
+      state.loading = true;
+      state.error = null;
+    })
+      .addCase(deleteCandidateApplication.fulfilled, (state, action) => {
+        state.loading = false;
+        state.error = null;
+        const applicationId = action.payload;
+        state.candidates = state.candidates.filter(
+          (candidate) => candidate.id !== applicationId
+        );
+      })
+      .addCase(deleteCandidateApplication.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
       });
   },
 });

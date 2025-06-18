@@ -22,6 +22,7 @@ import {
   CandidateWithApplication,
   SortOption,
   CandidateFilters,
+  deleteCandidateApplication,
 } from "@/store/features/candidatesSlice";
 import type { AppDispatch } from "@/store/store";
 import { TiArrowSortedDown } from "react-icons/ti";
@@ -350,32 +351,36 @@ export default function CandidatesList({
     }
   };
 
-  // const handleDeleteCandidate = async (applicationId: string) => {
-  //   if (!userContext) {
-  //     console.log("User context not available");
-  //     return;
-  //   }
+  const handleDeleteCandidate = async (application_id: string) => {
+    if (!userContext) {
+      alert("User context not available. Please log in again.");
+      return;
+    }
 
-  //   try {
-  //     // TODO: Implement delete functionality in the slice
-  //     console.log("Delete candidate with application ID:", applicationId);
+    // Confirm deletion
+    const confirmed = window.confirm(
+      `Are you sure you want to delete the application with ID ${application_id}?`
+    );
+    if (!confirmed) {
+      return;
+    }
 
-  //     // Close overlay if the deleted candidate is currently shown
-  //     if (candidatesDetailsOverlay.candidate?.application_id === applicationId) {
-  //       setCandidatesDetailsOverlay({
-  //         candidate: null,
-  //         show: false,
-  //       });
-  //     }
-  //   } catch (error) {
-  //     console.log("Failed to delete candidate:", error);
-  //   }
-  // };
+    try {
+      await dispatch(
+        deleteCandidateApplication(application_id)
+      ).unwrap();
 
-  // const handleRowClick = (candidate: CandidateWithApplication) => {
-  //   // Allow clicking anywhere on the row to open overlay
-  //   handleViewCandidate(candidate);
-  // };
+      // Optionally, close the overlay if it was open for this candidate
+      if (
+        candidatesDetailsOverlay.candidate?.application_id ===
+        application_id
+      ) {
+        setCandidatesDetailsOverlay({ candidate: null, show: false });
+      }
+    } catch (error) {
+      alert(`Failed to delete candidate: ${error}`);
+    }
+  };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -739,7 +744,7 @@ export default function CandidatesList({
         candidatesDetailsOverlay={candidatesDetailsOverlay}
         setCandidatesDetailsOverlay={setCandidatesDetailsOverlay}
         onStatusUpdate={handleStatusUpdate}
-        // onDelete={handleDeleteCandidate}
+        onDelete= {handleDeleteCandidate}
         calculateExperience={calculateExperience}
       />
     </>
