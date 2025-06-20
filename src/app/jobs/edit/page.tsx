@@ -350,9 +350,9 @@ export default function EditJob() {
       <div
         className={`transition-all duration-300 min-h-full md:pb-0 px-0 ${
           collapsed ? "md:ml-20" : "md:ml-64"
-        } md:pt-0 pt-4`}
+        } pt-18`}
       >
-        <div className="max-w-7xl w-full mx-auto mt-4 px-2 md:px-4 py-4">
+        <div className="max-w-7xl w-full mx-auto mt-4 px-2 py-4">
           <div className="flex justify-center items-center min-h-[400px]">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
           </div>
@@ -366,15 +366,15 @@ export default function EditJob() {
       <div
         className={`transition-all duration-300 min-h-full md:pb-0 px-0 ${
           collapsed ? "md:ml-20" : "md:ml-64"
-        } md:pt-0 pt-4`}
+        } pt-18`}
       >
-        <div className="max-w-7xl w-full mx-auto mt-4 px-2 md:px-4 py-4">
+        <div className="max-w-7xl w-full mx-auto mt-4 px-2 py-4">
           <div className="flex justify-center items-center min-h-[400px]">
             <div className="text-center">
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+              <h3 className="text-xl font-semibold text-neutral-900 mb-2">
                 Job not found
               </h3>
-              <p className="text-gray-600 mb-4">
+              <p className="text-neutral-600 mb-4">
                 The job you&apos;re trying to edit doesn&apos;t exist or has
                 been removed.
               </p>
@@ -392,34 +392,32 @@ export default function EditJob() {
     <div
       className={`transition-all duration-300 min-h-full md:pb-0 px-0 ${
         collapsed ? "md:ml-20" : "md:ml-64"
-      } md:pt-0 pt-4`}
+      } pt-18`}
     >
-      <div className="max-w-7xl w-full mx-auto mt-4 px-2 md:px-4 py-4">
+      <div className="w-full mx-auto mt-4 px-2">
         {/* Breadcrumb */}
-        <div className="flex items-center gap-1 mb-4">
+        <div className="flex items-center gap-1 mb-2">
           <Link
             href="/dashboard"
-            className="flex items-center text-neutral-500 hover:text-neutral-700 font-medium text-base"
+            className="flex items-center text-neutral-500 hover:text-neutral-700 font-medium text-sm"
           >
             <HiOutlineArrowCircleLeft className="w-6 h-6 mr-1" />
             <span>Back to Dashboard</span>
           </Link>
-          <span className="text-base text-neutral-500 font-light">/</span>
+          <span className="text-sm text-neutral-500 font-light">/</span>
           <Link
             href="/jobs"
-            className="text-neutral-500 hover:text-neutral-700 font-medium text-base"
+            className="text-neutral-500 hover:text-neutral-700 font-medium text-sm"
           >
             Jobs
           </Link>
-          <span className="text-base text-neutral-500 font-light">/</span>
-          <span className="text-base font-medium text-neutral-900">
-            Edit Job
-          </span>
+          <span className="text-sm text-neutral-500 font-light">/</span>
+          <span className="text-sm font-medium text-neutral-900">Edit Job</span>
         </div>
 
         {/* Header */}
-        <h1 className="text-2xl font-semibold mb-1">Edit Job</h1>
-        <p className="text-neutral-500 text-sm mb-6">
+        <h1 className="text-xl font-semibold mb-1">Edit Job</h1>
+        <p className="text-neutral-500 text-sm mb-10">
           Update the job details and requirements.
         </p>
 
@@ -438,7 +436,7 @@ export default function EditJob() {
                 key={s}
                 className={`px-4 py-2 text-center font-medium transition-colors whitespace-nowrap cursor-pointer ${
                   i === step
-                    ? "border-b-4 border-blue-600 text-blue-600"
+                    ? "border-b-4 border-blue-600"
                     : i < step
                     ? "text-green-600"
                     : "text-neutral-500"
@@ -455,7 +453,7 @@ export default function EditJob() {
 
         {/* Form Content */}
         <div className="flex justify-center items-center w-full">
-          <div className="max-w-5xl w-full pb-20">
+          <div className="w-full pb-20">
             <form
               className="bg-white rounded-2xl shadow-xs p-6"
               onSubmit={(e) => e.preventDefault()}

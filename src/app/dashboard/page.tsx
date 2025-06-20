@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from "recharts";
 import { HiOutlineBuildingOffice2 } from "react-icons/hi2";
@@ -10,6 +10,7 @@ import { FaCaretDown } from "react-icons/fa";
 import { GoPeople } from "react-icons/go";
 import Link from "next/link";
 import { AppDispatch, RootState } from "@/store/store"; // Adjust path as needed
+import { useAppSelector } from "@/store/hooks";
 
 // Import selectors and actions
 import {
@@ -93,7 +94,7 @@ const DashboardContent = ({
       label: "Active Jobs",
       value: dashboardStats.active_jobs.value,
       icon: (
-        <BsBriefcase className="w-15 h-15 text-indigo-400 bg-indigo-100 rounded-2xl p-3" />
+        <BsBriefcase className="w-11 h-11 text-indigo-400 bg-indigo-100 rounded-2xl p-3" />
       ),
       change: `${dashboardStats.active_jobs.change > 0 ? '+' : ''}${dashboardStats.active_jobs.change}%`,
       changeDesc: "Up from yesterday",
@@ -104,7 +105,7 @@ const DashboardContent = ({
       label: "Application Received",
       value: dashboardStats.applications_received.value,
       icon: (
-        <TiDocumentDelete className="w-15 h-15 text-amber-700/60 bg-amber-100 rounded-2xl p-3" />
+        <TiDocumentDelete className="w-11 h-11 text-amber-700/60 bg-amber-100 rounded-2xl p-3" />
       ),
       change: `${dashboardStats.applications_received.change > 0 ? '+' : ''}${dashboardStats.applications_received.change}%`,
       changeDesc: "Up from past week",
@@ -115,7 +116,7 @@ const DashboardContent = ({
       label: "Client Companies",
       value: dashboardStats.client_companies.value,
       icon: (
-        <HiOutlineBuildingOffice2 className="w-15 h-15 text-green-400 bg-green-100 rounded-2xl p-3" />
+        <HiOutlineBuildingOffice2 className="w-11 h-11 text-green-400 bg-green-100 rounded-2xl p-3" />
       ),
       change: `${dashboardStats.client_companies.change > 0 ? '+' : ''}${dashboardStats.client_companies.change}%`,
       changeDesc: "Up from last month",
@@ -126,7 +127,7 @@ const DashboardContent = ({
       label: "Total Candidates",
       value: dashboardStats.total_candidates.value,
       icon: (
-        <GoPeople className="w-15 h-15 text-orange-500 bg-red-200/80 rounded-2xl p-3" />
+        <GoPeople className="w-11 h-11 text-orange-500 bg-red-200/80 rounded-2xl p-3" />
       ),
       change: `${dashboardStats.total_candidates.change > 0 ? '+' : ''}${dashboardStats.total_candidates.change}%`,
       changeDesc: "Up from past week",
@@ -176,16 +177,16 @@ const DashboardContent = ({
     return (
       <div className={`transition-all duration-300 min-h-full px-3 md:px-6 ${
         collapsed ? "md:ml-20" : "md:ml-60"
-      } md:pt-0 pt-4`}>
-        <div className="max-w-8xl mx-auto px-2 py-8">
+      } pt-18`}>
+        <div className="max-w-8xl mx-auto px-2 py-4">
           <div className="animate-pulse">
-            <div className="h-8 bg-gray-200 rounded w-32 mb-4"></div>
+            <div className="h-8 bg-neutral-200 rounded w-32 mb-4"></div>
             <div className="flex flex-wrap gap-4 mb-8">
               {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="bg-gray-200 rounded-2xl h-44 flex-1 min-w-3xs"></div>
+                <div key={i} className="bg-neutral-200 rounded-2xl h-44 flex-1 min-w-3xs"></div>
               ))}
             </div>
-            <div className="bg-gray-200 rounded-2xl h-96"></div>
+            <div className="bg-neutral-200 rounded-2xl h-96"></div>
           </div>
         </div>
       </div>
@@ -197,8 +198,8 @@ const DashboardContent = ({
     return (
       <div className={`transition-all duration-300 min-h-full px-3 md:px-6 ${
         collapsed ? "md:ml-20" : "md:ml-60"
-      } md:pt-0 pt-4`}>
-        <div className="max-w-8xl mx-auto px-2 py-8">
+      } pt-18`}>
+        <div className="max-w-8xl mx-auto px-2 py-4">
           <div className="bg-red-50 border border-red-200 rounded-lg p-4">
             <h2 className="text-red-800 font-semibold mb-2">Error Loading Dashboard</h2>
             <p className="text-red-600">{error}</p>
@@ -226,10 +227,10 @@ const DashboardContent = ({
     return (
       <div className={`transition-all duration-300 min-h-full px-3 md:px-6 ${
         collapsed ? "md:ml-20" : "md:ml-60"
-      } md:pt-0 pt-4`}>
-        <div className="max-w-8xl mx-auto px-2 py-8">
+      } pt-18`}>
+        <div className="max-w-8xl mx-auto px-2 py-4">
           <div className="text-center py-12">
-            <p className="text-gray-500">No dashboard data available</p>
+            <p className="text-neutral-500">No dashboard data available</p>
           </div>
         </div>
       </div>
@@ -240,9 +241,9 @@ const DashboardContent = ({
     <div
       className={`transition-all duration-300 min-h-full px-3 md:px-6 ${
         collapsed ? "md:ml-20" : "md:ml-60"
-      } md:pt-0 pt-4`}
+      } pt-18`}
     >
-      <div className="max-w-8xl mx-auto px-2 py-8">
+      <div className="max-w-8xl mx-auto px-2 py-4">
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-2xl font-semibold text-neutral-900">
             Dashboard
@@ -259,24 +260,24 @@ const DashboardContent = ({
           {stats.map((stat) => (
             <div
               key={stat.label}
-              className="bg-white rounded-2xl shadow-sm flex flex-col justify-between p-4 min-w-3xs h-auto min-h-[11rem] sm:min-h-[11rem] flex-1"
+              className="bg-white rounded-2xl hover:shadow-sm transition-all duration-300 flex flex-col justify-between px-4 py-3 min-w-3xs h-auto flex-1"
             >
               {/* Top row: label, value, icon */}
               <div className="flex items-start sm:items-center justify-between w-full">
                 <div className="flex-1">
-                  <div className="text-neutral-500 text-sm font-medium mb-4">
+                  <div className="text-neutral-500 text-sm font-medium mb-1">
                     {stat.label}
                   </div>
-                  <div className="text-3xl lg:text-4xl font-semibold text-neutral-900">
+                  <div className="text-2xl lg:text-3xl font-semibold text-neutral-900">
                     {stat.value.toLocaleString()}
                   </div>
                 </div>
-                <div className="flex-shrink-0">
+                <div className="flex-shrink-0 relative -top-3 -right-1">
                   {stat.icon}
                 </div>
               </div>
               {/* Change info at the bottom */}
-              <div className="flex items-center gap-2 text-xs sm:text-sm mt-auto">
+              <div className="flex items-center gap-2 text-xs mt-6">
                 <span
                   className={`${stat.changeColor} font-semibold whitespace-nowrap`}
                 >
@@ -364,7 +365,8 @@ const DashboardContent = ({
 
 export default function DashboardPage() {
   const dispatch = useDispatch<AppDispatch>();
-  const [collapsed] = useState(false);
+  // Use global sidebar state
+  const collapsed = useAppSelector((state: RootState) => state.ui.sidebar.collapsed);
 
   // User authentication data
   const user = useSelector((state: RootState) => state.user.user);
@@ -414,7 +416,7 @@ export default function DashboardPage() {
       <div
         className={`transition-all duration-300 min-h-full px-3 md:px-6 ${
           collapsed ? "md:ml-20" : "md:ml-60"
-        } md:pt-0 pt-4`}
+        } pt-18`}
       >
         <div className="max-w-8xl mx-auto px-2 py-8">
           <div className="bg-red-50 border border-red-200 rounded-md p-4">
@@ -440,7 +442,7 @@ export default function DashboardPage() {
       <div
         className={`transition-all duration-300 min-h-full px-3 md:px-6 ${
           collapsed ? "md:ml-20" : "md:ml-60"
-        } md:pt-0 pt-4`}
+        } pt-18`}
       >
         <div className="max-w-8xl mx-auto px-2 py-8 flex justify-center items-center">
           <LoadingSpinner message="Loading dashboard..." />
@@ -455,7 +457,7 @@ export default function DashboardPage() {
       <div
         className={`transition-all duration-300 min-h-full px-3 md:px-6 ${
           collapsed ? "md:ml-20" : "md:ml-60"
-        } md:pt-0 pt-4`}
+        } pt-18`}
       >
         <div className="max-w-8xl mx-auto px-2 py-8">
           <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4">
@@ -481,7 +483,7 @@ export default function DashboardPage() {
       <div
         className={`transition-all duration-300 min-h-full px-3 md:px-6 ${
           collapsed ? "md:ml-20" : "md:ml-60"
-        } md:pt-0 pt-4`}
+        } pt-18`}
       >
         <div className="max-w-8xl mx-auto px-2 py-8">
           <InfoMessage
@@ -499,7 +501,7 @@ export default function DashboardPage() {
       <div
         className={`transition-all duration-300 min-h-full px-3 md:px-6 ${
           collapsed ? "md:ml-20" : "md:ml-60"
-        } md:pt-0 pt-4`}
+        } pt-18`}
       >
         <div className="max-w-8xl mx-auto px-2 py-8">
           <InfoMessage

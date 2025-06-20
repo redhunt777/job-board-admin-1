@@ -206,9 +206,9 @@ export default function Profile() {
       <div
         className={`transition-all duration-300 min-h-full md:pb-0 px-4 ${
           collapsed ? "md:ml-20" : "md:ml-60"
-        } md:pt-0 pt-4`}
+        } pt-18`}
       >
-        <div className="mt-4 px-2 md:px-4 py-4">
+        <div className="mt-4 px-2 py-4">
           <div className="flex items-center justify-center h-64">
             <div className="text-lg text-neutral-600">Loading profile...</div>
           </div>
@@ -221,9 +221,9 @@ export default function Profile() {
     <div
       className={`transition-all duration-300 min-h-full md:pb-0 px-4 ${
         collapsed ? "md:ml-20" : "md:ml-60"
-      } md:pt-0 pt-4`}
+      } pt-18`}
     >
-      <div className="mt-4 px-2 md:px-4 py-4 ">
+      <div className="mt-4 px-2 py-4 ">
         {/* Breadcrumb */}
         <div className="flex items-center gap-1 mb-4">
           <Link

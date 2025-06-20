@@ -160,7 +160,7 @@ const EditorContent = memo(({
     </div>
     
     {/* Help text */}
-    <div className="text-xs text-gray-500 mt-2">
+    <div className="text-xs text-neutral-500 mt-2">
       💡 <strong>Tip:</strong> Select text and use the toolbar above to format it. Try making text <strong>bold</strong>, <em>italic</em>, or creating lists!
     </div>
   </div>

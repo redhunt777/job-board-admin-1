@@ -141,31 +141,31 @@ const CandidatesContent = ({
     <div
       className={`transition-all duration-300 h-full px-3 md:px-6 ${
         collapsed ? "md:ml-20" : "md:ml-60"
-      } pt-4`}
+      } pt-18`}
     >
-      <div className="max-w-8xl mx-auto px-0 md:px-4 py-0 md:py-4">
+      <div className="w-full mx-auto px-0 md:px-4 py-6 md:py-4">
         {/* Back Navigation and Title */}
-        <div className="flex items-center gap-1 mb-6">
+        <div className="flex items-center gap-1 mb-2">
           <Link
             href="/dashboard"
-            className="flex items-center text-neutral-500 hover:text-neutral-700 font-medium md:text-base text-sm transition-colors"
+            className="flex items-center text-neutral-500 hover:text-neutral-700 font-medium text-sm transition-colors"
           >
             <HiOutlineArrowCircleLeft className="w-6 h-6 mr-1" />
             <span>Back to Dashboard</span>
           </Link>
-          <span className="md:text-base text-sm text-neutral-500 font-light">
+          <span className="text-sm text-neutral-500 font-light">
             /
           </span>
-          <span className="md:text-base text-sm font-medium text-neutral-900">
+          <span className="text-sm font-medium text-neutral-900">
             Candidates
           </span>
         </div>
 
         {/* Header with Role-based Content */}
-        <div className="flex items-center flex-wrap justify-between my-6">
+        <div className="flex items-center flex-wrap justify-between mb-10">
           <div>
             <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-semibold text-neutral-900">
+              <h1 className="text-xl font-semibold text-neutral-900">
                 All Candidates
               </h1>
 
@@ -337,9 +337,9 @@ export default function Candidates() {
       <div
         className={`transition-all duration-300 h-full px-3 md:px-0 ${
           collapsed ? "md:ml-20" : "md:ml-60"
-        } pt-4`}
+        } pt-18`}
       >
-        <div className="max-w-8xl mx-auto px-2 md:px-4 py-4">
+        <div className="max-w-8xl mx-auto px-2 py-4">
           <InfoMessage
             message={`Authentication error: ${error}`}
             type="error"
@@ -355,9 +355,9 @@ export default function Candidates() {
       <div
         className={`transition-all duration-300 h-full px-3 md:px-0 ${
           collapsed ? "md:ml-20" : "md:ml-60"
-        } pt-4`}
+        } pt-18`}
       >
-        <div className="max-w-8xl mx-auto px-2 md:px-4 py-4">
+        <div className="max-w-8xl mx-auto px-2 py-4">
           <LoadingSpinner message="Loading user authentication..." />
         </div>
       </div>
@@ -372,7 +372,7 @@ export default function Candidates() {
           collapsed ? "md:ml-20" : "md:ml-60"
         } pt-4`}
       >
-        <div className="max-w-8xl mx-auto px-2 md:px-4 py-4">
+        <div className="max-w-8xl mx-auto px-2 py-4">
           <InfoMessage
             message="You are not part of any organization. Please contact your administrator."
             type="info"
@@ -390,7 +390,7 @@ export default function Candidates() {
           collapsed ? "md:ml-20" : "md:ml-60"
         } pt-4`}
       >
-        <div className="max-w-8xl mx-auto px-2 md:px-4 py-4">
+        <div className="max-w-8xl mx-auto px-2 py-4">
           <InfoMessage
             message="No role is assigned to you. Please contact your administrator to assign a role."
             type="info"
@@ -408,7 +408,7 @@ export default function Candidates() {
           collapsed ? "md:ml-20" : "md:ml-60"
         } pt-4`}
       >
-        <div className="max-w-8xl mx-auto px-2 md:px-4 py-4">
+        <div className="max-w-8xl mx-auto px-2 py-4">
           <InfoMessage
             message="Invalid user or organization data. Please try refreshing the page."
             type="error"
