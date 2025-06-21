@@ -324,9 +324,6 @@ export default function Candidates() {
   // Initialize authentication if not already done
   useEffect(() => {
     if (!user && !isLoading) {
-      console.log("User not found, initializing auth...");
-      console.log("Current user state:", user);
-      console.log("Current loading state:", isLoading);
       dispatch(initializeAuth());
     }
   }, [user, isLoading, dispatch]);
